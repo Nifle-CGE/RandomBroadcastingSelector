@@ -1,0 +1,19 @@
+{
+    "id": "",
+    "name": "",
+    "email": "",
+    "message_score": 0,
+    "last_logged_in": 0,
+    "lang": "",
+    "ban": {
+        "status": 0,
+        "message": "",
+        "sample_reports": [],
+        "reason": "",
+        "appeal": ""
+    },
+    "report": {
+        "timestamp": 0,
+        "reason": ""
+    }
+}

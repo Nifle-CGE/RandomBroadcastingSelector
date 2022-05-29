@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <script src="/static/js/script.js"></script>
+
+    <title>Ban appeal - RandomBroadcastingSelector</title>
+</head>
+
+<nav>
+    <ul class="navbar">
+        <li><img class="logo" src="/static/img/logo RBS.png" alt="RBS logo" onclick="location.href='/en/'"></li>
+        <li><a class="active" href="/">Home</a></li>
+        <li style="float:right;"><a>{{ current_user.name }}</a></li>
+    </ul>
+</nav>
+
+<body>
+    <form action="/ban-appeal-callback" method="post">
+        <p>Enter why you should be unbanned.</p>
+        <p><input type="text" name="reason" /></p>
+        <input type="hidden" name="user_id" value="{{ user_id }}">
+        <input type="hidden" name="id_hashed" value="{{ id_hashed }}">
+        <p><input type="submit" value="submit" /></p>
+    </form>
+</body>
+
+</html>

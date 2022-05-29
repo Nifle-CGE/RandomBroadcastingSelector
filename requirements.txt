@@ -1,0 +1,6 @@
+flask
+flask_login
+oauthlib
+pyopenssl
+requests
+azure_cosmos

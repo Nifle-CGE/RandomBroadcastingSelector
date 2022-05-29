@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <script src="/static/js/script.js"></script>
+</head>
+
+<nav>
+    <ul class="navbar">
+        <li><img class="logo" src="/static/img/logo RBS.png" alt="RBS logo" onclick="location.href='/en/'"></li>
+        <li><a href="/">Home</a></li>
+        <li><a class="active" href="statistics">Stats</a></li>
+        <li><a href="history/1">History</a></li>
+        {% if current_user.is_authenticated: %}
+        <li style="float:right;"><a href="/logout">Logout</a></li>
+        <li style="float:right;"><a>{{ current_user.name }}</a></li>
+        {% else: %}
+        <li style="float:right;"><a href="login">Login</a></li>
+        {% endif %}
+    </ul>
+</nav>
+
+<body>
+    <h1>Global Statistics</h1>
+    <h2>This Broadcasts info</h2>
+    {% if stats["broadcast"]["lang"] == "en": %}
+    Current message : ❝{{ stats["broadcast"]["content"] }}❞<br>
+    {% else: %}
+    Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
+    Original message : ❝{{ stats["broadcast"]["content"] }}❞<br>
+    Message language : {{ stats["broadcast"]["lang"] }}<br>
+    {% endif %}
+    Broadcaster : {{ stats["broadcast"]["broadcaster_name"] }}<br>
+    Upvotes : ❝{{ stats["broadcast"]["upvotes"] }}❞<br>
+    Downvotes : ❝{{ stats["broadcast"]["downvotes"] }}❞<br>
+    Reports for this message : {{ stats["broadcast"]["reports"] }}<br>
+
+
+    <h2>General Broadcasting info</h2>
+    Broadcasts sent : {{ stats["broadcasts"]["msgs_sent"] }}<br>
+    {% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
+    Broadcasts in {{ lang_code }} sent : {{ number }}<br>
+    {% endfor %}
+
+    <h2>Users info</h2>
+    Registered users : {{ stats["users"]["num"] }}<br>
+    Banned users : {{ banned_num }}<br>
+    <!--
+    Users who logged in in the last hour : {{ no_brod_num }}<br>
+    Users who logged in the last 24 hour : {{ no_brod_num }}<br>
+    Users who logged in the last week : {{ no_brod_num }}<br>
+    -->
+
+    <h2>Time info</h2>
+    Uptime : {{ stats["time"]["uptime_str"] }}<br>
+    Time to get stats : {{ stats["time"]["stats_getting"] }} ms<br>
+
+    <h2>Top broadcasts in different categories</h2>
+    <h3>5 most upvoted</h3>
+    {% for post in range() %}
+    <h3>5 most downvoted</h3>
+    <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
+    <h3>5 most neutral (upvotes/downvotes ratio closest to 0)</h3>
+    <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
+    <!-- TODO : 5 most upvoted, 5 most downvoted, 5 most popular (best upvotes/downvotes ratio), 5 most unpopular (worst upvotes/downvotes ratio) -->
+
+    <small>These stats are updated every 10 minutes.</small>
+</body>
+
+</html>

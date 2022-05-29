@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+    <script src="/static/js/script.js"></script>
+
+    <title>Home - RandomBroadcastingSelector</title>
+</head>
+
+<nav>
+    <ul class="navbar">
+        <li><img class="logo" src="/static/img/logo RBS.png" alt="RBS logo" onclick="location.href='/en/'"></li>
+        <li><a class="active" href="/">Home</a></li>
+        <li><a href="statistics">Stats</a></li>
+        <li><a href="history/1">History</a></li>
+        {% if current_user.is_authenticated: %}
+        <li style="float:right;"><a href="/logout">Logout</a></li>
+        <li style="float:right;"><a>{{ current_user.name }}</a></li>
+        {% else: %}
+        <li style="float:right;"><a href="login">Login</a></li>
+        {% endif %}
+        <li style="float:right;" class="dropdown">
+            <a class="dropbtn">Language</a>
+            <div class="dropdown-content">
+                <a href="/fr/">French</a>
+                <a href="/de/">German</a>
+                <a href="/es/">Spanish</a>
+            </div>
+        </li>
+    </ul>
+</nav>
+
+<body>
+    <h1>Home</h1>
+    <div class="post"></div>
+</body>
+
+</html>
