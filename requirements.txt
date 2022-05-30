@@ -5,4 +5,3 @@ pyopenssl
 requests
 azure_cosmos
 sendgrid
-mod_wsgi
