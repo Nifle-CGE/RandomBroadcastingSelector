@@ -1,6 +1,6 @@
 flask
 flask_login
-oauthlib
+authlib
 pyopenssl
 requests
 azure_cosmos

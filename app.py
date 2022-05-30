@@ -2,6 +2,7 @@
 import hashlib
 import json
 import os
+import sys
 import time
 import random
 import csv
@@ -15,7 +16,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from oauthlib.oauth2 import WebApplicationClient
+from authlib.integrations.flask_client import OAuth
 import requests
 from azure.cosmos import CosmosClient
 from sendgrid import SendGridAPIClient
@@ -56,8 +57,9 @@ h_cont = db.get_container_client("Web RBS History")
 # Mail client setup
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
-# OAuth 2 client setup
-client = WebApplicationClient(config["google"]["oauth_id"])
+# OAuth setup
+app.config["SERVER_NAME"] = "localhost:5000"
+oauth = OAuth(app)
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
@@ -104,63 +106,34 @@ def index(lang):
 
     return render_template(f"{lang}_main.html")
 
-@app.route("/<lang>/login")
+@app.route("/<lang>/login/")
 def login(lang):
     verif_broadcast()
 
     return render_template(f"{lang}_login.html")
 
-@app.route("/login/google")
+@app.route("/login/google/")
 def google_login():
-    # Find out what URL to hit for Google login
-    google_provider_cfg = get_google_provider_cfg()
-    authorization_endpoint = google_provider_cfg["authorization_endpoint"]
+    # Google Oauth Config
+	oauth.register(
+		name='google',
+		client_id=config["google"]["oauth_id"],
+		client_secret=config["google"]["oauth_secret"],
+		server_metadata_url=config["google"]["discovery_url"],
+		client_kwargs={
+			'scope': 'openid email profile'
+		}
+	)
+	
+	# Redirect to google_login_callback function
+	redirect_uri = url_for("google_login_callback", _external=True)
+	return oauth.google.authorize_redirect(redirect_uri)
 
-    # Use library to construct the request for Google login and provide
-    # scopes that let you retrieve user's profile from Google
-    request_uri = client.prepare_request_uri(
-        authorization_endpoint,
-        redirect_uri=request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
-    )
-    return redirect(request_uri)
-
-@app.route("/login/google/callback")
+@app.route("/login/google/callback/")
 def google_login_callback():
-    # Get authorization code Google sent back to you
-    code = request.args.get("code")
-    # Find out what URL to hit to get tokens that allow you to ask for
-    # things on behalf of a user
-    google_provider_cfg = get_google_provider_cfg()
-    token_endpoint = google_provider_cfg["token_endpoint"]
-    # Prepare and send a request to get tokens! Yay tokens!
-    token_url, headers, body = client.prepare_token_request(
-        token_endpoint,
-        authorization_response=request.url,
-        redirect_url=request.base_url,
-        code=code
-    )
-    token_response = requests.post(
-        token_url,
-        headers=headers,
-        data=body,
-        auth=(config["google"]["oauth_id"], config["google"]["oauth_secret"]),
-    )
+    token = oauth.google.authorize_access_token()
+    response_json = token["userinfo"]
 
-    # Parse the tokens!
-    client.parse_request_body_response(json.dumps(token_response.json()))
-
-    # Now that you have tokens (yay) let's find and hit the URL
-    # from Google that gives you the user's profile information,
-    # including their Google profile image and email
-    userinfo_endpoint = google_provider_cfg["userinfo_endpoint"]
-    uri, headers, body = client.add_token(userinfo_endpoint)
-    userinfo_response = requests.get(uri, headers=headers, data=body)
-
-    # You want to make sure their email is verified.
-    # The user authenticated with Google, authorized your
-    # app, and now you've verified their email through Google!
-    response_json = userinfo_response.json()
     if response_json.get("email_verified"):
         unique_id = response_json["sub"]
         users_email = response_json["email"]
@@ -189,6 +162,61 @@ def google_login_callback():
 
     # Send user back to homepage
     return redirect(url_for("index", lang=user.lang))
+
+@app.route('/login/twitter/')
+def twitter_login():
+	# Twitter Oauth Config
+	oauth.register(
+		name='twitter',
+		client_id=config["twitter"]["api_key"],
+		client_secret=config["twitter"]["api_secret"],
+		request_token_url='https://api.twitter.com/oauth/request_token',
+		request_token_params=None,
+		access_token_url='https://api.twitter.com/oauth/access_token',
+		access_token_params=None,
+		authorize_url='https://api.twitter.com/oauth/authenticate',
+		authorize_params=None,
+		api_base_url='https://api.twitter.com/1.1/',
+		client_kwargs=None,
+	)
+	redirect_uri = url_for('twitter_login_callback', _external=True)
+	return oauth.twitter.authorize_redirect(redirect_uri)
+
+@app.route('/login/twitter/callback/')
+def twitter_login_callback():
+	token = oauth.twitter.authorize_access_token()
+	resp = oauth.twitter.get('account/verify_credentials.json')
+	profile = resp.json()
+	print(" Twitter User", profile)
+	return redirect('/')
+
+@app.route('/login/facebook/')
+def facebook_login():
+	# Facebook Oauth Config
+	FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
+	FACEBOOK_CLIENT_SECRET = os.environ.get('FACEBOOK_CLIENT_SECRET')
+	oauth.register(
+		name='facebook',
+		client_id=FACEBOOK_CLIENT_ID,
+		client_secret=FACEBOOK_CLIENT_SECRET,
+		access_token_url='https://graph.facebook.com/oauth/access_token',
+		access_token_params=None,
+		authorize_url='https://www.facebook.com/dialog/oauth',
+		authorize_params=None,
+		api_base_url='https://graph.facebook.com/',
+		client_kwargs={'scope': 'email'},
+	)
+	redirect_uri = url_for('facebook_login_callback', _external=True)
+	return oauth.facebook.authorize_redirect(redirect_uri)
+
+@app.route('/login/facebook/callback/')
+def facebook_login_callback():
+	token = oauth.facebook.authorize_access_token()
+	resp = oauth.facebook.get(
+		'https://graph.facebook.com/me?fields=id,name,email,picture{url}')
+	profile = resp.json()
+	print("Facebook User ", profile)
+	return redirect(url_for("index", lang=current_user.lang))
 
 @app.route("/logout")
 @login_required
