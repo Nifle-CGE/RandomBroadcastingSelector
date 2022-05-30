@@ -260,4 +260,4 @@ def ban_appeal_register():
     return "Your ban appeal has been saved."    
 
 if __name__ == "__main__":
-    app.run(debug=True, ssl_context="adhoc")
+    app.run("0.0.0.0")
