@@ -4,3 +4,4 @@ authlib
 pyopenssl
 requests
 azure_cosmos
+sendgrid
