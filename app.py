@@ -58,7 +58,7 @@ h_cont = db.get_container_client("Web RBS History")
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-app.config["SERVER_NAME"] = "localhost:5000"
+app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
 # Flask-Login helper to retrieve a user from our db
@@ -260,4 +260,4 @@ def ban_appeal_register():
     return "Your ban appeal has been saved."    
 
 if __name__ == "__main__":
-    app.run("0.0.0.0")
+    app.run(host="0.0.0.0")
