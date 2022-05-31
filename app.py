@@ -87,7 +87,7 @@ def verif_broadcast():
         
         message = Mail(
             from_email="random.broadcasting.selector@gmail.com",
-            to_emails=current_user.email,
+            to_emails=current_user.email, # TODO : pas bon
             subject="RandomBroadcastingSelector : You are the one.",
             html_content="" # TODO : faire
         )
@@ -133,6 +133,7 @@ def google_login():
 def google_login_callback():
     token = oauth.google.authorize_access_token()
     response_json = token["userinfo"]
+    return response_json
 
     if response_json.get("email_verified"):
         unique_id = response_json["sub"]
@@ -184,21 +185,20 @@ def twitter_login():
 
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
-	token = oauth.twitter.authorize_access_token()
-	resp = oauth.twitter.get('account/verify_credentials.json')
-	profile = resp.json()
-	print(" Twitter User", profile)
-	return redirect('/')
+    token = oauth.twitter.authorize_access_token()
+    resp = oauth.twitter.get('account/verify_credentials.json')
+    profile = resp.json()
+
+    return profile
+    return redirect(url_for("index", lang=current_user.lang))
 
 @app.route('/login/facebook/')
 def facebook_login():
 	# Facebook Oauth Config
-	FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
-	FACEBOOK_CLIENT_SECRET = os.environ.get('FACEBOOK_CLIENT_SECRET')
 	oauth.register(
 		name='facebook',
-		client_id=FACEBOOK_CLIENT_ID,
-		client_secret=FACEBOOK_CLIENT_SECRET,
+		client_id=config["facebook"]["client_id"],
+		client_secret=config["facebook"]["client_secret"],
 		access_token_url='https://graph.facebook.com/oauth/access_token',
 		access_token_params=None,
 		authorize_url='https://www.facebook.com/dialog/oauth',
@@ -215,7 +215,7 @@ def facebook_login_callback():
 	resp = oauth.facebook.get(
 		'https://graph.facebook.com/me?fields=id,name,email,picture{url}')
 	profile = resp.json()
-	print("Facebook User ", profile)
+	return profile
 	return redirect(url_for("index", lang=current_user.lang))
 
 @app.route("/logout")
