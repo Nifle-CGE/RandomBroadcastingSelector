@@ -112,7 +112,7 @@ def login(lang):
 
     return render_template(f"{lang}_login.html")
 
-@app.route("/login/google/")
+@app.route("/login/google")
 def google_login():
     # Google Oauth Config
 	oauth.register(
@@ -129,7 +129,7 @@ def google_login():
 	redirect_uri = url_for("google_login_callback", _external=True)
 	return oauth.google.authorize_redirect(redirect_uri)
 
-@app.route("/login/google/callback/")
+@app.route("/login/google/callback")
 def google_login_callback():
     token = oauth.google.authorize_access_token()
     response_json = token["userinfo"]
@@ -163,7 +163,7 @@ def google_login_callback():
     # Send user back to homepage
     return redirect(url_for("index", lang=user.lang))
 
-@app.route('/login/twitter/')
+@app.route('/login/twitter')
 def twitter_login():
 	# Twitter Oauth Config
 	oauth.register(
@@ -182,7 +182,7 @@ def twitter_login():
 	redirect_uri = url_for('twitter_login_callback', _external=True)
 	return oauth.twitter.authorize_redirect(redirect_uri)
 
-@app.route('/login/twitter/callback/')
+@app.route('/login/twitter/callback')
 def twitter_login_callback():
 	token = oauth.twitter.authorize_access_token()
 	resp = oauth.twitter.get('account/verify_credentials.json')
@@ -190,7 +190,7 @@ def twitter_login_callback():
 	print(" Twitter User", profile)
 	return redirect('/')
 
-@app.route('/login/facebook/')
+@app.route('/login/facebook')
 def facebook_login():
 	# Facebook Oauth Config
 	FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
@@ -209,7 +209,7 @@ def facebook_login():
 	redirect_uri = url_for('facebook_login_callback', _external=True)
 	return oauth.facebook.authorize_redirect(redirect_uri)
 
-@app.route('/login/facebook/callback/')
+@app.route('/login/facebook/callback')
 def facebook_login_callback():
 	token = oauth.facebook.authorize_access_token()
 	resp = oauth.facebook.get(
