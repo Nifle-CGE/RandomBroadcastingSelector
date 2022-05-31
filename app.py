@@ -112,7 +112,7 @@ def login(lang):
 
     return render_template(f"{lang}_login.html")
 
-@app.route("/login/google")
+@app.route("/login/google/")
 def google_login():
     # Google Oauth Config
 	oauth.register(
@@ -163,7 +163,7 @@ def google_login_callback():
     # Send user back to homepage
     return redirect(url_for("index", lang=user.lang))
 
-@app.route('/login/twitter')
+@app.route('/login/twitter/')
 def twitter_login():
 	# Twitter Oauth Config
 	oauth.register(
@@ -190,7 +190,7 @@ def twitter_login_callback():
 	print(" Twitter User", profile)
 	return redirect('/')
 
-@app.route('/login/facebook')
+@app.route('/login/facebook/')
 def facebook_login():
 	# Facebook Oauth Config
 	FACEBOOK_CLIENT_ID = os.environ.get('FACEBOOK_CLIENT_ID')
