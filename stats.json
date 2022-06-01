@@ -1,1 +1,41 @@
-{"broadcast": {"broadcaster": 941277742501072897, "broadcaster_name": "admin", "content": "", "l_b_t": 16490601329.47, "lang": "fr", "trads": {}, "upvotes": 0, "downvotes": 0, "reports": 0}, "broadcasts": {"msgs_sent": 0, "langs_msgs_sent": {"en": 0, "fr": 0, "es": 0, "de": 0}}, "users": {"num": 0, "banned": 0, "lastlog_hour": 0, "lastlog_24h": 0, "lastlog_week": 0}, "time": {"start_time": 1653850263.6722453, "stats_getting": 0, "stats_last_edited": 0}, "top_msgs": {"5_most_upped": [], "5_most_downed": [], "5_most_pop": [], "5_most_neut": [], "5_most_unpop": []}}
+{
+    "broadcast": {
+        "broadcaster": 941277742501072897,
+        "broadcaster_name": "admin",
+        "content": "",
+        "l_b_t": 16490601329.47,
+        "lang": "fr",
+        "trads": {},
+        "upvotes": 0,
+        "downvotes": 0,
+        "reports": 0
+    },
+    "broadcasts": {
+        "msgs_sent": 0,
+        "langs_msgs_sent": {
+            "en": 0,
+            "fr": 0,
+            "es": 0,
+            "de": 0
+        }
+    },
+    "users": {
+        "num": 0,
+        "banned": 0,
+        "lastlog_hour": 0,
+        "lastlog_24h": 0,
+        "lastlog_week": 0
+    },
+    "time": {
+        "start_time": 1653850263.6722453,
+        "stats_getting": 0,
+        "stats_last_edited": 0
+    },
+    "top_msgs": {
+        "5_most_upped": [],
+        "5_most_downed": [],
+        "5_most_pop": [],
+        "5_most_neut": [],
+        "5_most_unpop": []
+    }
+}
