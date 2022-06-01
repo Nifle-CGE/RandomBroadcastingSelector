@@ -138,7 +138,7 @@ def google_login_callback():
     if response_json.get("email_verified"):
         unique_id = response_json["sub"]
         users_email = response_json["email"]
-        users_name = response_json["given_name"]
+        users_name = response_json["given_name"] + " " + response_json["family_name"]
     else:
         return "User email not available or not verified by Google.", 400
 
@@ -159,6 +159,7 @@ def google_login_callback():
     # Begin user session by logging the user in
     login_user(user)
     user.last_logged_in = time.time()
+    user.lang = response_json["locale"]
     user.export_user(u_cont)
 
     # Send user back to homepage
@@ -239,6 +240,7 @@ def statistics(lang):
         start_time = time.time()
 
         stats["broadcast"]["reports"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.report.timestamp > " + str(stats["bradcast"]["l_b_t"]), enable_cross_partition_query=True).next()
+        stats["broadcast"]["upvotes"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.report.timestamp > " + str(stats["bradcast"]["l_b_t"]), enable_cross_partition_query=True).next()
         stats["users"]["num"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 0", enable_cross_partition_query=True).next()
         stats["users"]["banned"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 1", enable_cross_partition_query=True).next()
 
@@ -251,13 +253,18 @@ def statistics(lang):
 
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_register():
-    print(request.form)
+    return request.form
     encoded_id = request.form["user_id"].encode("ascii")
     hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
     if hashed_id != request.form["id_hashed"]:
         return "Get IP banned noob", 400
 
-    return "Your ban appeal has been saved."    
+    return "Your ban appeal has been saved."
+
+@app.route("/licence/")
+def licence():
+    with open("LICENCE.txt", "r", encoding="utf-8") as licence_file:
+        return licence_file.read()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
