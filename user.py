@@ -2,13 +2,13 @@ from azure.cosmos.exceptions import *
 import json
 
 class User:
-    def __init__(self, id_=None, name=None, email=None, lang="en") -> None:
+    def __init__(self, id_=None, name=None, email=None) -> None:
         self.id_ = id_
         self.name = name
         self.email = email
         self.message_score = 0
         self.last_logged_in = 0
-        self.lang = lang
+        self.lang = "en"
         self.banned = 0
         self.ban_message = ""
         self.sample_reports = [] 
