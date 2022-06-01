@@ -2,7 +2,8 @@
     "id": "",
     "name": "",
     "email": "",
-    "message_score": 0,
+    "upvotes": [],
+    "downvotes": [],
     "last_logged_in": 0,
     "lang": "",
     "ban": {
@@ -13,7 +14,7 @@
         "appeal": ""
     },
     "report": {
-        "timestamp": 0,
+        "post_id": -1,
         "reason": ""
     }
 }
