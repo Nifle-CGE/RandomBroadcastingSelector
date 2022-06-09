@@ -8,7 +8,6 @@ class User:
         self.email = email
         self.message_score = 0
         self.last_logged_in = 0
-        self.lang = "en"
         self.banned = 0
         self.ban_message = ""
         self.sample_reports = [] 
@@ -17,12 +16,17 @@ class User:
         self.report_timestamp = 0
         self.report_reason = ""
         self.is_active = True
-        self.is_authenticated = True
+        self.is_authenticated = False
+        self.is_anonymous = False
+        self.is_broadcaster = False
 
-    def get_id(self):
+    def get_id(self) -> str:
         return self.id_
 
-    def import_user(self, u_cont, user_id:str):
+    def import_user(self, u_cont, user_id:str) -> None:
+        """
+        Use this functions when sure the user is authenticated
+        """
         try:
             user = u_cont.read_item(user_id, user_id)
         except CosmosResourceNotFoundError:
@@ -33,7 +37,6 @@ class User:
         self.email = user["email"]
         self.message_score = user["message_score"]
         self.last_logged_in = user["last_logged_in"]
-        self.lang = user["lang"]
         self.banned = user["ban"]["status"]
         self.ban_message = user["ban"]["message"]
         self.sample_reports = user["ban"]["sample_reports"]
@@ -45,6 +48,7 @@ class User:
         self.is_active = not bool(self.banned)
         self.is_authenticated = True
         self.is_anonymous = False
+        self.is_broadcaster = False
 
         return True
 
@@ -57,7 +61,6 @@ class User:
         user["email"] = self.email
         user["message_score"] = self.message_score
         user["last_logged_in"] = self.last_logged_in
-        user["lang"] = self.lang
         user["ban"]["status"] = self.banned
         user["ban"]["message"] = self.ban_message
         user["ban"]["sample_reports"] = self.sample_reports

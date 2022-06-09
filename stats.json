@@ -1,9 +1,9 @@
 {
     "broadcast": {
-        "broadcaster": 941277742501072897,
-        "broadcaster_name": "admin",
+        "author": 941277742501072897,
+        "author_name": "admin",
+        "post_id": 0,
         "content": "",
-        "l_b_t": 16490601329.47,
         "lang": "fr",
         "trads": {},
         "upvotes": 0,
@@ -27,15 +27,17 @@
         "lastlog_week": 0
     },
     "time": {
-        "start_time": 1653850263.6722453,
+        "start_time": 1654617978.695912,
         "stats_getting": 0,
-        "stats_last_edited": 0
+        "stats_last_edited": 0,
+        "last_broadcast": 16490601329.47,
+        "last_broadcaster": 16490601329.47,
+        "uptime_str": ""
     },
-    "top_msgs": {
+    "top_posts": {
         "5_most_upped": [],
         "5_most_downed": [],
         "5_most_pop": [],
-        "5_most_neut": [],
         "5_most_unpop": []
     }
 }

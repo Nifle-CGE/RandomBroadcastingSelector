@@ -8,7 +8,7 @@ import random
 import csv
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, request, url_for
+from flask import Flask, make_response, redirect, render_template, request, url_for
 from flask_login import (
     LoginManager,
     current_user,
@@ -31,9 +31,14 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
-# https://flask-login.readthedocs.io/en/latest
 login_manager = LoginManager()
 login_manager.init_app(app)
+# Setting anonymous user
+anon_user = User()
+anon_user.is_active = False
+anon_user.is_authenticated = False
+anon_user.is_anonymous = True
+login_manager.anonymous_user = anon_user
 
 # Config elements setup
 global config, stats
@@ -44,7 +49,7 @@ _stuffimporter.set_stats(stats)
 
 with open("langs.csv", "r", encoding="utf-8") as csvfile:
     reader = csv.reader(csvfile)
-    LANGUAGE_CODES = {rows[1]:rows[0] for rows in reader}
+    LANGUAGE_CODES = {rows[1].lower():rows[0] for rows in reader}
 
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
@@ -66,14 +71,13 @@ oauth = OAuth(app)
 def load_user(user_id):
     user = User()
     user.import_user(u_cont, user_id)
+    if user.id == stats["broadcast"]["author"]:
+        user.is_broadcaster = True
     return user
 
 # Useful defs
-def get_google_provider_cfg():
-    return requests.get(config["google"]["discovery_url"]).json()
-
 def verif_broadcast():
-    time_to_next_broadcast = 86400 - (time.time() - stats["broadcast"]["l_b_t"])
+    time_to_next_broadcast = 86400 - (time.time() - stats["time"]["last_broadcast"])
     if time_to_next_broadcast <= 0:
         with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
             new_post = json.load(sample_file)
@@ -82,35 +86,50 @@ def verif_broadcast():
         # TODO : save current message to history
 
         stats["broadcast"]["broadcaster"] = random.choice(_stuffimporter.pot_brods(u_cont))
-        stats["broadcast"]["l_b_t"] = time.time()
         stats["broadcast"]["content"] = ""
-        
-        message = Mail(
-            from_email="random.broadcasting.selector@gmail.com",
-            to_emails=current_user.email, # TODO : pas bon
-            subject="RandomBroadcastingSelector : You are the one.",
-            html_content="" # TODO : faire
-        )
-        sg_client.send(message)
+        stats["time"]["last_broadcast"] = time.time()
 
         _stuffimporter.set_stats(stats)
+
+        brod_obj = load_user(stats["broadcast"]["broadcaster"])
+        if not brod_obj.email: return
+
+        with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
+            mail_content = mail_file.read().replace("{{ server_name }}", app.config["SERVER_NAME"])
+
+        message = Mail(
+            from_email="random.broadcasting.selector@gmail.com",
+            to_emails=brod_obj.email,
+            subject="RandomBroadcastingSelector : You are the one.",
+            html_content=mail_content
+        )
+        sg_client.send(message)
 
 # Routing
 @app.route("/")
 def index_redirect():
-    return redirect(url_for("index", lang="en"))
+    lang = request.cookies.get("lang")
+    if not lang:
+        lang = "en"
+
+    return redirect(url_for("index", lang=lang))
 
 @app.route("/<lang>/")
 def index(lang):
     verif_broadcast()
 
-    return render_template(f"{lang}_main.html")
+    resp = make_response(render_template(f"{lang}_index.html"))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
+# All the login stuff
 @app.route("/<lang>/login/")
 def login(lang):
     verif_broadcast()
 
-    return render_template(f"{lang}_login.html")
+    resp = make_response(render_template(f"{lang}_index.html"))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
 @app.route("/login/google/")
 def google_login():
@@ -138,7 +157,11 @@ def google_login_callback():
     if response_json.get("email_verified"):
         unique_id = response_json["sub"]
         users_email = response_json["email"]
-        users_name = response_json["given_name"] + " " + response_json["family_name"]
+        users_name = response_json["name"]
+        if response_json["locale"] in LANGUAGE_CODES.keys():
+            lang = response_json["locale"]
+        else:
+            lang = "en"
     else:
         return "User email not available or not verified by Google.", 400
 
@@ -154,16 +177,18 @@ def google_login_callback():
     elif user.banned: # if user banned propose the ban appeal form
         encoded_id = user.id.encode("ascii")
         hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-        return render_template(f"{user.lang}_banned.html", user_id=user.id, id_hashed=hashed_id)
+        return render_template(f"{lang}_banned.html", user_id=user.id, id_hashed=hashed_id)
 
     # Begin user session by logging the user in
     login_user(user)
     user.last_logged_in = time.time()
-    user.lang = response_json["locale"]
+    user.is_authenticated = True
     user.export_user(u_cont)
 
     # Send user back to homepage
-    return redirect(url_for("index", lang=user.lang))
+    resp = make_response(redirect(url_for("index", lang=lang)))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
 @app.route('/login/twitter/')
 def twitter_login():
@@ -173,13 +198,10 @@ def twitter_login():
 		client_id=config["twitter"]["api_key"],
 		client_secret=config["twitter"]["api_secret"],
 		request_token_url='https://api.twitter.com/oauth/request_token',
-		request_token_params=None,
 		access_token_url='https://api.twitter.com/oauth/access_token',
-		access_token_params=None,
 		authorize_url='https://api.twitter.com/oauth/authenticate',
-		authorize_params=None,
 		api_base_url='https://api.twitter.com/1.1/',
-		client_kwargs=None,
+        userinfo_endpoint="account/verify_credentials.json?include_email=true&skip_status=true"
 	)
 	redirect_uri = url_for('twitter_login_callback', _external=True)
 	return oauth.twitter.authorize_redirect(redirect_uri)
@@ -187,11 +209,10 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    resp = oauth.twitter.get('account/verify_credentials.json')
-    profile = resp.json()
+    profile = token["userinfo"]
 
-    return profile
-    return redirect(url_for("index", lang=current_user.lang))
+    return token
+    return redirect(url_for("index", lang=request.cookies.get("lang")))
 
 @app.route('/login/facebook/')
 def facebook_login():
@@ -200,12 +221,11 @@ def facebook_login():
 		name='facebook',
 		client_id=config["facebook"]["client_id"],
 		client_secret=config["facebook"]["client_secret"],
-		access_token_url='https://graph.facebook.com/oauth/access_token',
-		access_token_params=None,
-		authorize_url='https://www.facebook.com/dialog/oauth',
-		authorize_params=None,
 		api_base_url='https://graph.facebook.com/',
-		client_kwargs={'scope': 'email'},
+		access_token_url='https://graph.facebook.com/oauth/access_token',
+		authorize_url='https://www.facebook.com/dialog/oauth',
+		client_kwargs={'scope': 'email public_profile'},
+        userinfo_endpoints="me?fields=id,name,email,locale"
 	)
 	redirect_uri = url_for('facebook_login_callback', _external=True)
 	return oauth.facebook.authorize_redirect(redirect_uri)
@@ -213,16 +233,15 @@ def facebook_login():
 @app.route('/login/facebook/callback')
 def facebook_login_callback():
 	token = oauth.facebook.authorize_access_token()
-	resp = oauth.facebook.get(
-		'https://graph.facebook.com/me?fields=id,name,email,picture{url}')
+	return token
+	resp = oauth.facebook.get()
 	profile = resp.json()
-	return profile
-	return redirect(url_for("index", lang=current_user.lang))
+	return redirect(url_for("index", lang=request.cookies.get("lang")))
 
 @app.route("/logout")
 @login_required
 def logout():
-    lang = current_user.lang
+    lang = request.cookies.get("lang")
     logout_user()
     return redirect(url_for("index", lang=lang))
 
@@ -230,7 +249,9 @@ def logout():
 def history(lang, page):
     verif_broadcast()
 
-    return render_template(f"{lang}_history.html", hist_page=page)
+    resp = make_response(render_template(f"{lang}_history.html", hist_page=page))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
 @app.route("/<lang>/statistics/")
 def statistics(lang):
@@ -239,17 +260,30 @@ def statistics(lang):
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
 
-        stats["broadcast"]["reports"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.report.timestamp > " + str(stats["bradcast"]["l_b_t"]), enable_cross_partition_query=True).next()
-        stats["broadcast"]["upvotes"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.report.timestamp > " + str(stats["bradcast"]["l_b_t"]), enable_cross_partition_query=True).next()
+        stats["broadcast"]["reports"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.report.post_id = {stats['broadcast']['post_id']} AND NOT u.report.reason = ''", enable_cross_partition_query=True).next()
+        stats["broadcast"]["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+        stats["broadcast"]["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+
         stats["users"]["num"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 0", enable_cross_partition_query=True).next()
         stats["users"]["banned"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 1", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 3600}", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 86400}", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 604800}", enable_cross_partition_query=True).next()
 
-    # TODO : modifier le système pour utiliser moins de RU en mettant les stats dans config.json et qui s'updatent toutes les heures
+        stats["top_posts"]["5_most_upped"] = u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5")
+        stats["top_posts"]["5_most_downed"] = u_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5")
+        stats["top_posts"]["5_most_pop"] = u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes / p.downvotes DESC OFFSET 0 LIMIT 5")
+        stats["top_posts"]["5_most_unpop"] = u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes / p.downvotes ASC OFFSET 0 LIMIT 5")
+        
+        stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(start_time - stats["time"]["start_time"])
+        stats["time"]["stats_last_edited"] = start_time
+        stats["time"]["stats_getting"] = time.time() - start_time
 
+        _stuffimporter.set_stats(stats)
 
-    uptime_str = _stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
-
-    return render_template(f"{lang}_stats.html", stats=stats)
+    resp = make_response(render_template(f"{lang}_stats.html", stats=stats))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_register():
@@ -259,12 +293,23 @@ def ban_appeal_register():
     if hashed_id != request.form["id_hashed"]:
         return "Get IP banned noob", 400
 
+    user = User()
+
     return "Your ban appeal has been saved."
 
+# Legal stuff
 @app.route("/licence/")
 def licence():
     with open("LICENCE.txt", "r", encoding="utf-8") as licence_file:
-        return licence_file.read()
+        return licence_file.read().replace("\n", "<br>")
+
+@app.route("/privacy-policy/")
+def privacy_policy():
+    return render_template("privacy_policy.html")
+
+@app.route("/terms-of-service/")
+def terms_of_service():
+    return render_template("terms_of_service.html")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
