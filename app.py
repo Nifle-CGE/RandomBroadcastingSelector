@@ -34,11 +34,13 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 login_manager = LoginManager()
 login_manager.init_app(app)
 # Setting anonymous user
-anon_user = User()
-anon_user.is_active = False
-anon_user.is_authenticated = False
-anon_user.is_anonymous = True
-login_manager.anonymous_user = anon_user
+def anon_user_getter():
+    anon_user = User()
+    anon_user.is_active = False
+    anon_user.is_authenticated = False
+    anon_user.is_anonymous = True
+    return anon_user
+login_manager.anonymous_user = anon_user_getter
 
 # Config elements setup
 global config, stats
