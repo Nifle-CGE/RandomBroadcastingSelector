@@ -129,7 +129,7 @@ def index(lang):
 def login(lang):
     verif_broadcast()
 
-    resp = make_response(render_template(f"{lang}_index.html"))
+    resp = make_response(render_template(f"{lang}_login.html"))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -300,11 +300,6 @@ def ban_appeal_register():
     return "Your ban appeal has been saved."
 
 # Legal stuff
-@app.route("/licence/")
-def licence():
-    with open("LICENCE.txt", "r", encoding="utf-8") as licence_file:
-        return licence_file.read().replace("\n", "<br>")
-
 @app.route("/privacy-policy/")
 def privacy_policy():
     return render_template("privacy_policy.html")
