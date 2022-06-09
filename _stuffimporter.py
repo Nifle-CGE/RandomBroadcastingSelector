@@ -36,3 +36,13 @@ def seconds_to_str(seconds:float):
         result.append(f"{rem_seconds} seconds")
 
     return " ".join(result)
+
+def itempaged_to_list(itempaged) -> list:
+    result = []
+    while True:
+        try:
+            result.append(itempaged.next())
+        except StopIteration:
+            break
+    
+    return result
