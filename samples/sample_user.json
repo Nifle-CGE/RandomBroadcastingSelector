@@ -2,10 +2,9 @@
     "id": "",
     "name": "",
     "email": "",
-    "upvotes": [],
-    "downvotes": [],
+    "upvote": -1,
+    "downvote": -1,
     "last_logged_in": 0,
-    "lang": "",
     "ban": {
         "status": 0,
         "message": "",
