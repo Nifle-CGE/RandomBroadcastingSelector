@@ -46,25 +46,70 @@
 
     <h2>Users info</h2>
     Registered users : {{ stats["users"]["num"] }}<br>
-    Banned users : {{ banned_num }}<br>
-    <!--
-    Users who logged in in the last hour : {{ no_brod_num }}<br>
-    Users who logged in the last 24 hour : {{ no_brod_num }}<br>
-    Users who logged in the last week : {{ no_brod_num }}<br>
-    -->
+    Banned users : {{ stats["users"]["banned"] }}<br>
+    Users who logged in in the last hour : {{ stats["users"]["lastlog_hour"] }}<br>
+    Users who logged in the last 24 hour : {{ stats["users"]["lastlog_24h"] }}<br>
+    Users who logged in the last week : {{ stats["users"]["lastlog_week"] }}<br>
 
     <h2>Time info</h2>
     Uptime : {{ stats["time"]["uptime_str"] }}<br>
-    Time to get stats : {{ stats["time"]["stats_getting"] }} ms<br>
+    Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 
     <h2>Top broadcasts in different categories</h2>
-    <h3>5 most upvoted</h3>
-    {% for post in range() %}
-    <h3>5 most downvoted</h3>
-    <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
-    <h3>5 most neutral (upvotes/downvotes ratio closest to 0)</h3>
-    <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
-    <!-- TODO : 5 most upvoted, 5 most downvoted, 5 most popular (best upvotes/downvotes ratio), 5 most unpopular (worst upvotes/downvotes ratio) -->
+    <table>
+        <h3>5 most upvoted</h3>
+        {% for post in stats["top_posts"]["5_most_upped"] %}
+        <tr>
+            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
+            <td>
+                <div class="container">
+                    <h5>{{ post["content"] }}</h5>
+                    <p>by {{ post["broadcaster_name"] }}</p>
+                    <small>Id : {{ post["id"] }}</small>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <h3>5 most downvoted</h3>
+        {% for post in stats["top_posts"]["5_most_downed"] %}
+        <tr>
+            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
+            <td>
+                <div class="container">
+                    <h5>{{ post["content"] }}</h5>
+                    <p>by {{ post["broadcaster_name"] }}</p>
+                    <small>Id : {{ post["id"] }}</small>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
+        {% for post in stats["top_posts"]["5_most_pop"] %}
+        <tr>
+            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
+            <td>
+                <div class="container">
+                    <h5>{{ post["content"] }}</h5>
+                    <p>by {{ post["broadcaster_name"] }}</p>
+                    <small>Id : {{ post["id"] }}</small>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+        <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
+        {% for post in stats["top_posts"]["5_most_unpop"] %}
+        <tr>
+            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
+            <td>
+                <div class="container">
+                    <h5>{{ post["content"] }}</h5>
+                    <p>by {{ post["broadcaster_name"] }}</p>
+                    <small>Id : {{ post["id"] }}</small>
+                </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
 
     <small>These stats are updated every 10 minutes.</small>
 </body>
