@@ -12,14 +12,14 @@
 <nav>
     <ul class="navbar">
         <li><img class="logo" src="/static/img/logo RBS.png" alt="RBS logo" onclick="location.href='/en/'"></li>
-        <li><a class="active" href="/">Home</a></li>
-        <li><a href="statistics">Stats</a></li>
-        <li><a href="history/1">History</a></li>
+        <li><a class="active" href="/en/">Home</a></li>
+        <li><a href="/en/statistics">Stats</a></li>
+        <li><a href="/en/history/1">History</a></li>
         {% if current_user.is_authenticated: %}
         <li style="float:right;"><a href="/logout">Logout</a></li>
         <li style="float:right;"><a>{{ current_user.name }}</a></li>
         {% else: %}
-        <li style="float:right;"><a href="login">Login</a></li>
+        <li style="float:right;"><a href="/en/login">Login</a></li>
         {% endif %}
         <li style="float:right;" class="dropdown">
             <a class="dropbtn">Language</a>
