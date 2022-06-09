@@ -274,8 +274,8 @@ def statistics(lang):
         
         stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes / p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes / p.downvotes ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
         stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(start_time - stats["time"]["start_time"])
         stats["time"]["stats_last_edited"] = start_time
