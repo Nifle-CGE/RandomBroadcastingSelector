@@ -278,7 +278,7 @@ def logout():
 def history(lang, page):
     verif_broadcast()
 
-    resp = make_response(render_template(f"{lang}_history.html", hist_page=page))
+    resp = make_response(render_template(f"{lang}_history.html", hist_page=int(page)))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
