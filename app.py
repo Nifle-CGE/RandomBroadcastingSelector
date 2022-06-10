@@ -202,8 +202,7 @@ def twitter_login():
 		request_token_url='https://api.twitter.com/oauth/request_token',
 		access_token_url='https://api.twitter.com/oauth/access_token',
 		authorize_url='https://api.twitter.com/oauth/authenticate',
-		api_base_url='https://api.twitter.com/1.1/',
-        userinfo_endpoint="account/verify_credentials.json?include_email=true&skip_status=true"
+		api_base_url='https://api.twitter.com/1.1/'
 	)
 	redirect_uri = url_for('twitter_login_callback', _external=True)
 	return oauth.twitter.authorize_redirect(redirect_uri)
@@ -211,9 +210,10 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    profile = token["userinfo"]
+    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
+    profile = resp.json()
 
-    return token
+    return profile
     return redirect(url_for("index", lang=request.cookies.get("lang")))
 
 @app.route('/login/facebook/')
@@ -226,8 +226,7 @@ def facebook_login():
 		api_base_url='https://graph.facebook.com/',
 		access_token_url='https://graph.facebook.com/oauth/access_token',
 		authorize_url='https://www.facebook.com/dialog/oauth',
-		client_kwargs={'scope': 'email public_profile'},
-        userinfo_endpoints="me?fields=id,name,email,locale"
+		client_kwargs={'scope': 'email public_profile'}
 	)
 	redirect_uri = url_for('facebook_login_callback', _external=True)
 	return oauth.facebook.authorize_redirect(redirect_uri)
@@ -235,9 +234,10 @@ def facebook_login():
 @app.route('/login/facebook/callback')
 def facebook_login_callback():
 	token = oauth.facebook.authorize_access_token()
-	return token
-	resp = oauth.facebook.get()
+	resp = oauth.facebook.get("me?fields=id,name,email,locale")
 	profile = resp.json()
+    
+	return profile
 	return redirect(url_for("index", lang=request.cookies.get("lang")))
 
 @app.route("/logout")
