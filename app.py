@@ -235,7 +235,7 @@ def github_login():
 @app.route('/login/github/callback')
 def github_login_callback():
 	token = oauth.github.authorize_access_token()
-	profile = token["userinfo"]
+	profile = oauth.github.get("/user")
 
 	return profile
 	return redirect(url_for("index", lang=request.cookies.get("lang")))
