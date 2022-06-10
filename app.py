@@ -199,10 +199,10 @@ def twitter_login():
 		name='twitter',
 		client_id=config["twitter"]["api_key"],
 		client_secret=config["twitter"]["api_secret"],
+		api_base_url='https://api.twitter.com/1.1/',
 		request_token_url='https://api.twitter.com/oauth/request_token',
 		access_token_url='https://api.twitter.com/oauth/access_token',
-		authorize_url='https://api.twitter.com/oauth/authenticate',
-		api_base_url='https://api.twitter.com/1.1/'
+		authorize_url='https://api.twitter.com/oauth/authenticate'
 	)
 	redirect_uri = url_for('twitter_login_callback', _external=True)
 	return oauth.twitter.authorize_redirect(redirect_uri)
@@ -223,9 +223,9 @@ def facebook_login():
 		name='facebook',
 		client_id=config["facebook"]["client_id"],
 		client_secret=config["facebook"]["client_secret"],
-		api_base_url='https://graph.facebook.com/',
-		access_token_url='https://graph.facebook.com/oauth/access_token',
-		authorize_url='https://www.facebook.com/dialog/oauth',
+		api_base_url='https://graph.facebook.com/v7.0/',
+		access_token_url='https://graph.facebook.com/v7.0/oauth/access_token',
+		authorize_url='https://www.facebook.com/v7.0/dialog/oauth',
 		client_kwargs={'scope': 'email public_profile'}
 	)
 	redirect_uri = url_for('facebook_login_callback', _external=True)
@@ -236,7 +236,7 @@ def facebook_login_callback():
 	token = oauth.facebook.authorize_access_token()
 	resp = oauth.facebook.get("me?fields=id,name,email,locale")
 	profile = resp.json()
-    
+
 	return profile
 	return redirect(url_for("index", lang=request.cookies.get("lang")))
 
