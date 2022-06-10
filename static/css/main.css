@@ -50,8 +50,13 @@ input:hover,
 }
 
 /* add appropriate colors to fb, twitter and google buttons */
-.fb {
+.facebook {
     background-color: #1771BF;
+    color: white;
+}
+
+.github {
+    background-color: black;
     color: white;
 }
 

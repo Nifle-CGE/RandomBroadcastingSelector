@@ -216,6 +216,31 @@ def twitter_login_callback():
     return profile
     return redirect(url_for("index", lang=request.cookies.get("lang")))
 
+@app.route('/login/github/')
+def github_login():
+	# Facebook Oauth Config
+	oauth.register(
+		name='github',
+		client_id=config["github"]["client_id"],
+		client_secret=config["github"]["client_secret"],
+		api_base_url='https://api.github.com/',
+		access_token_url='https://github.com/login/oauth/access_token',
+		authorize_url='https://github.com/login/oauth/authorize',
+		client_kwargs={'scope': 'user:email'},
+        userinfo_endpoint="https://api.github.com/user"
+	)
+	redirect_uri = url_for('github_login_callback', _external=True)
+	return oauth.github.authorize_redirect(redirect_uri)
+
+@app.route('/login/github/callback')
+def github_login_callback():
+	token = oauth.github.authorize_access_token()
+	profile = token["userinfo"]
+
+	return profile
+	return redirect(url_for("index", lang=request.cookies.get("lang")))
+
+"""
 @app.route('/login/facebook/')
 def facebook_login():
 	# Facebook Oauth Config
@@ -239,6 +264,7 @@ def facebook_login_callback():
 
 	return profile
 	return redirect(url_for("index", lang=request.cookies.get("lang")))
+"""
 
 @app.route("/logout")
 @login_required
