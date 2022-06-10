@@ -65,7 +65,7 @@ h_cont = db.get_container_client("Web RBS History")
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
+#app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
 # Flask-Login helper to retrieve a user from our db
@@ -234,11 +234,12 @@ def github_login():
 
 @app.route('/login/github/callback')
 def github_login_callback():
-	token = oauth.github.authorize_access_token()
-	profile = oauth.github.get("/user")
+    token = oauth.github.authorize_access_token()
+    resp = oauth.github.get("/user")
+    profile = resp.json()
 
-	return profile
-	return redirect(url_for("index", lang=request.cookies.get("lang")))
+    return profile
+    return redirect(url_for("index", lang=request.cookies.get("lang")))
 
 """
 @app.route('/login/facebook/')
