@@ -225,10 +225,9 @@ def facebook_login():
 		client_secret=config["facebook"]["client_secret"],
 		api_base_url='https://graph.facebook.com/',
 		access_token_url='https://graph.facebook.com/oauth/access_token',
-        access_token_params=None,
 		authorize_url='https://www.facebook.com/dialog/oauth',
-        authorize_params=None,
-		client_kwargs={'scope': 'email'}
+		client_kwargs={'scope': 'email public_profile'},
+        userinfo_endpoint="https://graph.facebook.com/me?fields=id,name,email,languages"
 	)
 	redirect_uri = url_for('facebook_login_callback', _external=True)
 	return oauth.facebook.authorize_redirect(redirect_uri)
@@ -236,8 +235,7 @@ def facebook_login():
 @app.route('/login/facebook/callback')
 def facebook_login_callback():
 	token = oauth.facebook.authorize_access_token()
-	resp = oauth.facebook.get("https://graph.facebook.com/me?fields=id,name,email,languages")
-	profile = resp.json()
+	profile = token["userinfo"]
 
 	return profile
 	return redirect(url_for("index", lang=request.cookies.get("lang")))
