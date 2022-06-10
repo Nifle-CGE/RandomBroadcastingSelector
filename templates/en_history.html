@@ -43,11 +43,34 @@
 </nav>
 
 <body>
-    <br><br>
-    <h1>History page {{ hist_page }}</h1>
-    {% for post in post_list: %}
-    <div border="1"></div>
+    <div class="w3-container">
+        <br><br>
+        <h1>History page {{ hist_page }}</h1>
+        {% for post in post_list: %}
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ post["content"] }}❞</h5>
+                <p>by {{ post["broadcaster_name"] }}</p>
+                <small>Id : {{ post["id"] }}</small>
+            </div>
+        </div>
+        {% endfor %}
 
+        <div class="w3-bar">
+            <a href="/en/history/{{ hist_page - 1 }}" class="w3-bar-item w3-button">&laquo;</a>
+            {% for nav_page in range(hist_page - 3, hist_page + 4): %}
+            {% if nav_page == hist_page: %}
+            <a href="/en/history/{{ nav_page }}" class="w3-bar-item w3-button w3-light-green">{{ nav_page }}</a>
+            {% elif nav_page > 0: %}
+            <a href="/en/history/{{ nav_page }}" class="w3-bar-item w3-button">{{ nav_page }}</a>
+            {% endif %}
+            {% endfor %}
+            <a href="/en/history/{{ hist_page + 1 }}" class="w3-bar-item w3-button">&raquo;</a>
+        </div>
+    </div>
 </body>
 
 </html>

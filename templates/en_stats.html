@@ -43,96 +43,96 @@
 </nav>
 
 <body>
-    <br><br>
-    <h1>Global Statistics</h1>
-    <h2>This Broadcasts info</h2>
-    {% if stats["broadcast"]["lang"] == "en": %}
-    Current message : ❝{{ stats["broadcast"]["content"] }}❞<br>
-    {% else: %}
-    Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
-    Original message : ❝{{ stats["broadcast"]["content"] }}❞<br>
-    Message language : {{ stats["broadcast"]["lang"] }}<br>
-    {% endif %}
-    Broadcaster : {{ stats["broadcast"]["broadcaster_name"] }}<br>
-    Upvotes : {{ stats["broadcast"]["upvotes"] }}<br>
-    Downvotes : {{ stats["broadcast"]["downvotes"] }}<br>
-    Reports for this message : {{ stats["broadcast"]["reports"] }}<br>
+    <div class="w3-container">
+        <br><br>
+        <h1>Global Statistics</h1>
+        <h2>This Broadcasts info</h2>
+        {% if stats["broadcast"]["lang"] == "en": %}
+        Current message : ❝{{ stats["broadcast"]["content"] }}❞<br>
+        {% else: %}
+        Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
+        Original message : ❝{{ stats["broadcast"]["content"] }}❞<br>
+        Message language : {{ stats["broadcast"]["lang"] }}<br>
+        {% endif %}
+        Broadcaster : {{ stats["broadcast"]["broadcaster_name"] }}<br>
+        Upvotes : {{ stats["broadcast"]["upvotes"] }}<br>
+        Downvotes : {{ stats["broadcast"]["downvotes"] }}<br>
+        Reports for this message : {{ stats["broadcast"]["reports"] }}<br>
 
 
-    <h2>General Broadcasting info</h2>
-    Broadcasts sent : {{ stats["broadcasts"]["msgs_sent"] }}<br>
-    {% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
-    Broadcasts in {{ lang_code }} sent : {{ number }}<br>
-    {% endfor %}
+        <h2>General Broadcasting info</h2>
+        Broadcasts sent : {{ stats["broadcasts"]["msgs_sent"] }}<br>
+        {% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
+        Broadcasts in {{ lang_code }} sent : {{ number }}<br>
+        {% endfor %}
 
-    <h2>Users info</h2>
-    Registered users : {{ stats["users"]["num"] }}<br>
-    Banned users : {{ stats["users"]["banned"] }}<br>
-    Users who logged in in the last hour : {{ stats["users"]["lastlog_hour"] }}<br>
-    Users who logged in the last 24 hour : {{ stats["users"]["lastlog_24h"] }}<br>
-    Users who logged in the last week : {{ stats["users"]["lastlog_week"] }}<br>
+        <h2>Users info</h2>
+        Registered users : {{ stats["users"]["num"] }}<br>
+        Banned users : {{ stats["users"]["banned"] }}<br>
+        Users who logged in in the last hour : {{ stats["users"]["lastlog_hour"] }}<br>
+        Users who logged in the last 24 hour : {{ stats["users"]["lastlog_24h"] }}<br>
+        Users who logged in the last week : {{ stats["users"]["lastlog_week"] }}<br>
 
-    <h2>Time info</h2>
-    Uptime : {{ stats["time"]["uptime_str"] }}<br>
-    Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
+        <h2>Time info</h2>
+        Uptime : {{ stats["time"]["uptime_str"] }}<br>
+        Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 
-    <h2>Top broadcasts in different categories</h2>
-    <table>
+        <h2>Top broadcasts in different categories</h2>
         <h3>5 most upvoted</h3>
         {% for post in stats["top_posts"]["5_most_upped"] %}
-        <tr>
-            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
-            <td>
-                <div class="container">
-                    <h5>{{ post["content"] }}</h5>
-                    <p>by {{ post["broadcaster_name"] }}</p>
-                    <small>Id : {{ post["id"] }}</small>
-                </div>
-            </td>
-        </tr>
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ post["content"] }}❞</h5>
+                <p>by {{ post["broadcaster_name"] }}</p>
+                <small>Id : {{ post["id"] }}</small>
+            </div>
+        </div>
         {% endfor %}
         <h3>5 most downvoted</h3>
         {% for post in stats["top_posts"]["5_most_downed"] %}
-        <tr>
-            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
-            <td>
-                <div class="container">
-                    <h5>{{ post["content"] }}</h5>
-                    <p>by {{ post["broadcaster_name"] }}</p>
-                    <small>Id : {{ post["id"] }}</small>
-                </div>
-            </td>
-        </tr>
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ post["content"] }}❞</h5>
+                <p>by {{ post["broadcaster_name"] }}</p>
+                <small>Id : {{ post["id"] }}</small>
+            </div>
+        </div>
         {% endfor %}
         <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
         {% for post in stats["top_posts"]["5_most_pop"] %}
-        <tr>
-            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
-            <td>
-                <div class="container">
-                    <h5>{{ post["content"] }}</h5>
-                    <p>by {{ post["broadcaster_name"] }}</p>
-                    <small>Id : {{ post["id"] }}</small>
-                </div>
-            </td>
-        </tr>
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ post["content"] }}❞</h5>
+                <p>by {{ post["broadcaster_name"] }}</p>
+                <small>Id : {{ post["id"] }}</small>
+            </div>
+        </div>
         {% endfor %}
         <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
         {% for post in stats["top_posts"]["5_most_unpop"] %}
-        <tr>
-            <td>up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}</td>
-            <td>
-                <div class="container">
-                    <h5>{{ post["content"] }}</h5>
-                    <p>by {{ post["broadcaster_name"] }}</p>
-                    <small>Id : {{ post["id"] }}</small>
-                </div>
-            </td>
-        </tr>
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ post["content"] }}❞</h5>
+                <p>by {{ post["broadcaster_name"] }}</p>
+                <small>Id : {{ post["id"] }}</small>
+            </div>
+        </div>
         {% endfor %}
-    </table>
 
-    <small>These stats are updated every 10 minutes.</small>
+        <small>These stats are updated every 10 minutes.</small>
+    </div>
 </body>
 
 </html>

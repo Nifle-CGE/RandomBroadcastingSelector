@@ -120,7 +120,7 @@ def index_redirect():
 def index(lang):
     verif_broadcast()
 
-    resp = make_response(render_template(f"{lang}_index.html"))
+    resp = make_response(render_template(f"{lang}_index.html", stats=stats))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 

@@ -35,14 +35,16 @@
 </nav>
 
 <body>
-    <br><br>
-    <form action="/ban-appeal-callback" method="post">
-        <p>Enter why you should be unbanned.</p>
-        <p><input type="text" name="reason" /></p>
-        <input type="hidden" name="user_id" value="{{ user_id }}">
-        <input type="hidden" name="id_hashed" value="{{ id_hashed }}">
-        <p><input type="submit" value="submit" /></p>
-    </form>
+    <div class="w3-container">
+        <br><br>
+        <form action="/ban-appeal-callback" method="post">
+            <p>Enter why you should be unbanned.</p>
+            <p><input type="text" name="reason" /></p>
+            <input type="hidden" name="user_id" value="{{ user_id }}">
+            <input type="hidden" name="id_hashed" value="{{ id_hashed }}">
+            <p><input type="submit" value="submit" /></p>
+        </form>
+    </div>
 </body>
 
 </html>

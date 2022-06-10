@@ -43,9 +43,20 @@
 </nav>
 
 <body>
-    <br><br>
-    <h1>Home</h1>
-    <div class="post"></div>
+    <div class="w3-container">
+        <br><br>
+        <h1>Home</h1>
+        <div class="w3-row">
+            <div class="w3-col" style="width:10%">
+                up<br>{{ stats["broadcast"]["upvotes"] }}<br>down<br>{{ stats["broadcast"]["downvotes"] }}
+            </div>
+            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+                <h5>❝{{ stats["broadcast"]["content"] }}❞</h5>
+                <p>by {{ stats["broadcast"]["author_name"] }}</p>
+                <small>Id : {{ stats["broadcast"]["post_id"] }}</small>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
