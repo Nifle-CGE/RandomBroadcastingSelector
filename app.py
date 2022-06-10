@@ -225,8 +225,10 @@ def facebook_login():
 		client_secret=config["facebook"]["client_secret"],
 		api_base_url='https://graph.facebook.com/',
 		access_token_url='https://graph.facebook.com/oauth/access_token',
+        access_token_params=None,
 		authorize_url='https://www.facebook.com/dialog/oauth',
-		client_kwargs={'scope': 'email user_likes'}
+        authorize_params=None,
+		client_kwargs={'scope': 'email'}
 	)
 	redirect_uri = url_for('facebook_login_callback', _external=True)
 	return oauth.facebook.authorize_redirect(redirect_uri)
