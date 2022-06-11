@@ -17,7 +17,6 @@ from flask_login import (
     logout_user,
 )
 from authlib.integrations.flask_client import OAuth
-import requests
 from azure.cosmos import CosmosClient
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -334,6 +333,28 @@ def privacy_policy():
 @app.route("/terms-of-service/")
 def terms_of_service():
     return render_template("terms_of_service.html")
+
+# Error handling
+@app.errorhandler(404)
+def not_found(e):
+    lang = request.cookies.get('lang')
+    if not lang:
+        lang = "en"
+    return render_template(f"{lang}_not_found.html", e=e), 404
+
+@app.errorhandler(405)
+def method_not_allowed(e):
+    lang = request.cookies.get('lang')
+    if not lang:
+        lang = "en"
+    return render_template(f"{lang}_method_not_allowed.html", e=e), 405
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    lang = request.cookies.get('lang')
+    if not lang:
+        lang = "en"
+    return render_template(f"{lang}_internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")
