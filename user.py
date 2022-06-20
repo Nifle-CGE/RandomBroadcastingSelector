@@ -6,8 +6,9 @@ class User:
         self.id_ = id_
         self.name = name
         self.email = email
-        self.message_score = 0
-        self.last_logged_in = 0
+        self.upvote = 0
+        self.downvote = 0
+        self.last_active = 0
         self.banned = 0
         self.ban_message = ""
         self.sample_reports = [] 
@@ -35,14 +36,15 @@ class User:
         self.id_ = user["id"]
         self.name = user["name"]
         self.email = user["email"]
-        self.message_score = user["message_score"]
-        self.last_logged_in = user["last_logged_in"]
+        self.upvote = user["upvote"]
+        self.downvote = user["downvote"]
+        self.last_active = user["last_active"]
         self.banned = user["ban"]["status"]
         self.ban_message = user["ban"]["message"]
         self.sample_reports = user["ban"]["sample_reports"]
         self.ban_reason =  user["ban"]["reason"]
         self.ban_appeal = user["ban"]["appeal"]
-        self.report_timestamp = user["report"]["timestamp"]
+        self.report_post_id = user["report"]["post_id"]
         self.report_reason = user["report"]["reason"]
         
         self.is_active = not bool(self.banned)
@@ -59,14 +61,15 @@ class User:
         user["id"] = self.id_
         user["name"] = self.name
         user["email"] = self.email
-        user["message_score"] = self.message_score
-        user["last_logged_in"] = self.last_logged_in
+        user["upvote"] = self.upvote
+        user["downvote"] = self.downvote
+        user["last_active"] = self.last_active
         user["ban"]["status"] = self.banned
         user["ban"]["message"] = self.ban_message
         user["ban"]["sample_reports"] = self.sample_reports
         user["ban"]["reason"] = self.ban_reason
         user["ban"]["appeal"] = self.ban_appeal
-        user["report"]["timestamp"] = self.report_timestamp
+        user["report"]["post_id"] = self.report_post_id
         user["report"]["reason"] = self.report_reason
 
         u_cont.upsert_item(user)
