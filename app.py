@@ -72,8 +72,10 @@ oauth = OAuth(app)
 def load_user(user_id):
     user = User()
     user.import_user(u_cont, user_id)
+    user.last_active = time.time()
     if user.id == stats["broadcast"]["author"]:
         user.is_broadcaster = True
+    user.export_user(u_cont)
     return user
 
 # Useful defs
@@ -105,6 +107,32 @@ def verif_broadcast():
             html_content=mail_content
         )
         sg_client.send(message)
+
+def login_or_create_user(id_:str, name:str, email:str, lang:str):
+    # Test to see if the user exists in the db
+    user = User()
+    user_exists = user.import_user(u_cont, id_)
+
+    # Doesn't exist? Add it to the database.
+    if not user_exists:
+        new_user = User(id_=id_, name=name, email=email)
+        new_user.export_user(u_cont)
+        user = new_user
+    elif user.banned: # if user banned propose the ban appeal form
+        encoded_id = user.id.encode("ascii")
+        hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
+        return render_template(f"{lang}_banned.html", user_id=user.id, id_hashed=hashed_id)
+
+    # Begin user session by logging the user in
+    login_user(user)
+    user.last_active = time.time()
+    user.is_authenticated = True
+    user.export_user(u_cont)
+
+    # Send user back to homepage
+    resp = make_response(redirect(url_for("index", lang=lang)))
+    resp.set_cookie("lang", lang, max_age=2592000)
+    return resp
 
 # Routing
 @app.route("/")
@@ -153,12 +181,11 @@ def google_login():
 def google_login_callback():
     token = oauth.google.authorize_access_token()
     response_json = token["userinfo"]
-    return response_json
 
     if response_json.get("email_verified"):
-        unique_id = response_json["sub"]
-        users_email = response_json["email"]
+        unique_id = "gg-" + response_json["sub"]
         users_name = response_json["name"]
+        users_email = response_json["email"]
         if response_json["locale"] in LANGUAGE_CODES.keys():
             lang = response_json["locale"]
         else:
@@ -166,42 +193,19 @@ def google_login_callback():
     else:
         return "User email not available or not verified by Google.", 400
 
-    # Test to see if the user exists in the db
-    user = User()
-    user_exists = user.import_user(u_cont, unique_id)
-
-    # Doesn't exist? Add it to the database.
-    if not user_exists:
-        new_user = User(id_=unique_id, name=users_name, email=users_email)
-        new_user.export_user(u_cont)
-        user = new_user
-    elif user.banned: # if user banned propose the ban appeal form
-        encoded_id = user.id.encode("ascii")
-        hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-        return render_template(f"{lang}_banned.html", user_id=user.id, id_hashed=hashed_id)
-
-    # Begin user session by logging the user in
-    login_user(user)
-    user.last_logged_in = time.time()
-    user.is_authenticated = True
-    user.export_user(u_cont)
-
-    # Send user back to homepage
-    resp = make_response(redirect(url_for("index", lang=lang)))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+    return login_or_create_user(unique_id, users_name, users_email, lang)
 
 @app.route('/login/twitter/')
 def twitter_login():
 	# Twitter Oauth Config
 	oauth.register(
 		name='twitter',
-		client_id=config["twitter"]["api_key"],
-		client_secret=config["twitter"]["api_secret"],
-		api_base_url='https://api.twitter.com/1.1/',
+		client_id=config["twitter"]["apiv2_key"],
+		client_secret=config["twitter"]["apiv2_secret"],
+		api_base_url='https://api.twitter.com/2/',
 		request_token_url='https://api.twitter.com/oauth/request_token',
 		access_token_url='https://api.twitter.com/oauth/access_token',
-		authorize_url='https://api.twitter.com/oauth/authenticate'
+		authorize_url='https://api.twitter.com/oauth/authorize'
 	)
 	redirect_uri = url_for('twitter_login_callback', _external=True)
 	return oauth.twitter.authorize_redirect(redirect_uri)
@@ -210,10 +214,21 @@ def twitter_login():
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
     resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
-    profile = resp.json()
+    response_json = resp.json()
 
-    return profile
-    return redirect(url_for("index", lang=request.cookies.get("lang")))
+    if response_json.get("needs_phone_verification"):
+        unique_id = "tw-" + response_json["id_str"]
+        users_name = response_json["name"]
+        users_email = response_json["email"] # TODO : corriger
+        resp = oauth.twitter.get("account/settings.json")
+        resp_json = resp.json()
+        lang = resp_json.get("language")
+        if not lang in LANGUAGE_CODES.keys():
+            lang = "en"
+    else:
+        return "The phone number from this Twitter account isn't verified.", 400
+
+    return login_or_create_user(unique_id, users_name, users_email, lang)
 
 @app.route('/login/github/')
 def github_login():
@@ -225,8 +240,8 @@ def github_login():
 		api_base_url='https://api.github.com/',
 		access_token_url='https://github.com/login/oauth/access_token',
 		authorize_url='https://github.com/login/oauth/authorize',
-		client_kwargs={'scope': 'user:email'},
-        userinfo_endpoint="https://api.github.com/user"
+        userinfo_endpoint="https://api.github.com/user",
+		client_kwargs={'scope': 'user:email'}
 	)
 	redirect_uri = url_for('github_login_callback', _external=True)
 	return oauth.github.authorize_redirect(redirect_uri)
@@ -234,11 +249,20 @@ def github_login():
 @app.route('/login/github/callback')
 def github_login_callback():
     token = oauth.github.authorize_access_token()
-    resp = oauth.github.get("/user")
-    profile = resp.json()
+    resp = oauth.github.get("user")
+    response_json = resp.json()
 
-    return profile
-    return redirect(url_for("index", lang=request.cookies.get("lang")))
+    if not response_json.get('email'):
+        resp = oauth.github.get('user/emails')
+        emails = resp.json()
+        response_json["email"] = next(email['email'] for email in emails if email['primary'])
+
+    unique_id = "gh-" + str(response_json["id"])
+    users_name = response_json["name"]
+    users_email = response_json["email"]
+    lang = "en"
+
+    return login_or_create_user(unique_id, users_name, users_email, lang)
 
 """
 @app.route('/login/facebook/')
@@ -294,9 +318,9 @@ def statistics(lang):
 
         stats["users"]["num"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 0", enable_cross_partition_query=True).next()
         stats["users"]["banned"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 1", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 3600}", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 86400}", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_logged_in > {start_time - 604800}", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 3600}", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 86400}", enable_cross_partition_query=True).next()
+        stats["users"]["lastlog_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 604800}", enable_cross_partition_query=True).next()
         
         stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
