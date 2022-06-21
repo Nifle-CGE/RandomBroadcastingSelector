@@ -20,9 +20,9 @@ def pot_brods(u_cont):
     return brods
 
 def seconds_to_str(seconds:float):
-    days = seconds // 86400
-    hours = (seconds % 86400) // 3600
-    minutes = ((seconds % 86400) % 3600) // 60
+    days = round(seconds // 86400)
+    hours = round((seconds % 86400) // 3600)
+    minutes = round(((seconds % 86400) % 3600) // 60)
     rem_seconds = round(((seconds % 86400) % 3600) % 60, 2)
 
     result = []

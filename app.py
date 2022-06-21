@@ -59,7 +59,7 @@ db = cc.get_database_client("Main Database")
 global u_cont
 u_cont = db.get_container_client("Web RBS Users")
 global h_cont
-h_cont = db.get_container_client("Web RBS History")
+p_cont = db.get_container_client("Web RBS Posts")
 
 # Mail client setup
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
@@ -203,9 +203,9 @@ def twitter_login():
 	# Twitter Oauth Config
 	oauth.register(
 		name='twitter',
-		client_id=config["twitter"]["apiv2_key"],
-		client_secret=config["twitter"]["apiv2_secret"],
-		api_base_url='https://api.twitter.com/2/',
+		client_id=config["twitter"]["apiv1_key"],
+		client_secret=config["twitter"]["apiv1_secret"],
+		api_base_url='https://api.twitter.com/1.1/',
 		request_token_url='https://api.twitter.com/oauth/request_token',
 		access_token_url='https://api.twitter.com/oauth/access_token',
 		authorize_url='https://api.twitter.com/oauth/authorize'
@@ -325,10 +325,10 @@ def statistics(lang):
         stats["users"]["lastlog_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 86400}", enable_cross_partition_query=True).next()
         stats["users"]["lastlog_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 604800}", enable_cross_partition_query=True).next()
         
-        stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
         stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(start_time - stats["time"]["start_time"])
         stats["time"]["stats_last_edited"] = start_time
