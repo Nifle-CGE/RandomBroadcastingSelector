@@ -216,20 +216,20 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    resp = oauth.twitter.get("account/verify_credentials.json", params={"includ_email": True, "skip_status": True})
+    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
     response_json = resp.json()
 
-    if not response_json.get("needs_phone_verification"):
+    if not response_json.get("email"):
         unique_id = "tw-" + response_json["id_str"]
         users_name = response_json["name"]
-        users_email = response_json["email"] # TODO : corriger
+        users_email = response_json.get("email") # TODO : corriger
         resp = oauth.twitter.get("account/settings.json")
         resp_json = resp.json()
         lang = resp_json.get("language")
         if not lang in LANGUAGE_CODES.keys():
             lang = "en"
     else:
-        return "The phone number from this Twitter account isn't verified.", 400
+        return "User email not available or not verified by Twitter.", 400
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -390,4 +390,4 @@ def internal_server_error(e):
     return render_template(f"{lang}_internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0")
