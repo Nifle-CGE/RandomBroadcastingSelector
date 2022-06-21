@@ -222,7 +222,7 @@ def twitter_login_callback():
     if response_json.get("email"):
         unique_id = "tw-" + response_json["id_str"]
         users_name = response_json["name"]
-        users_email = response_json.get("email") # TODO : corriger
+        users_email = response_json.get("email")
         resp = oauth.twitter.get("account/settings.json")
         resp_json = resp.json()
         lang = resp_json.get("language")
