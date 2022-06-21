@@ -216,10 +216,10 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
+    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
     response_json = resp.json()
 
-    if not response_json.get("email"):
+    if response_json.get("email"):
         unique_id = "tw-" + response_json["id_str"]
         users_name = response_json["name"]
         users_email = response_json.get("email") # TODO : corriger
