@@ -18,6 +18,7 @@ from flask_login import (
 )
 from authlib.integrations.flask_client import OAuth
 from azure.cosmos import CosmosClient
+import jinja2
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -79,7 +80,7 @@ def load_user(user_id):
     return user
 
 # Useful defs
-def verif_broadcast():
+def verify_broadcast():
     time_to_next_broadcast = 86400 - (time.time() - stats["time"]["last_broadcast"])
     if time_to_next_broadcast <= 0:
         with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
@@ -145,16 +146,18 @@ def index_redirect():
 
 @app.route("/<lang>/")
 def index(lang):
-    verif_broadcast()
-
-    resp = make_response(render_template(f"{lang}_index.html", stats=stats))
+    verify_broadcast()
+    try:
+        resp = make_response(render_template(f"{lang}_index.html", stats=stats))
+    except jinja2.exceptions.TemplateNotFound:
+        resp = make_response(render_template(f"en_index.html", stats=stats))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
 # All the login stuff
 @app.route("/<lang>/login/")
 def login(lang):
-    verif_broadcast()
+    verify_broadcast()
 
     resp = make_response(render_template(f"{lang}_login.html"))
     resp.set_cookie("lang", lang, max_age=2592000)
@@ -299,7 +302,7 @@ def logout():
 
 @app.route("/<lang>/history/<page>")
 def history(lang, page):
-    verif_broadcast()
+    verify_broadcast()
 
     resp = make_response(render_template(f"{lang}_history.html", hist_page=int(page)))
     resp.set_cookie("lang", lang, max_age=2592000)
@@ -307,7 +310,7 @@ def history(lang, page):
 
 @app.route("/<lang>/statistics/")
 def statistics(lang):
-    verif_broadcast()
+    verify_broadcast()
     
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
