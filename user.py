@@ -14,7 +14,7 @@ class User:
         self.sample_reports = [] 
         self.ban_reason =  ""
         self.ban_appeal = ""
-        self.report_timestamp = 0
+        self.report_post_id = 0
         self.report_reason = ""
         self.is_active = True
         self.is_authenticated = False
