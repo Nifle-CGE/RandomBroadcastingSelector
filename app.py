@@ -73,7 +73,7 @@ def load_user(user_id):
     user = User()
     user.import_user(u_cont, user_id)
     user.last_active = time.time()
-    if user.id == stats["broadcast"]["author"]:
+    if user.id_ == stats["broadcast"]["author"]:
         user.is_broadcaster = True
     user.export_user(u_cont)
     return user
@@ -119,9 +119,9 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         new_user.export_user(u_cont)
         user = new_user
     elif user.banned: # if user banned propose the ban appeal form
-        encoded_id = user.id.encode("ascii")
+        encoded_id = user.id_.encode("ascii")
         hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-        return render_template(f"{lang}_banned.html", user_id=user.id, id_hashed=hashed_id)
+        return render_template(f"{lang}_banned.html", user_id=user.id_, id_hashed=hashed_id)
 
     # Begin user session by logging the user in
     login_user(user)
