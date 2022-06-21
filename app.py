@@ -219,7 +219,7 @@ def twitter_login_callback():
     resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
     response_json = resp.json()
 
-    if response_json.get("needs_phone_verification"):
+    if not response_json.get("needs_phone_verification"):
         unique_id = "tw-" + response_json["id_str"]
         users_name = response_json["name"]
         users_email = response_json["email"] # TODO : corriger
