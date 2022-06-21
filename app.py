@@ -216,7 +216,7 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": True, "skip_status": True})
+    resp = oauth.twitter.get("account/verify_credentials.json", params={"includ_email": True, "skip_status": True})
     response_json = resp.json()
 
     if not response_json.get("needs_phone_verification"):
