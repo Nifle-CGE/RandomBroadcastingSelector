@@ -340,6 +340,12 @@ def statistics(lang):
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
+@app.route("/stats.json")
+def stats_file():
+    stats_file = stats.copy()
+    stats_file["broadcast"].pop("author")
+    return stats_file
+
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_register():
     return request.form
