@@ -344,6 +344,13 @@ def statistics(lang):
 def stats_file():
     stats_file = stats.copy()
     stats_file["broadcast"].pop("author")
+
+    for i in stats_file["top_posts"]:
+        for j in range(len(stats_file["top_posts"][i])):
+            for k in stats_file["top_posts"][i][j]:
+                if k.startswith("_") or k == "author":
+                    stats_file[i][j].pop(k)
+                    
     return stats_file
 
 @app.route("/ban-appeal-callback", methods=["POST"])
