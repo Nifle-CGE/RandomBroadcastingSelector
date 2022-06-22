@@ -122,7 +122,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     elif user.banned: # if user banned propose the ban appeal form
         encoded_id = user.id_.encode("ascii")
         hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-        return render_template(f"{lang}_banned.html", user_id=user.id_, id_hashed=hashed_id)
+        return render_template(f"{lang}/banned.html", user_id=user.id_, id_hashed=hashed_id)
 
     # Begin user session by logging the user in
     login_user(user)
@@ -148,9 +148,9 @@ def index_redirect():
 def index(lang):
     verify_broadcast()
     try:
-        resp = make_response(render_template(f"{lang}_index.html", stats=stats))
+        resp = make_response(render_template(f"{lang}/index.html", stats=stats))
     except jinja2.exceptions.TemplateNotFound:
-        resp = make_response(render_template(f"en_index.html", stats=stats))
+        resp = make_response(render_template(f"en/index.html", stats=stats))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -159,7 +159,7 @@ def index(lang):
 def login(lang):
     verify_broadcast()
 
-    resp = make_response(render_template(f"{lang}_login.html"))
+    resp = make_response(render_template(f"{lang}/login.html"))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -304,7 +304,7 @@ def logout():
 def history(lang, page):
     verify_broadcast()
 
-    resp = make_response(render_template(f"{lang}_history.html", hist_page=int(page)))
+    resp = make_response(render_template(f"{lang}/history.html", hist_page=int(page)))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -336,7 +336,7 @@ def statistics(lang):
 
         _stuffimporter.set_stats(stats)
 
-    resp = make_response(render_template(f"{lang}_stats.html", stats=stats))
+    resp = make_response(render_template(f"{lang}/stats.html", stats=stats))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -373,21 +373,21 @@ def not_found(e):
     lang = request.cookies.get('lang')
     if not lang:
         lang = "en"
-    return render_template(f"{lang}_not_found.html", e=e), 404
+    return render_template(f"{lang}/not_found.html", e=e), 404
 
 @app.errorhandler(405)
 def method_not_allowed(e):
     lang = request.cookies.get('lang')
     if not lang:
         lang = "en"
-    return render_template(f"{lang}_method_not_allowed.html", e=e), 405
+    return render_template(f"{lang}/method_not_allowed.html", e=e), 405
 
 @app.errorhandler(500)
 def internal_server_error(e):
     lang = request.cookies.get('lang')
     if not lang:
         lang = "en"
-    return render_template(f"{lang}_internal_server_error.html", e=e), 500
+    return render_template(f"{lang}/internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0")

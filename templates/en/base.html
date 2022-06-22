@@ -12,7 +12,7 @@
 
     <script src="/static/js/script.js"></script>
 
-    <title>Home - RandomBroadcastingSelector</title>
+    <title>{% block title required %}{% endblock %} - RandomBroadcastingSelector</title>
 </head>
 
 <nav>
@@ -20,15 +20,19 @@
         <div class="w3-bar w3-light-grey">
             <a href="/en/"><img class="logo w3-bar-item" style="padding: 0;height: 54.5px;"
                     src="/static/img/logo RBS.png" alt="RBS logo"></a>
-            <a class="w3-bar-item w3-button w3-padding-16 w3-teal" href="/en/">Home</a>
-            <a class="w3-bar-item w3-button w3-padding-16" href="/en/statistics">Stats</a>
-            <a class="w3-bar-item w3-button w3-padding-16" href="/en/history/1">History</a>
+            <a class="w3-bar-item w3-button w3-padding-16{% block home_main %}{% endblock %}"
+                href="/en/">RandomBroadcastingSelector</a>
+            <a class="w3-bar-item w3-button w3-padding-16{% block stats_main %}{% endblock %}"
+                href="/en/statistics">Stats</a>
+            <a class="w3-bar-item w3-button w3-padding-16{% block history_main %}{% endblock %}"
+                href="/en/history/1">History</a>
 
             {% if current_user.is_authenticated: %}
             <a class="w3-bar-item w3-button w3-right w3-padding-16" href="/logout">Logout</a>
             <span class="w3-bar-item w3-right w3-padding-16">{{ current_user.name }}</span>
             {% else: %}
-            <a class="w3-bar-item w3-button w3-right w3-padding-16" href="/en/login">Login</a>
+            <a class="w3-bar-item w3-button w3-right w3-padding-16{% block login_main %}{% endblock %}"
+                href="/en/login">Login</a>
             {% endif %}
             <div class="w3-dropdown-hover w3-right">
                 <button class="w3-button w3-padding-16">Language</button>
@@ -44,18 +48,8 @@
 
 <body>
     <div class="w3-container">
-        <br><br>
-        <h1>Home</h1>
-        <div class="w3-row">
-            <div class="w3-col" style="width:10%">
-                up<br>{{ stats["broadcast"]["upvotes"] }}<br>down<br>{{ stats["broadcast"]["downvotes"] }}
-            </div>
-            <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-                <h5>❝{{ stats["broadcast"]["content"] }}❞</h5>
-                <p>by {{ stats["broadcast"]["author_name"] }}</p>
-                <small>Id : {{ stats["broadcast"]["post_id"] }}</small>
-            </div>
-        </div>
+        <br><br><br>
+        {% block content required %}{% endblock %}
     </div>
 </body>
 
