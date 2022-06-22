@@ -5,6 +5,7 @@ import os
 import sys
 import time
 import random
+import copy
 import csv
 
 # Third-party libraries
@@ -148,9 +149,10 @@ def index_redirect():
 def index(lang):
     verify_broadcast()
     try:
-        resp = make_response(render_template(f"{lang}/index.html", stats=stats))
+        test = render_template(f"{lang}/index.html", stats=stats)
     except jinja2.exceptions.TemplateNotFound:
-        resp = make_response(render_template(f"en/index.html", stats=stats))
+        lang = "en"
+    resp = make_response(render_template(f"{lang}/index.html", stats=stats))
     resp.set_cookie("lang", lang, max_age=2592000)
     return resp
 
@@ -342,12 +344,12 @@ def statistics(lang):
 
 @app.route("/stats.json")
 def stats_file():
-    stats_file = stats.copy()
+    stats_file = copy.deepcopy(stats)
     stats_file["broadcast"].pop("author")
 
-    for i in stats_file["top_posts"]:
-        for j in range(len(stats_file["top_posts"][i])):
-            for k in stats_file["top_posts"][i][j]:
+    for i in stats["top_posts"]:
+        for j in range(len(stats["top_posts"][i])):
+            for k in stats["top_posts"][i][j]:
                 if k.startswith("_") or k == "author":
                     stats_file["top_posts"][i][j].pop(k)
 
@@ -397,4 +399,4 @@ def internal_server_error(e):
     return render_template(f"{lang}/internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=True)
