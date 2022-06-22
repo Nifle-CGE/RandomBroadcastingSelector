@@ -349,8 +349,8 @@ def stats_file():
         for j in range(len(stats_file["top_posts"][i])):
             for k in stats_file["top_posts"][i][j]:
                 if k.startswith("_") or k == "author":
-                    stats_file[i][j].pop(k)
-                    
+                    stats_file["top_posts"][i][j].pop(k)
+
     return stats_file
 
 @app.route("/ban-appeal-callback", methods=["POST"])
