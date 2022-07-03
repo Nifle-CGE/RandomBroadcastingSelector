@@ -1,15 +1,14 @@
 # Python standard libraries
-import hashlib
+import secrets
 import json
 import os
-import sys
 import time
 import random
 import copy
 import csv
 
 # Third-party libraries
-from flask import Flask, make_response, redirect, render_template, request, url_for
+from flask import Flask, redirect, render_template, url_for, session, request
 from flask_login import (
     LoginManager,
     current_user,
@@ -34,6 +33,7 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 # User session management setup
 login_manager = LoginManager()
 login_manager.init_app(app)
+
 # Setting anonymous user
 def anon_user_getter():
     anon_user = User()
@@ -71,13 +71,15 @@ oauth = OAuth(app)
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
-def load_user(user_id):
+def load_user(user_id, active=True):
     user = User()
     user.import_user(u_cont, user_id)
-    user.last_active = time.time()
     if user.id_ == stats["broadcast"]["author"]:
         user.is_broadcaster = True
-    user.export_user(u_cont)
+
+    if active:
+        user.last_active = time.time()
+        user.export_user(u_cont)
     return user
 
 # Useful defs
@@ -96,7 +98,7 @@ def verify_broadcast():
 
         _stuffimporter.set_stats(stats)
 
-        brod_obj = load_user(stats["broadcast"]["broadcaster"])
+        brod_obj = load_user(stats["broadcast"]["broadcaster"], active=False)
         if not brod_obj.email: return
 
         with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
@@ -112,34 +114,31 @@ def verify_broadcast():
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
     # Test to see if the user exists in the db
-    user = User()
-    user_exists = user.import_user(u_cont, id_)
+    user = load_user(id_)
 
     # Doesn't exist? Add it to the database.
-    if not user_exists:
+    if not user:
         new_user = User(id_=id_, name=name, email=email)
         new_user.export_user(u_cont)
         user = new_user
-    elif user.banned: # if user banned propose the ban appeal form
-        encoded_id = user.id_.encode("ascii")
-        hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-        return render_template(f"{lang}/banned.html", user_id=user.id_, id_hashed=hashed_id)
+    elif user.banned: # if user banned send the ban appeal form
+        code = secrets.token_urlsafe(32)
+        stats["codes"]["ban_appeal"].append(code)
+        _stuffimporter.set_stats(stats)
+        return render_template(f"{lang}/banned.html", user_id=user.id_, appeal_code=code)
 
     # Begin user session by logging the user in
-    login_user(user)
-    user.last_active = time.time()
     user.is_authenticated = True
-    user.export_user(u_cont)
+    login_user(user)
 
     # Send user back to homepage
-    resp = make_response(redirect(url_for("index", lang=lang)))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+    session["lang"] = lang
+    return redirect(url_for("index", lang=lang))
 
 # Routing
 @app.route("/")
 def index_redirect():
-    lang = request.cookies.get("lang")
+    lang = session.get("lang")
     if not lang:
         lang = "en"
 
@@ -152,18 +151,17 @@ def index(lang):
         test = render_template(f"{lang}/index.html", stats=stats)
     except jinja2.exceptions.TemplateNotFound:
         lang = "en"
-    resp = make_response(render_template(f"{lang}/index.html", stats=stats))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+
+    session["lang"] = lang
+    return render_template(f"{lang}/index.html", stats=stats)
 
 # All the login stuff
 @app.route("/<lang>/login/")
 def login(lang):
     verify_broadcast()
 
-    resp = make_response(render_template(f"{lang}/login.html"))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+    session["lang"] = lang
+    return render_template(f"{lang}/login.html")
 
 @app.route("/login/google/")
 def google_login():
@@ -292,23 +290,22 @@ def facebook_login_callback():
 	profile = token["userinfo"]
 
 	return profile
-	return redirect(url_for("index", lang=request.cookies.get("lang")))
+	return redirect(url_for("index", lang=session.get("lang")))
 """
 
 @app.route("/logout")
 @login_required
 def logout():
-    lang = request.cookies.get("lang")
     logout_user()
+    lang = session.get("lang")
     return redirect(url_for("index", lang=lang))
 
 @app.route("/<lang>/history/<page>")
 def history(lang, page):
     verify_broadcast()
 
-    resp = make_response(render_template(f"{lang}/history.html", hist_page=int(page)))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+    session["lang"] = lang
+    return render_template(f"{lang}/history.html", hist_page=int(page))
 
 @app.route("/<lang>/statistics/")
 def statistics(lang):
@@ -338,13 +335,13 @@ def statistics(lang):
 
         _stuffimporter.set_stats(stats)
 
-    resp = make_response(render_template(f"{lang}/stats.html", stats=stats))
-    resp.set_cookie("lang", lang, max_age=2592000)
-    return resp
+    session["lang"] = lang
+    return render_template(f"{lang}/stats.html", stats=stats)
 
 @app.route("/stats.json")
 def stats_file():
     stats_file = copy.deepcopy(stats)
+    stats_file.pop("codes")
     stats_file["broadcast"].pop("author")
 
     for i in stats["top_posts"]:
@@ -358,14 +355,19 @@ def stats_file():
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_register():
     return request.form
-    encoded_id = request.form["user_id"].encode("ascii")
-    hashed_id = hashlib.sha256("".join([str(encoded_id[i] + app.secret_key[i]) for i in range(len(encoded_id))]).encode("ascii")).hexdigest()
-    if hashed_id != request.form["id_hashed"]:
+    try:
+        stats["codes"]["ban_appeal"].pop(request.form["appeal_code"])
+        _stuffimporter.set_stats(stats)
+    except KeyError:
         return "Get IP banned noob", 400
 
-    user = User()
+    user = load_user(request.form["user_id"], active=False)
+    if not user.ban_appeal:
+        return {"en": "You have already made a ban appeal.", "fr": "Vous avez déja fait une demande de débannissement."}[session.get("lang") if session.get("lang") else "en"]
+    user.ban_appeal = request.form["reason"]
+    user.export_user(u_cont)
 
-    return "Your ban appeal has been saved."
+    return {"en": "Your ban appeal has been saved.", "fr": "Votre demande de débannissement a été enregistrée."}[session.get("lang") if session.get("lang") else "en"]
 
 # Legal stuff
 @app.route("/privacy-policy/")
@@ -376,27 +378,37 @@ def privacy_policy():
 def terms_of_service():
     return render_template("terms_of_service.html")
 
+@app.route("/<lang>/sitemap/")
+def sitemap(lang):
+    session["lang"] = lang
+    render_template(f"{lang}/sitemap.html")
+
+# Crawling control
+@app.route("/robots.txt")
+def robots():
+    return render_template("robots.html")
+
 # Error handling
 @app.errorhandler(404)
 def not_found(e):
-    lang = request.cookies.get('lang')
+    lang = session.get('lang')
     if not lang:
         lang = "en"
     return render_template(f"{lang}/not_found.html", e=e), 404
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    lang = request.cookies.get('lang')
+    lang = session.get('lang')
     if not lang:
         lang = "en"
     return render_template(f"{lang}/method_not_allowed.html", e=e), 405
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    lang = request.cookies.get('lang')
+    lang = session.get('lang')
     if not lang:
         lang = "en"
     return render_template(f"{lang}/internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0")

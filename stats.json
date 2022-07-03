@@ -39,5 +39,9 @@
         "5_most_downed": [],
         "5_most_pop": [],
         "5_most_unpop": []
+    },
+    "codes": {
+        "broadcast": [],
+        "ban_appeal": []
     }
 }
