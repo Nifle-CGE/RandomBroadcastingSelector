@@ -8,12 +8,12 @@ def set_stats(dict_:dict):
     with open(f"./stats.json", "w", encoding="utf-8") as stats_file:
         json.dump(dict_, stats_file)
 
-def pot_brods(u_cont):
-    brods_query = u_cont.query_items("SELECT u.id FROM Users u WHERE u.no.brod = 0 AND u.ban.status = 0 AND u.id <> " + get_json("config")["broadcaster"], enable_cross_partition_query=True)
+def pot_brods(u_cont, last_brod):
+    brods_query = u_cont.query_items("SELECT u.id FROM Users u WHERE u.ban.status = 0 AND u.id <> " + last_brod, enable_cross_partition_query=True)
     brods = []
     while True:
         try:
-            brods.append(int(brods_query.next()["id"]))
+            brods.append(brods_query.next()["id"])
         except StopIteration:
             break
 

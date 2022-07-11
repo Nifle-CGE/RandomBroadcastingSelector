@@ -88,18 +88,26 @@ def verify_broadcast():
     if time_to_next_broadcast <= 0:
         with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
             new_post = json.load(sample_file)
-            new_post["id"] = stats["broadcast"]["broadcaster"]
-            new_post["content"] = stats["broadcast"]["content"]
-        # TODO : save current message to history
 
-        stats["broadcast"]["broadcaster"] = random.choice(_stuffimporter.pot_brods(u_cont))
+        new_post["id"] = stats["broadcast"]["post_id"]
+        new_post["content"] = stats["broadcast"]["content"]
+        new_post["author"] = stats["broadcast"]["author"]
+        new_post["author_name"] = stats["broadcast"]["author_name"]
+        new_post["date"] = stats["broadcast"]["date"]
+        new_post["lang"] = stats["broadcast"]["lang"]
+        new_post["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+        new_post["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+        new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
+        p_cont.create_item(new_post)
+
+        stats["broadcast"]["broadcaster"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
         stats["broadcast"]["content"] = ""
         stats["time"]["last_broadcast"] = time.time()
 
         _stuffimporter.set_stats(stats)
 
         brod_obj = load_user(stats["broadcast"]["broadcaster"], active=False)
-        if not brod_obj.email: return
+        if not brod_obj.email: return "error : selected user doesn't have an email"
 
         with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
             mail_content = mail_file.read().replace("{{ server_name }}", app.config["SERVER_NAME"])
@@ -303,9 +311,22 @@ def logout():
 @app.route("/<lang>/history/<page>")
 def history(lang, page):
     verify_broadcast()
-
     session["lang"] = lang
-    return render_template(f"{lang}/history.html", hist_page=int(page))
+
+    post_list = []
+    return render_template(f"{lang}/history.html", post_list, hist_page=int(page))
+
+@app.route("/<lang>/post/<id>")
+def history(lang, id):
+    verify_broadcast()
+    session["lang"] = lang
+
+    try:
+        post = p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {id}", enable_cross_partition_query=True).next()
+    except StopIteration:
+        return redirect(url_for("not_found", e=Exception))
+        
+    return render_template(f"{lang}/history.html", post=post)
 
 @app.route("/<lang>/statistics/")
 def statistics(lang):
