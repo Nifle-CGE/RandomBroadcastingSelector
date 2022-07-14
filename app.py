@@ -110,7 +110,7 @@ def verify_broadcast():
         if not brod_obj.email: return "error : selected user doesn't have an email"
 
         with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
-            mail_content = mail_file.read().replace("{{ server_name }}", app.config["SERVER_NAME"])
+            mail_content = mail_file.read().replace("{{ server_name }}", "rbs.azurewebsites.net")
 
         message = Mail(
             from_email="random.broadcasting.selector@gmail.com",
@@ -167,7 +167,6 @@ def index(lang):
 @app.route("/<lang>/login/")
 def login(lang):
     verify_broadcast()
-
     session["lang"] = lang
     return render_template(f"{lang}/login.html")
 
@@ -324,7 +323,7 @@ def history(lang, id):
     try:
         post = p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {id}", enable_cross_partition_query=True).next()
     except StopIteration:
-        return redirect(url_for("not_found", e=Exception))
+        return redirect(url_for("not_found", e="This post doesn't exist yet."))
         
     return render_template(f"{lang}/history.html", post=post)
 
