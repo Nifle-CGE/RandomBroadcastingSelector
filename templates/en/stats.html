@@ -1,5 +1,7 @@
 {% extends "en/base.html" %}
 
+{% import "to_import.html" as to_import %}
+
 {% block title %}Statistics{% endblock %}
 
 {% block stats_main %} w3-teal{% endblock %}
@@ -13,7 +15,7 @@ Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
 Original message : ❝{{ stats["broadcast"]["content"] }}❞<br>
 Message language : {{ stats["broadcast"]["lang"] }}<br>
 {% endif %}
-Broadcaster : {{ stats["broadcast"]["broadcaster_name"] }}<br>
+Broadcaster : {{ stats["broadcast"]["author_name"] }}<br>
 Upvotes : {{ stats["broadcast"]["upvotes"] }}<br>
 Downvotes : {{ stats["broadcast"]["downvotes"] }}<br>
 Reports for this message : {{ stats["broadcast"]["reports"] }}<br>
@@ -39,55 +41,19 @@ Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 <h2>Top broadcasts in different categories</h2>
 <h3>5 most upvoted</h3>
 {% for post in stats["top_posts"]["5_most_upped"] %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ post["content"] }}❞</h5>
-        <p>by {{ post["broadcaster_name"] }}</p>
-        <small>Id : {{ post["id"] }}</small>
-    </div>
-</div>
+{{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most downvoted</h3>
 {% for post in stats["top_posts"]["5_most_downed"] %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ post["content"] }}❞</h5>
-        <p>by {{ post["broadcaster_name"] }}</p>
-        <small>Id : {{ post["id"] }}</small>
-    </div>
-</div>
+{{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
 {% for post in stats["top_posts"]["5_most_pop"] %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ post["content"] }}❞</h5>
-        <p>by {{ post["broadcaster_name"] }}</p>
-        <small>Id : {{ post["id"] }}</small>
-    </div>
-</div>
+{{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
 {% for post in stats["top_posts"]["5_most_unpop"] %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ post["content"] }}❞</h5>
-        <p>by {{ post["broadcaster_name"] }}</p>
-        <small>Id : {{ post["id"] }}</small>
-    </div>
-</div>
+{{ to_import.post(post) }}
 {% endfor %}
 <br>
 <small>

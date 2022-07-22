@@ -1,21 +1,14 @@
 {% extends "en/base.html" %}
 
+{% import "to_import.html" as to_import %}
+
 {% block title %}History page {{ hist_page }}{% endblock %}
 
 {% block history_main %} w3-teal{% endblock %}
 
 {% block content %}
 {% for post in post_list: %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ post["content"] }}❞</h5>
-        <p>by {{ post["broadcaster_name"] }}</p>
-        <small>Id : {{ post["id"] }}</small>
-    </div>
-</div>
+{{ to_import.post(post) }}
 {% endfor %}
 
 <div class="w3-bar">

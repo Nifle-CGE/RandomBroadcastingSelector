@@ -1,18 +1,16 @@
 {% extends "en/base.html" %}
 
+{% import "to_import.html" as to_import %}
+
 {% block title %}Home{% endblock %}
 
 {% block home_main %} w3-teal{% endblock %}
 
 {% block content %}
-<div class="w3-row">
-    <div class="w3-col" style="width:10%">
-        up<br>{{ stats["broadcast"]["upvotes"] }}<br>down<br>{{ stats["broadcast"]["downvotes"] }}
-    </div>
-    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
-        <h5>❝{{ stats["broadcast"]["content"] }}❞</h5>
-        <p>by {{ stats["broadcast"]["author_name"] }}</p>
-        <small>Id : {{ stats["broadcast"]["post_id"] }}</small>
-    </div>
-</div>
+{% if stats["broadcast"]["content"]: %}
+{{ to_import.post(stats["broadcast"], target_lang="en") }}
+{% else: %}
+<h2>The new broadcaster hasn't responded yet so the post isn't here.<br>
+    Meanwhile, you can check out every other posts that ever existed <a href="/en/history/1">here</a>, or make a <a
+        href="/en/donate">donation</a> to keep this website running.</h2>
 {% endblock %}

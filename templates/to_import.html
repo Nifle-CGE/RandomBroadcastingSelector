@@ -1,0 +1,15 @@
+{% macro post(post, target_lang="") -%}
+<div class="w3-row">
+    <div class="w3-col" style="width:10%">
+        up<br>{{ post["upvotes"] }}<br>down<br>{{ post["downvotes"] }}
+    </div>
+    <div class="w3-col w3-container w3-light-grey" style="width:90%;border-radius: 5px;">
+        <h5>❝{{ post["content"] }}❞</h5>
+        {% if target_lang and target_lang != post["lang"]: %}
+        <h6>Trad : {{ post["trads"][target_lang] }}</h6>
+        {% endif %}
+        <p>by {{ post["author_name"] }}</p>
+        <small>Id : {{ post["id"] }}</small>
+    </div>
+</div>
+{%- endmacro %}
