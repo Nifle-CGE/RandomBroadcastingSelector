@@ -1,0 +1,11 @@
+{% extends "en/base.html" %}
+
+{% import "to_import.html" as to_import %}
+
+{% block title %}History page {{ hist_page }}{% endblock %}
+
+{% block history_main %} w3-teal{% endblock %}
+
+{% block content %}
+{{ to_import.post(post) }}
+{% endblock %}
