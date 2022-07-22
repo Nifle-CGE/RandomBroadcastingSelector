@@ -5,3 +5,4 @@ pyopenssl
 requests
 azure_cosmos
 sendgrid
+deepl
