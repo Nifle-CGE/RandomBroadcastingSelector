@@ -1,0 +1,20 @@
+{% extends "en/base.html" %}
+
+{% block title %}Broadcast{% endblock %}
+
+{% block broadcast_main %} w3-teal{% endblock %}
+
+{% block content %}
+<h1></h1>
+<form name="Broadcast" action="/broadcast-callback" onsubmit="return validateBroadcastForm()" method="post" required>
+    <label for="message">Enter the message you want to send to this websites users.</label><br>
+    <textarea rows="4" cols="128" name="message" maxlength="512" autofocus required><br>
+    <label for="displayed_name">Author of this message (name that you want to be designated as that everyone will see.)
+        :</label><br>
+    <input type="text" name="displayed_name" value="{{ current_user.name }}" maxlength="64" required><br>
+    <label for="brod_code">Verification code from the email you received :</label><br>
+    <input type="text" name="brod_code" placeholder="For example : 3e691af4..." maxlength="32" size="32" required><br>
+    <input type="hidden" name="user_id" value="{{ current_user.id_ }}">
+    <input type="submit" value="Submit">
+</form>
+{% endblock %}
