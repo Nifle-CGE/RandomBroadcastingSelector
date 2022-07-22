@@ -1,4 +1,5 @@
 # Python standard libraries
+import datetime
 import secrets
 import json
 import os
@@ -21,6 +22,7 @@ from azure.cosmos import CosmosClient
 import jinja2
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+import deepl
 
 # Internal imports
 import _stuffimporter
@@ -44,7 +46,6 @@ def anon_user_getter():
 login_manager.anonymous_user = anon_user_getter
 
 # Config elements setup
-global config, stats
 config = _stuffimporter.get_json("config")
 stats = _stuffimporter.get_json("stats")
 stats["time"]["start_time"] = time.time()
@@ -57,9 +58,7 @@ with open("langs.csv", "r", encoding="utf-8") as csvfile:
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
-global u_cont
 u_cont = db.get_container_client("Web RBS Users")
-global h_cont
 p_cont = db.get_container_client("Web RBS Posts")
 
 # Mail client setup
@@ -68,6 +67,9 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 # OAuth setup
 #app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
+
+# Deepl traduction setup
+translator = deepl.Translator(config["deepl_auth_key"])
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
@@ -84,41 +86,60 @@ def load_user(user_id, active=True):
 
 # Useful defs
 def verify_broadcast():
-    time_to_next_broadcast = 86400 - (time.time() - stats["time"]["last_broadcast"])
-    if time_to_next_broadcast <= 0:
-        with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
-            new_post = json.load(sample_file)
+    if stats["time"]["last_broadcaster"] + 86400 > time.time():
+        return "The broadcaster still has time to make his broadcast."
+    elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
+        return "The broadcaster has made his broadcast and this posts time isn't over yet."
 
-        new_post["id"] = stats["broadcast"]["post_id"]
-        new_post["content"] = stats["broadcast"]["content"]
-        new_post["author"] = stats["broadcast"]["author"]
-        new_post["author_name"] = stats["broadcast"]["author_name"]
-        new_post["date"] = stats["broadcast"]["date"]
-        new_post["lang"] = stats["broadcast"]["lang"]
-        new_post["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
-        new_post["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+    with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
+        new_post = json.load(sample_file)
+
+    new_post["id"] = stats["broadcast"]["id"]
+    new_post["content"] = stats["broadcast"]["content"]
+    new_post["author"] = stats["broadcast"]["author"]
+    new_post["author_name"] = stats["broadcast"]["author_name"]
+    new_post["date"] = stats["broadcast"]["date"]
+    new_post["lang"] = stats["broadcast"]["lang"]
+    new_post["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {new_post['id']}", enable_cross_partition_query=True).next()
+    new_post["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {new_post['id']}", enable_cross_partition_query=True).next()
+    try:
         new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
-        p_cont.create_item(new_post)
+    except ZeroDivisionError:
+        new_post["ratio"] = 1
+    p_cont.create_item(new_post)
 
-        stats["broadcast"]["broadcaster"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
-        stats["broadcast"]["content"] = ""
-        stats["time"]["last_broadcast"] = time.time()
+    stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
+    stats["broadcast"]["content"] = ""
+    stats["broadcasts"]["msgs_sent"] += 1
+    try:
+        stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] += 1
+    except KeyError:
+        stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
 
-        _stuffimporter.set_stats(stats)
+    stats["time"]["last_broadcaster"] = time.time()
 
-        brod_obj = load_user(stats["broadcast"]["broadcaster"], active=False)
-        if not brod_obj.email: return "error : selected user doesn't have an email"
+    code = secrets.token_urlsafe(32)
+    stats["codes"]["broadcast"] = code
 
-        with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
-            mail_content = mail_file.read().replace("{{ server_name }}", "rbs.azurewebsites.net")
+    _stuffimporter.set_stats(stats)
 
-        message = Mail(
-            from_email="random.broadcasting.selector@gmail.com",
-            to_emails=brod_obj.email,
-            subject="RandomBroadcastingSelector : You are the one.",
-            html_content=mail_content
-        )
-        sg_client.send(message)
+    brod_obj = load_user(stats["broadcast"]["author"], active=False)
+    if not brod_obj.email: return "error : selected user doesn't have an email"
+
+    with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
+        mail_content = mail_file.read()
+    mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+    mail_content.replace("{{ brod_code }}", code)
+
+    message = Mail(
+        from_email="random.broadcasting.selector@gmail.com",
+        to_emails=brod_obj.email,
+        subject="RandomBroadcastingSelector : You are the one.",
+        html_content=mail_content
+    )
+    sg_client.send(message)
+
+    return "New broadcaster selected."
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
     # Test to see if the user exists in the db
@@ -158,7 +179,7 @@ def index(lang):
     try:
         test = render_template(f"{lang}/index.html", stats=stats)
     except jinja2.exceptions.TemplateNotFound:
-        lang = "en"
+        return render_template(f"en/message.html", message="This language has not been implemented yet.")
 
     session["lang"] = lang
     return render_template(f"{lang}/index.html", stats=stats)
@@ -316,7 +337,7 @@ def history(lang, page):
     return render_template(f"{lang}/history.html", post_list, hist_page=int(page))
 
 @app.route("/<lang>/post/<id>")
-def history(lang, id):
+def specific_post(lang, id):
     verify_broadcast()
     session["lang"] = lang
 
@@ -325,7 +346,7 @@ def history(lang, id):
     except StopIteration:
         return redirect(url_for("not_found", e="This post doesn't exist yet."))
         
-    return render_template(f"{lang}/history.html", post=post)
+    return render_template(f"{lang}/post.html", post=post)
 
 @app.route("/<lang>/statistics/")
 def statistics(lang):
@@ -334,9 +355,9 @@ def statistics(lang):
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
 
-        stats["broadcast"]["reports"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.report.post_id = {stats['broadcast']['post_id']} AND NOT u.report.reason = ''", enable_cross_partition_query=True).next()
-        stats["broadcast"]["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
-        stats["broadcast"]["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['post_id']}", enable_cross_partition_query=True).next()
+        stats["broadcast"]["reports"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.report.post_id = {stats['broadcast']['id']} AND NOT u.report.reason = ''", enable_cross_partition_query=True).next()
+        stats["broadcast"]["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['id']}", enable_cross_partition_query=True).next()
+        stats["broadcast"]["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['id']}", enable_cross_partition_query=True).next()
 
         stats["users"]["num"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 0", enable_cross_partition_query=True).next()
         stats["users"]["banned"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 1", enable_cross_partition_query=True).next()
@@ -372,22 +393,88 @@ def stats_file():
 
     return stats_file
 
-@app.route("/ban-appeal-callback", methods=["POST"])
-def ban_appeal_register():
+@app.route("/<lang>/broadcast/")
+@login_required
+def broadcast(lang):
+    if current_user.id_ != stats["broadcast"]["author"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have to be broadcaster to have access to this page.",
+        "fr": "Vous devez être diffuseur pour accéder a cette page."}[lang])
+
+    if stats["broadcast"]["content"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have already made your broadcast.",
+        "fr": "Vous avez déja fait votre diffusion."}[lang])
+
+    session["lang"] = lang
+    return render_template(f"{lang}/broadcast.html")
+
+@app.route("/broadcast-callback", methods=["POST"])
+def broadcast_callback():
+    lang = session.get("lang") if session.get("lang") else "en"
     return request.form
+    
+    if stats["codes"]["broadcast"] != request.form["brod_code"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have to input the code you received in the mail we sent to you.",
+        "fr": "Vous devez saisir le code que vous avez reçu dans le mail qui vous a été envoyé."}[lang])
+    else:
+        stats["codes"]["broadcast"] = ""
+    
+    if request.form["user_id"] != stats["broadcast"]["author"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "I didn't think it was possible but you did it, so anyway you can only broadcast if you are the broadcaster, which you are not.",
+        "fr": "Je pensait pas que c'était possible mais tu l'a fait, bon, de toute façon tu peux pas diffuser si tu  ."}[lang])
+    
+    with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
+        new_post = json.load(sample_file)
+
+    stats["broadcast"]["id"] += 1
+    stats["broadcast"]["content"] = request.form["message"]
+    stats["broadcast"]["author_name"] = request.form["displayed_name"]
+    stats["broadcast"]["date"] = str(datetime.datetime.today().date())
+
+    test = translator.translate_text(request.form["message"], target_lang="EN-US")
+    stats["broadcast"]["lang"] = test.detected_source_lang.lower()
+
+    for language in translator.get_target_languages():
+        lang_code = language.code
+        if len(lang_code) != 2:
+            lang_code = lang_code.split("-")[0]
+        stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(request.form["message"], target_lang=language.code)
+    
+    stats["time"]["last_broadcast"] = time.time()
+
+    _stuffimporter.set_stats(stats)
+
+    return render_template(f"{lang}/message.html", message=
+    {"en": "Your broadcast has been saved.",
+    "fr": "Votre diffusion a été enregistrée."}[lang])
+
+@app.route("/ban-appeal-callback", methods=["POST"])
+def ban_appeal_callback():
+    lang = session.get("lang") if session.get("lang") else "en"
+    return request.form
+
     try:
-        stats["codes"]["ban_appeal"].pop(request.form["appeal_code"])
+        stats["codes"]["ban_appeal"].remove(request.form["appeal_code"])
         _stuffimporter.set_stats(stats)
-    except KeyError:
-        return "Get IP banned noob", 400
+    except ValueError:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "Get IP banned noob.",
+        "fr": "Tu est maintenant ban IP."}[lang])
 
     user = load_user(request.form["user_id"], active=False)
     if not user.ban_appeal:
-        return {"en": "You have already made a ban appeal.", "fr": "Vous avez déja fait une demande de débannissement."}[session.get("lang") if session.get("lang") else "en"]
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have already made a ban appeal.",
+        "fr": "Vous avez déja fait une demande de débannissement."}[lang])
     user.ban_appeal = request.form["reason"]
     user.export_user(u_cont)
 
-    return {"en": "Your ban appeal has been saved.", "fr": "Votre demande de débannissement a été enregistrée."}[session.get("lang") if session.get("lang") else "en"]
+    return render_template(f"{lang}/message.html", message=
+    {"en": "Your ban appeal has been saved.",
+    "fr": "Votre demande de débannissement a été enregistrée."}[lang])
 
 # Legal stuff
 @app.route("/privacy-policy/")
