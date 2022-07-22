@@ -4,10 +4,10 @@
 
 {% block content %}
 <form action="/ban-appeal-callback" method="post">
-    <h1>Enter why you should be unbanned.</h1>
-    <p><input type="text" name="reason"></p>
-    <input type="hidden" name="user_id" value="{{ user_id }}">
-    <input type="hidden" name="appeal_code" value="{{ appeal_code }}">
-    <p><input type="submit" value="submit"></p>
+    <label for="reason">Enter why you should be unbanned.</label><br>
+    <textarea rows="4" cols="128" name="reason" maxlength="512" autofocus required><br>
+    <input type="hidden" name="user_id" value="{{ user_id }}"><br>
+    <input type="hidden" name="appeal_code" value="{{ appeal_code }}"><br>
+    <input type="submit" value="Submit">
 </form>
 {% endblock %}
