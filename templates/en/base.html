@@ -27,6 +27,10 @@
                 href="/en/statistics">Stats</a>
             <a class="w3-bar-item w3-button w3-padding-16{% block history_main %}{% endblock %}"
                 href="/en/history/1">History</a>
+            {% if current_user.is_broadcaster: %}
+            <a class="w3-bar-item w3-button w3-padding-16{% block broadcast_main %}{% endblock %}"
+                href="/en/broadcast">Broadcast</a>
+            {% endif %}
 
             {% if current_user.is_authenticated: %}
             <a class="w3-bar-item w3-button w3-right w3-padding-16" href="/logout">Logout</a>
@@ -56,9 +60,12 @@
 <br>
 <footer class="w3-bar w3-light-grey">
     <div class="w3-bar-item w3-padding-16">
-        <address>
-            Created by <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a>
-        </address>
+        <address>Created by <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a></address> | <a
+            href="/en/post">Lookup an individual post</a> | <a href="/en/sitemap">Sitemap</a> | <a
+            href="/privacy-policy">Privacy Policy</a> | <a href="/terms-of-service">Terms of Service</a>
+        <br>
+        <small>If you spot any spelling mistakes or encounter any bugs just contact me by clicking my name
+            above.</small>
     </div>
 </footer>
 
