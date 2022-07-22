@@ -1,9 +1,9 @@
 {
     "broadcast": {
+        "id": 0,
+        "content": "Ceci est un broadcast de test.",
         "author": 941277742501072897,
         "author_name": "admin",
-        "post_id": 0,
-        "content": "Ceci est un broadcast de test.",
         "date": "aujourdhui",
         "lang": "fr",
         "trads": {},
@@ -42,7 +42,7 @@
         "5_most_unpop": []
     },
     "codes": {
-        "broadcast": [],
+        "broadcast": "",
         "ban_appeal": []
     }
 }
