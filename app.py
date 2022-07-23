@@ -328,15 +328,30 @@ def logout():
     lang = session.get("lang")
     return redirect(url_for("index", lang=lang))
 
-@app.route("/<lang>/history/<page>")
+@app.route("/<lang>/history/<int:page>")
 def history(lang, page):
     verify_broadcast()
     session["lang"] = lang
 
     post_list = []
-    return render_template(f"{lang}/history.html", post_list, hist_page=int(page))
+    for post_id in range((5 * page) - 4, (5 * page) + 1):
+        try:
+            post_list.append(p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {post_id}", enable_cross_partition_query=True).next())
+        except StopIteration:
+            pass
+    
+    return render_template(f"{lang}/history.html", post_list=post_list, hist_page=int(page))
 
-@app.route("/<lang>/post/<id>")
+@app.route("/<lang>/post/")
+def specific_post_search(lang):
+    verify_broadcast()
+    session["lang"] = lang
+
+    max_id = stats["broadcast"]["id"] - 1
+        
+    return render_template(f"{lang}/post_search.html", max_post_id=max_id)
+
+@app.route("/<lang>/post/<int:id>")
 def specific_post(lang, id):
     verify_broadcast()
     session["lang"] = lang
@@ -344,7 +359,7 @@ def specific_post(lang, id):
     try:
         post = p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {id}", enable_cross_partition_query=True).next()
     except StopIteration:
-        return redirect(url_for("not_found", e="This post doesn't exist yet."))
+        return "This post doesn't exist yet.", 404
         
     return render_template(f"{lang}/post.html", post=post)
 

@@ -7,12 +7,15 @@
 {% block history_main %} w3-teal{% endblock %}
 
 {% block content %}
+{% if post_list: %}
 {% for post in post_list: %}
 {{ to_import.post(post) }}
 {% endfor %}
+{% else: %}
+<h3>These posts don't exist yet.</h3>
 
 <div class="w3-bar">
-    <a href="/en/history/{{ hist_page - 1 }}" class="w3-bar-item w3-button">&laquo;</a>
+    <a href="/en/history/{{ hist_page - 1 }}" class="w3-bar-item w3-button">◄</a>
     {% for nav_page in range(hist_page - 3, hist_page + 4): %}
     {% if nav_page == hist_page: %}
     <a href="/en/history/{{ nav_page }}" class="w3-bar-item w3-button w3-light-green">{{ nav_page }}</a>
@@ -20,6 +23,6 @@
     <a href="/en/history/{{ nav_page }}" class="w3-bar-item w3-button">{{ nav_page }}</a>
     {% endif %}
     {% endfor %}
-    <a href="/en/history/{{ hist_page + 1 }}" class="w3-bar-item w3-button">&raquo;</a>
+    <a href="/en/history/{{ hist_page + 1 }}" class="w3-bar-item w3-button">►</a>
 </div>
 {% endblock %}
