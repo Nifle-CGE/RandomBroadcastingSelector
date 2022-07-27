@@ -1,0 +1,44 @@
+{% macro post(post, target_lang="", live=False, current_user=None) -%}
+<div class="w3-container" style="padding:0;">
+    <div class=" w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
+        {% if live and current_user.is_authenticated: %}
+        <form action="/upvote" , method="post">
+            {% if current_user.upvote != post["id"]: %}
+            <input type="submit" id="upvote_button" name="upvote" onclick="invertColorUpvote()"
+                class="w3-button w3-hover-light-green" value="▲"><br>
+            {% else: %}
+            <input type="submit" id="upvote_button" name="upvote" onclick="invertColorUpvote()"
+                class="w3-button w3-hover-light-green w3-text-green" value="▲"><br>
+            {% endif %}
+        </form>
+        {% else: %}
+        <input type="button" class="w3-button w3-hover-light-green" value="▲"><br>
+        {% endif %}
+
+        <span class="w3-text-green">{{ post["upvotes"] }}</span><br>
+        <span class="w3-text-red">{{ post["downvotes"] }}</span><br>
+
+        {% if live and current_user.is_authenticated: %}
+        <form action="/downvote" , method="post">
+            {% if current_user.downvote != post["id"]: %}
+            <input type="submit" id="downvote_button" name="downvote" onclick="invertColorDownvote()"
+                class="w3-button w3-hover-orange" value="▼"><br>
+            {% else: %}
+            <input type="submit" id="downvote_button" name="downvote" onclick="invertColorDownvote()"
+                class="w3-button w3-hover-orange w3-text-red" value="▼"><br>
+            {% endif %}
+        </form>
+        {% else: %}
+        <input type="button" class="w3-button w3-hover-orange" value="▼">
+        {% endif %}
+    </div>
+    <div class="w3-container w3-cell w3-light-grey" style="border-radius: 5px;">
+        <h4>❝{{ post["content"] }}❞</h4>
+        {% if target_lang and target_lang != post["lang"]: %}
+        <h5>Traduction : {{ post["trads"][target_lang] }}</h5>
+        {% endif %}
+        <p>by {{ post["author_name"] }}</p>
+        <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}</small>
+    </div>
+</div>
+{%- endmacro %}

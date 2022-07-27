@@ -9,7 +9,7 @@ import copy
 import csv
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, url_for, session, request
+from flask import Flask, redirect, render_template, url_for, session, request, abort
 from flask_login import (
     LoginManager,
     current_user,
@@ -17,9 +17,9 @@ from flask_login import (
     login_user,
     logout_user,
 )
+import jinja2
 from authlib.integrations.flask_client import OAuth
 from azure.cosmos import CosmosClient
-import jinja2
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import deepl
@@ -176,10 +176,14 @@ def index_redirect():
 @app.route("/<lang>/")
 def index(lang):
     verify_broadcast()
+
+    if not lang in LANGUAGE_CODES.keys():
+        raise abort(404)
+
     try:
         test = render_template(f"{lang}/index.html", stats=stats)
     except jinja2.exceptions.TemplateNotFound:
-        return render_template(f"en/message.html", message="This language has not been implemented yet.")
+        return render_template("en/message.html", message="This language has not been implemented yet.")
 
     session["lang"] = lang
     return render_template(f"{lang}/index.html", stats=stats)
@@ -263,7 +267,7 @@ def twitter_login_callback():
 
 @app.route('/login/github/')
 def github_login():
-	# Facebook Oauth Config
+	# Github Oauth Config
 	oauth.register(
 		name='github',
 		client_id=config["github"]["client_id"],
@@ -328,6 +332,7 @@ def logout():
     lang = session.get("lang")
     return redirect(url_for("index", lang=lang))
 
+# General stuff
 @app.route("/<lang>/history/<int:page>")
 def history(lang, page):
     verify_broadcast()
@@ -336,7 +341,7 @@ def history(lang, page):
     post_list = []
     for post_id in range((5 * page) - 4, (5 * page) + 1):
         try:
-            post_list.append(p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {post_id}", enable_cross_partition_query=True).next())
+            post_list.append(p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{post_id}'", enable_cross_partition_query=True).next())
         except StopIteration:
             pass
     
@@ -357,10 +362,10 @@ def specific_post(lang, id):
     session["lang"] = lang
 
     try:
-        post = p_cont.query_items(f"SELECT p FROM Posts p WHERE p.id = {id}", enable_cross_partition_query=True).next()
+        post = p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
     except StopIteration:
-        return "This post doesn't exist yet.", 404
-        
+        abort(404)
+
     return render_template(f"{lang}/post.html", post=post)
 
 @app.route("/<lang>/statistics/")
@@ -385,11 +390,12 @@ def statistics(lang):
         stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
-        stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(start_time - stats["time"]["start_time"])
-        stats["time"]["stats_last_edited"] = start_time
+        stats["time"]["stats_last_edited"] = time.time()
         stats["time"]["stats_getting"] = time.time() - start_time
 
-        _stuffimporter.set_stats(stats)
+    stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
+
+    _stuffimporter.set_stats(stats)
 
     session["lang"] = lang
     return render_template(f"{lang}/stats.html", stats=stats)
@@ -424,7 +430,9 @@ def broadcast(lang):
     session["lang"] = lang
     return render_template(f"{lang}/broadcast.html")
 
+# Callbacks
 @app.route("/broadcast-callback", methods=["POST"])
+@login_required
 def broadcast_callback():
     lang = session.get("lang") if session.get("lang") else "en"
     return request.form
@@ -456,7 +464,7 @@ def broadcast_callback():
         lang_code = language.code
         if len(lang_code) != 2:
             lang_code = lang_code.split("-")[0]
-        stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(request.form["message"], target_lang=language.code)
+        stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(request.form["message"], target_lang=language.code).text
     
     stats["time"]["last_broadcast"] = time.time()
 
@@ -490,6 +498,40 @@ def ban_appeal_callback():
     return render_template(f"{lang}/message.html", message=
     {"en": "Your ban appeal has been saved.",
     "fr": "Votre demande de débannissement a été enregistrée."}[lang])
+
+@app.route("/upvote", methods=["POST"])
+@login_required
+def upvote():
+    lang = session.get("lang") if session.get("lang") else "en"
+    if not stats["broadcast"]["content"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "No post is live right now so you cant upvote one.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang])
+
+    if current_user.upvote != stats["broadcast"]["id"]:
+        current_user.upvote = stats["broadcast"]["id"]
+        current_user.downvote = None
+    else:
+        current_user.upvote = None
+
+    current_user.export_user(u_cont)
+
+@app.route("/downvote", methods=["POST"])
+@login_required
+def downvote():
+    lang = session.get("lang") if session.get("lang") else "en"
+    if not stats["broadcast"]["content"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "No post is live right now so you cant downvote one.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang])
+
+    if current_user.downvote != stats["broadcast"]["id"]:
+        current_user.downvote = stats["broadcast"]["id"]
+        current_user.upvote = None
+    else:
+        current_user.downvote = None
+
+    current_user.export_user(u_cont)
 
 # Legal stuff
 @app.route("/privacy-policy/")
@@ -533,4 +575,4 @@ def internal_server_error(e):
     return render_template(f"{lang}/internal_server_error.html", e=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=True)
