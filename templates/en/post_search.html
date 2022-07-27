@@ -1,7 +1,5 @@
 {% extends "en/base.html" %}
 
-{% import "to_import.html" as to_import %}
-
 {% block title %}Post search{% endblock %}
 
 {% block history_main %} w3-teal{% endblock %}
@@ -10,5 +8,6 @@
 <label for="post_id">Input the number of the post you want to view.</label>
 <input type="number" id="post_id_input" name="post_id" placeholder="0-{{ max_post_id }}" min="0"
     max="{{ max_post_id }}">
+<br>
 <input type="button" name="submit" value="Submit" onclick="redirectToPost()">
 {% endblock %}
