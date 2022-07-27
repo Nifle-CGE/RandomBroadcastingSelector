@@ -1,7 +1,7 @@
 {
     "broadcast": {
-        "id": 0,
-        "content": "Ceci est un broadcast de test.",
+        "id": 1,
+        "content": "Ceci est un second broadcast de test.",
         "author": 941277742501072897,
         "author_name": "admin",
         "date": "aujourdhui",
