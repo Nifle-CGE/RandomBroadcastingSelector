@@ -8,7 +8,7 @@ def set_stats(dict_:dict):
     with open(f"./stats.json", "w", encoding="utf-8") as stats_file:
         json.dump(dict_, stats_file)
 
-def pot_brods(u_cont, last_brod):
+def pot_brods(u_cont, last_brod:str):
     brods_query = u_cont.query_items("SELECT u.id FROM Users u WHERE u.ban.status = 0 AND u.id <> " + last_brod, enable_cross_partition_query=True)
     brods = []
     while True:
