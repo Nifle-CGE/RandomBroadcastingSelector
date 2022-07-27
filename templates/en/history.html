@@ -1,6 +1,6 @@
 {% extends "en/base.html" %}
 
-{% import "to_import.html" as to_import %}
+{% import "en/to_import.html" as to_import %}
 
 {% block title %}History page {{ hist_page }}{% endblock %}
 
@@ -13,6 +13,7 @@
 {% endfor %}
 {% else: %}
 <h3>These posts don't exist yet.</h3>
+{% endif %}
 
 <div class="w3-bar">
     <a href="/en/history/{{ hist_page - 1 }}" class="w3-bar-item w3-button">◄</a>
