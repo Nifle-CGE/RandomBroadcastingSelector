@@ -11,15 +11,14 @@
 {% if stats["broadcast"]["lang"] == "en": %}
 Current message : ❝{{ stats["broadcast"]["content"] }}❞<br>
 {% else: %}
-Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
 Original message : ❝{{ stats["broadcast"]["content"] }}❞<br>
+Traducted message : ❝{{ stats["broadcast"]["trads"]["en"] }}❞<br>
 Message language : {{ stats["broadcast"]["lang"] }}<br>
 {% endif %}
 Broadcaster : {{ stats["broadcast"]["author_name"] }}<br>
 Upvotes : {{ stats["broadcast"]["upvotes"] }}<br>
 Downvotes : {{ stats["broadcast"]["downvotes"] }}<br>
 Reports for this message : {{ stats["broadcast"]["reports"] }}<br>
-
 
 <h2>General Broadcasting info</h2>
 Broadcasts sent : {{ stats["broadcasts"]["msgs_sent"] }}<br>
@@ -28,11 +27,12 @@ Broadcasts in {{ lang_code }} sent : {{ number }}<br>
 {% endfor %}
 
 <h2>Users info</h2>
-Registered users : {{ stats["users"]["num"] }}<br>
+Registered (and not banned) users : {{ stats["users"]["num"] }}<br>
 Banned users : {{ stats["users"]["banned"] }}<br>
-Users who logged in in the last hour : {{ stats["users"]["lastlog_hour"] }}<br>
-Users who logged in the last 24 hour : {{ stats["users"]["lastlog_24h"] }}<br>
-Users who logged in the last week : {{ stats["users"]["lastlog_week"] }}<br>
+Number of users that have seen the current broadcast : {{ stats["users"]["seen_msg"] }}<br>
+Users who were active in the last hour : {{ stats["users"]["lastact_hour"] }}<br>
+Users who were active in the last 24 hour : {{ stats["users"]["lastact_24h"] }}<br>
+Users who were active in the last week : {{ stats["users"]["lastact_week"] }}<br>
 
 <h2>Time info</h2>
 Uptime : {{ stats["time"]["uptime_str"] }}<br>
@@ -40,19 +40,19 @@ Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 
 <h2>Top broadcasts in different categories</h2>
 <h3>5 most upvoted</h3>
-{% for post in stats["top_posts"]["5_most_upped"] %}
+{% for post in stats["top_posts"]["5_most_upped"]: %}
 {{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most downvoted</h3>
-{% for post in stats["top_posts"]["5_most_downed"] %}
+{% for post in stats["top_posts"]["5_most_downed"]: %}
 {{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
-{% for post in stats["top_posts"]["5_most_pop"] %}
+{% for post in stats["top_posts"]["5_most_pop"]: %}
 {{ to_import.post(post) }}
 {% endfor %}
 <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
-{% for post in stats["top_posts"]["5_most_unpop"] %}
+{% for post in stats["top_posts"]["5_most_unpop"]: %}
 {{ to_import.post(post) }}
 {% endfor %}
 <br>

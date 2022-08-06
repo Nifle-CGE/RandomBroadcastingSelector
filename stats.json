@@ -1,8 +1,8 @@
 {
     "broadcast": {
-        "id": 1,
+        "id": "1",
         "content": "Ceci est un second broadcast de test.",
-        "author": 941277742501072897,
+        "author": "gg-941277742501072897",
         "author_name": "admin",
         "date": "aujourdhui",
         "lang": "fr",
@@ -21,25 +21,94 @@
         }
     },
     "users": {
-        "num": 0,
+        "num": 2,
         "banned": 0,
-        "lastlog_hour": 0,
-        "lastlog_24h": 0,
-        "lastlog_week": 0
+        "seen_msg": 0,
+        "lastact_hour": 0,
+        "lastact_24h": 0,
+        "lastact_week": 0
     },
     "time": {
-        "start_time": 1654617978.695912,
-        "stats_getting": 0,
-        "stats_last_edited": 0,
+        "start_time": 1659779361.5438223,
+        "stats_getting": 8.815144300460815,
+        "stats_last_edited": 1659779540.953866,
         "last_broadcast": 16490601329.47,
         "last_broadcaster": 16490601329.47,
-        "uptime_str": ""
+        "uptime_str": "2 minutes 59.41 seconds"
     },
     "top_posts": {
-        "5_most_upped": [],
-        "5_most_downed": [],
-        "5_most_pop": [],
-        "5_most_unpop": []
+        "5_most_upped": [
+            {
+                "id": "0",
+                "content": "Ceci est un message de test.",
+                "author": "",
+                "author_name": "admin",
+                "date": "2022-06-09",
+                "lang": "fr",
+                "upvotes": 1,
+                "downvotes": 1,
+                "ratio": 1,
+                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
+                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
+                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
+                "_attachments": "attachments/",
+                "_ts": 1655819390
+            }
+        ],
+        "5_most_downed": [
+            {
+                "id": "0",
+                "content": "Ceci est un message de test.",
+                "author": "",
+                "author_name": "admin",
+                "date": "2022-06-09",
+                "lang": "fr",
+                "upvotes": 1,
+                "downvotes": 1,
+                "ratio": 1,
+                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
+                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
+                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
+                "_attachments": "attachments/",
+                "_ts": 1655819390
+            }
+        ],
+        "5_most_pop": [
+            {
+                "id": "0",
+                "content": "Ceci est un message de test.",
+                "author": "",
+                "author_name": "admin",
+                "date": "2022-06-09",
+                "lang": "fr",
+                "upvotes": 1,
+                "downvotes": 1,
+                "ratio": 1,
+                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
+                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
+                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
+                "_attachments": "attachments/",
+                "_ts": 1655819390
+            }
+        ],
+        "5_most_unpop": [
+            {
+                "id": "0",
+                "content": "Ceci est un message de test.",
+                "author": "",
+                "author_name": "admin",
+                "date": "2022-06-09",
+                "lang": "fr",
+                "upvotes": 1,
+                "downvotes": 1,
+                "ratio": 1,
+                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
+                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
+                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
+                "_attachments": "attachments/",
+                "_ts": 1655819390
+            }
+        ]
     },
     "codes": {
         "broadcast": "",

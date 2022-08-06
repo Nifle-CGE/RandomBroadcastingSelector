@@ -2,18 +2,18 @@
     "id": "",
     "name": "",
     "email": "",
-    "upvote": -1,
-    "downvote": -1,
+    "upvote": "",
+    "downvote": "",
     "last_active": 0,
     "ban": {
-        "status": 0,
         "message": "",
-        "sample_reports": [],
+        "most_quoted": "",
         "reason": "",
         "appeal": ""
     },
     "report": {
-        "post_id": -1,
-        "reason": ""
+        "post_id": "",
+        "reason": "",
+        "quote": ""
     }
 }
