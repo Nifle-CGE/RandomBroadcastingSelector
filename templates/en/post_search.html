@@ -5,9 +5,10 @@
 {% block history_main %} w3-teal{% endblock %}
 
 {% block content %}
-<label for="post_id">Input the number of the post you want to view.</label>
-<input type="number" id="post_id_input" name="post_id" placeholder="0-{{ max_post_id }}" min="0"
-    max="{{ max_post_id }}">
-<br>
-<input type="button" name="submit" value="Submit" onclick="redirectToPost()">
+<label>
+    Input the number of the post you want to view.<br>
+    <input type="number" id="postIdInput" name="post_id" placeholder="0-{{ max_post_id }}" min="0"
+        max="{{ max_post_id }}">
+</label><br><br>
+<input type="button" value="Submit" onclick="redirectToPost()">
 {% endblock %}
