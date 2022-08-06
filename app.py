@@ -6,7 +6,7 @@ import os
 import time
 import random
 import copy
-import csv
+import math
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
@@ -51,9 +51,11 @@ stats = _stuffimporter.get_json("stats")
 stats["time"]["start_time"] = time.time()
 _stuffimporter.set_stats(stats)
 
-with open("langs.csv", "r", encoding="utf-8") as csvfile:
-    reader = csv.reader(csvfile)
-    LANGUAGE_CODES = {rows[1].lower():rows[0] for rows in reader}
+# Deepl traduction setup
+translator = deepl.Translator(config["deepl_auth_key"])
+
+LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
+SUPPORTED_LANGUAGES = ["en"]
 
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
@@ -68,28 +70,30 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 #app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
-# Deepl traduction setup
-translator = deepl.Translator(config["deepl_auth_key"])
-
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id, active=True):
     user = User()
-    user.import_user(u_cont, user_id)
+    if not user.uimport(u_cont, user_id):
+        return user
+
     if user.id_ == stats["broadcast"]["author"]:
         user.is_broadcaster = True
 
     if active:
         user.last_active = time.time()
-        user.export_user(u_cont)
+        user.uexport(u_cont)
+
     return user
 
 # Useful defs
-def verify_broadcast():
+def verify_broadcast(func):
     if stats["time"]["last_broadcaster"] + 86400 > time.time():
-        return "The broadcaster still has time to make his broadcast."
+        end_message = "The broadcaster still has time to make his broadcast."
+        return func
     elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
-        return "The broadcaster has made his broadcast and this posts time isn't over yet."
+        end_message = "The broadcaster has made his broadcast and this posts time isn't over yet."
+        return func
 
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
         new_post = json.load(sample_file)
@@ -100,8 +104,8 @@ def verify_broadcast():
     new_post["author_name"] = stats["broadcast"]["author_name"]
     new_post["date"] = stats["broadcast"]["date"]
     new_post["lang"] = stats["broadcast"]["lang"]
-    new_post["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {new_post['id']}", enable_cross_partition_query=True).next()
-    new_post["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {new_post['id']}", enable_cross_partition_query=True).next()
+    new_post["upvotes"] = stats["broadcast"]["upvotes"]
+    new_post["downvotes"] = stats["broadcast"]["downvotes"]
     try:
         new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
     except ZeroDivisionError:
@@ -124,7 +128,9 @@ def verify_broadcast():
     _stuffimporter.set_stats(stats)
 
     brod_obj = load_user(stats["broadcast"]["author"], active=False)
-    if not brod_obj.email: return "error : selected user doesn't have an email"
+    if not brod_obj.email:
+        end_message = "error : selected user doesn't have an email"
+        return func
 
     with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
         mail_content = mail_file.read()
@@ -139,21 +145,40 @@ def verify_broadcast():
     )
     sg_client.send(message)
 
-    return "New broadcaster selected."
+    end_message = "New broadcaster selected."
+    return func
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "en"
+
     # Test to see if the user exists in the db
     user = load_user(id_)
 
     # Doesn't exist? Add it to the database.
     if not user:
+        try:
+            fraud_id = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
+            # TODO : vérifier que la query au dessus fonctionne
+            return render_template(f"{lang}/message.html", message=
+            {"en": "Double accounts aren't allowed.",
+            "fr": "Les doubles comptes ne sont pas autorisés."}[lang])
+        except StopIteration:
+            pass
+
         new_user = User(id_=id_, name=name, email=email)
-        new_user.export_user(u_cont)
+        new_user.last_active = time.time()
+        new_user.uexport(u_cont)
+
+        stats["users"]["num"] += 1
+        _stuffimporter.set_stats(stats)
+
         user = new_user
-    elif user.banned: # if user banned send the ban appeal form
+    if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
         stats["codes"]["ban_appeal"].append(code)
         _stuffimporter.set_stats(stats)
+
         return render_template(f"{lang}/banned.html", user_id=user.id_, appeal_code=code)
 
     # Begin user session by logging the user in
@@ -161,38 +186,47 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     login_user(user)
 
     # Send user back to homepage
-    session["lang"] = lang
+    set_lang(lang)
     return redirect(url_for("index", lang=lang))
+
+def get_lang():
+    lang = session.get("lang")
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "en"
+        session["lang"] = lang
+
+    return lang
+
+def set_lang(lang):
+    if lang not in SUPPORTED_LANGUAGES:
+        lang = "en"
+
+    session["lang"] = lang
 
 # Routing
 @app.route("/")
 def index_redirect():
-    lang = session.get("lang")
-    if not lang:
-        lang = "en"
-
-    return redirect(url_for("index", lang=lang))
+    return redirect(url_for("index", lang=get_lang()))
 
 @app.route("/<lang>/")
+@verify_broadcast
 def index(lang):
-    verify_broadcast()
-
-    if not lang in LANGUAGE_CODES.keys():
-        raise abort(404)
+    if not lang in LANGUAGE_CODES:
+        abort(404)
 
     try:
         test = render_template(f"{lang}/index.html", stats=stats)
     except jinja2.exceptions.TemplateNotFound:
+        set_lang("en")
         return render_template("en/message.html", message="This language has not been implemented yet.")
 
-    session["lang"] = lang
-    return render_template(f"{lang}/index.html", stats=stats)
+    set_lang(lang)
+    return test
 
 # All the login stuff
 @app.route("/<lang>/login/")
+@verify_broadcast
 def login(lang):
-    verify_broadcast()
-    session["lang"] = lang
     return render_template(f"{lang}/login.html")
 
 @app.route("/login/google/")
@@ -221,7 +255,7 @@ def google_login_callback():
         unique_id = "gg-" + response_json["sub"]
         users_name = response_json["name"]
         users_email = response_json["email"]
-        if response_json["locale"] in LANGUAGE_CODES.keys():
+        if response_json["locale"] in LANGUAGE_CODES:
             lang = response_json["locale"]
         else:
             lang = "en"
@@ -254,11 +288,11 @@ def twitter_login_callback():
     if response_json.get("email"):
         unique_id = "tw-" + response_json["id_str"]
         users_name = response_json["name"]
-        users_email = response_json.get("email")
+        users_email = response_json["email"]
         resp = oauth.twitter.get("account/settings.json")
         resp_json = resp.json()
         lang = resp_json.get("language")
-        if not lang in LANGUAGE_CODES.keys():
+        if not lang in LANGUAGE_CODES:
             lang = "en"
     else:
         return "User email not available or not verified by Twitter.", 400
@@ -329,14 +363,13 @@ def facebook_login_callback():
 @login_required
 def logout():
     logout_user()
-    lang = session.get("lang")
-    return redirect(url_for("index", lang=lang))
+    return redirect(url_for("index", lang=get_lang()))
 
 # General stuff
 @app.route("/<lang>/history/<int:page>")
+@verify_broadcast
 def history(lang, page):
-    verify_broadcast()
-    session["lang"] = lang
+    set_lang(lang)
 
     post_list = []
     for post_id in range((5 * page) - 4, (5 * page) + 1):
@@ -348,18 +381,18 @@ def history(lang, page):
     return render_template(f"{lang}/history.html", post_list=post_list, hist_page=int(page))
 
 @app.route("/<lang>/post/")
+@verify_broadcast
 def specific_post_search(lang):
-    verify_broadcast()
-    session["lang"] = lang
+    set_lang(lang)
 
-    max_id = stats["broadcast"]["id"] - 1
+    max_id = int(stats["broadcast"]["id"]) - 1
         
     return render_template(f"{lang}/post_search.html", max_post_id=max_id)
 
 @app.route("/<lang>/post/<int:id>")
+@verify_broadcast
 def specific_post(lang, id):
-    verify_broadcast()
-    session["lang"] = lang
+    set_lang(lang)
 
     try:
         post = p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
@@ -369,21 +402,15 @@ def specific_post(lang, id):
     return render_template(f"{lang}/post.html", post=post)
 
 @app.route("/<lang>/statistics/")
+@verify_broadcast
 def statistics(lang):
-    verify_broadcast()
-    
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
 
-        stats["broadcast"]["reports"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.report.post_id = {stats['broadcast']['id']} AND NOT u.report.reason = ''", enable_cross_partition_query=True).next()
-        stats["broadcast"]["upvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.upvote = {stats['broadcast']['id']}", enable_cross_partition_query=True).next()
-        stats["broadcast"]["downvotes"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.downvote = {stats['broadcast']['id']}", enable_cross_partition_query=True).next()
-
-        stats["users"]["num"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 0", enable_cross_partition_query=True).next()
-        stats["users"]["banned"] = u_cont.query_items("SELECT VALUE COUNT(1) FROM Users u WHERE u.ban.status = 1", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 3600}", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 86400}", enable_cross_partition_query=True).next()
-        stats["users"]["lastlog_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {start_time - 604800}", enable_cross_partition_query=True).next()
+        stats["users"]["seen_msg"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['time']['last_broadcast']}", enable_cross_partition_query=True).next()
+        stats["users"]["lastact_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
+        stats["users"]["lastact_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
+        stats["users"]["lastact_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
         
         stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
@@ -397,7 +424,7 @@ def statistics(lang):
 
     _stuffimporter.set_stats(stats)
 
-    session["lang"] = lang
+    set_lang(lang)
     return render_template(f"{lang}/stats.html", stats=stats)
 
 @app.route("/stats.json")
@@ -427,14 +454,14 @@ def broadcast(lang):
         {"en": "You have already made your broadcast.",
         "fr": "Vous avez déja fait votre diffusion."}[lang])
 
-    session["lang"] = lang
+    set_lang(lang)
     return render_template(f"{lang}/broadcast.html")
 
 # Callbacks
 @app.route("/broadcast-callback", methods=["POST"])
 @login_required
 def broadcast_callback():
-    lang = session.get("lang") if session.get("lang") else "en"
+    lang = get_lang()
     return request.form
     
     if stats["codes"]["broadcast"] != request.form["brod_code"]:
@@ -452,7 +479,7 @@ def broadcast_callback():
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
         new_post = json.load(sample_file)
 
-    stats["broadcast"]["id"] += 1
+    stats["broadcast"]["id"] = int(stats["broadcast"]["id"]) + 1
     stats["broadcast"]["content"] = request.form["message"]
     stats["broadcast"]["author_name"] = request.form["displayed_name"]
     stats["broadcast"]["date"] = str(datetime.datetime.today().date())
@@ -476,7 +503,7 @@ def broadcast_callback():
 
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_callback():
-    lang = session.get("lang") if session.get("lang") else "en"
+    lang = get_lang()
     return request.form
 
     try:
@@ -493,45 +520,116 @@ def ban_appeal_callback():
         {"en": "You have already made a ban appeal.",
         "fr": "Vous avez déja fait une demande de débannissement."}[lang])
     user.ban_appeal = request.form["reason"]
-    user.export_user(u_cont)
+    user.uexport(u_cont)
 
     return render_template(f"{lang}/message.html", message=
     {"en": "Your ban appeal has been saved.",
     "fr": "Votre demande de débannissement a été enregistrée."}[lang])
 
-@app.route("/upvote", methods=["POST"])
+@app.route("/upvote-callback", methods=["POST"])
 @login_required
-def upvote():
-    lang = session.get("lang") if session.get("lang") else "en"
+def upvote_callback():
+    lang = get_lang()
     if not stats["broadcast"]["content"]:
         return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you cant upvote one.",
+        {"en": "No post is live right now so you can't upvote one.",
         "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang])
 
     if current_user.upvote != stats["broadcast"]["id"]:
         current_user.upvote = stats["broadcast"]["id"]
-        current_user.downvote = None
+        stats["broadcast"]["upvote"] += 1
+        current_user.downvote = ""
+        stats["broadcast"]["downvote"] -= 1
     else:
-        current_user.upvote = None
+        current_user.upvote = ""
+        stats["broadcast"]["upvote"] -= 1
 
-    current_user.export_user(u_cont)
+    current_user.uexport(u_cont)
+    _stuffimporter.set_stats(stats)
 
-@app.route("/downvote", methods=["POST"])
+@app.route("/downvote-callback", methods=["POST"])
 @login_required
-def downvote():
-    lang = session.get("lang") if session.get("lang") else "en"
+def downvote_callback():
+    lang = get_lang()
     if not stats["broadcast"]["content"]:
         return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you cant downvote one.",
+        {"en": "No post is live right now so you can't downvote one.",
         "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang])
 
     if current_user.downvote != stats["broadcast"]["id"]:
         current_user.downvote = stats["broadcast"]["id"]
-        current_user.upvote = None
+        stats["broadcast"]["downvote"] += 1
+        current_user.upvote = ""
+        stats["broadcast"]["upvote"] -= 1
     else:
-        current_user.downvote = None
+        current_user.downvote = ""
+        stats["broadcast"]["downvote"] -= 1
 
-    current_user.export_user(u_cont)
+    current_user.uexport(u_cont)
+    _stuffimporter.set_stats(stats)
+
+@app.route("/report-callback", methods=["POST"])
+@login_required
+def report_callback():
+    return request.form
+    
+    lang = get_lang()
+    if not stats["broadcast"]["content"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "No post is live right now so you can't report one.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler."}[lang])
+
+    if current_user.report_post_id == stats["broadcast"]["id"]:
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have already reported this post and you can't report it again.",
+        "fr": "Vous avez déja signalé ce post, vous ne pouvez pas le signaler une deuxième fois."}[lang])
+
+    current_user.report_post_id = stats["broadcast"]["id"]
+    current_user.report_reason = request.form["reason"]
+    current_user.report_quote = request.form["message_quote"]
+
+    current_user.uexport(u_cont)
+    
+    stats["broadcast"]["reports"] += 1
+
+    if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2):
+        brod = load_user(stats["broadcast"]["author"], active=False)
+
+        brod.banned = 1
+        brod.ban_message = stats["broadcast"]["content"]
+
+        reports = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
+        reason_effectives = {}
+        for user_report in reports:
+            report = user_report["user"]
+
+            # Extract the most present reason from the dicts
+            try:
+                reason_effectives[report["reason"]] += 1
+            except KeyError:
+                reason_effectives[report["reason"]] = 1
+
+        reason_effectives = sorted(reason_effectives.items(), key=lambda x:x[1])
+        most_reason = reason_effectives[0][0]
+        brod.ban_reason = most_reason
+
+        reason_quotes = [user["quote"] for user in reports if user["reason"] == most_reason]
+        results = {}
+        for quote in reason_quotes:
+            results[quote] = 0
+            for secquote in reason_quotes:
+                if quote in secquote:
+                    results[quote] += 1
+
+        results = sorted(results.items(), key=lambda x:x[1])
+        most_quoted = results[0][0]
+        brod.most_quoted = most_quoted
+
+        brod.uexport(u_cont)
+
+        stats["users"]["banned"] += 1
+
+    _stuffimporter.set_stats(stats)
 
 # Legal stuff
 @app.route("/privacy-policy/")
@@ -544,7 +642,6 @@ def terms_of_service():
 
 @app.route("/<lang>/sitemap/")
 def sitemap(lang):
-    session["lang"] = lang
     render_template(f"{lang}/sitemap.html")
 
 # Crawling control
@@ -553,26 +650,29 @@ def robots():
     return render_template("robots.html")
 
 # Error handling
+@app.errorhandler(401)
+def method_not_allowed(e):
+    return render_template(f"{get_lang()}/error.html",
+                            err_title="401 Unauthorized",
+                            err_img_src="/static/img/you shall not pass.gif",
+                            err_img_alt="Gandalf you shall not pass GIF",
+                            err_msg=e), 401
+
 @app.errorhandler(404)
 def not_found(e):
-    lang = session.get('lang')
-    if not lang:
-        lang = "en"
-    return render_template(f"{lang}/not_found.html", e=e), 404
-
-@app.errorhandler(405)
-def method_not_allowed(e):
-    lang = session.get('lang')
-    if not lang:
-        lang = "en"
-    return render_template(f"{lang}/method_not_allowed.html", e=e), 405
+    return render_template(f"{get_lang()}/error.html",
+                            err_title="404 Not Found",
+                            err_img_src="/static/img/confused travolta.gif",
+                            err_img_alt="Confused Travolta GIF",
+                            err_msg=e), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    lang = session.get('lang')
-    if not lang:
-        lang = "en"
-    return render_template(f"{lang}/internal_server_error.html", e=e), 500
+    return render_template(f"{get_lang()}/error.html",
+                            err_title="500 Internal Server Error",
+                            err_img_src="/static/img/this is fine.gif",
+                            err_img_alt="This is fine dog GIF",
+                            err_msg=e), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=True)

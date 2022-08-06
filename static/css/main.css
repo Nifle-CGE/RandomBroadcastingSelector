@@ -7,65 +7,26 @@ body {
 }
 
 img.logo {
-    transition: all .3s;
     width: 50px;
     height: 50px;
     display: block;
 }
 
-img.logo:hover {
-    filter: grayscale(50%);
+.hover-zoom {
+    transition: all .3s;
+}
+
+.hover-zoom:hover {
     transform: scale(1.1);
 }
 
-/* style the container */
-.container {
-    position: relative;
-    border-radius: 5px;
-    background-color: #f2f2f2;
-    padding: 20px 50px 30px;
-    box-sizing: border-box;
-}
-
-/* style inputs and link buttons */
-input,
-.btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    margin: 5px 0;
-    opacity: 0.85;
-    display: inline-block;
-    font-size: 17px;
-    line-height: 20px;
-    text-decoration: none;
-    box-sizing: border-box;
-    /* remove underline from anchors */
-}
-
-input:hover,
-.btn:hover {
-    opacity: 1;
-}
-
-/* add appropriate colors to fb, twitter and google buttons */
-.facebook {
-    background-color: #1771BF;
-    color: white;
-}
-
-.github {
-    background-color: black;
-    color: white;
-}
-
-.twitter {
-    background-color: #1DA1F2;
-    color: white;
-}
-
-.google {
-    background-color: #F23535;
-    color: white;
+.form-popup {
+    display: none;
+    position: fixed;
+    height: 80%;
+    width: 80%;
+    top: 10%;
+    left: 10%;
+    background-color: white;
+    overflow-y: auto;
 }

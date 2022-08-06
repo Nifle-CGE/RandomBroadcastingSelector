@@ -1,44 +1,87 @@
-{% macro post(post, target_lang="", live=False, current_user=None) -%}
+{% macro post(post, target_lang="", live=False, user=None) -%}
 <div class="w3-container" style="padding:0;">
-    <div class=" w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
-        {% if live and current_user.is_authenticated: %}
-        <form action="/upvote" , method="post">
-            {% if current_user.upvote != post["id"]: %}
-            <input type="submit" id="upvote_button" name="upvote" onclick="invertColorUpvote()"
-                class="w3-button w3-hover-light-green" value="▲"><br>
-            {% else: %}
-            <input type="submit" id="upvote_button" name="upvote" onclick="invertColorUpvote()"
-                class="w3-button w3-hover-light-green w3-text-green" value="▲"><br>
-            {% endif %}
+    <div class="w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
+        {% if live and user.is_authenticated: %}
+        <form action="/upvote-callback" , method="post">
+            <input type="submit" id="upvoteButton" name="upvote" onclick="invertColorUpvote()" class="w3-button w3-round-large w3-hover-light-green
+                {% if user.upvote == post['id']: %} w3-text-green{% endif %}
+                " value=" ▲"><br>
         </form>
         {% else: %}
-        <input type="button" class="w3-button w3-hover-light-green" value="▲"><br>
+        <input type="button" class="w3-button w3-round-large w3-hover-light-green" value="▲"><br>
         {% endif %}
 
         <span class="w3-text-green">{{ post["upvotes"] }}</span><br>
         <span class="w3-text-red">{{ post["downvotes"] }}</span><br>
 
-        {% if live and current_user.is_authenticated: %}
-        <form action="/downvote" , method="post">
-            {% if current_user.downvote != post["id"]: %}
-            <input type="submit" id="downvote_button" name="downvote" onclick="invertColorDownvote()"
-                class="w3-button w3-hover-orange" value="▼"><br>
-            {% else: %}
-            <input type="submit" id="downvote_button" name="downvote" onclick="invertColorDownvote()"
-                class="w3-button w3-hover-orange w3-text-red" value="▼"><br>
-            {% endif %}
+        {% if live and user.is_authenticated: %}
+        <form action="/downvote-callback" , method="post">
+            <input type="submit" id="downvoteButton" name="downvote" onclick="invertColorDownvote()" class="w3-button w3-round-large w3-hover-orange
+                {% if user.downvote != post['id']: %} w3-text-red{% endif %}
+                " value="▼"><br>
         </form>
         {% else: %}
-        <input type="button" class="w3-button w3-hover-orange" value="▼">
+        <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
         {% endif %}
     </div>
-    <div class="w3-container w3-cell w3-light-grey" style="border-radius: 5px;">
+    <div class="w3-container w3-cell w3-round-large w3-light-grey">
         <h4>❝{{ post["content"] }}❞</h4>
         {% if target_lang and target_lang != post["lang"]: %}
         <h5>Traduction : {{ post["trads"][target_lang] }}</h5>
         {% endif %}
         <p>by {{ post["author_name"] }}</p>
-        <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}</small>
+        <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}
+            <!-- | <a class="w3-hover-red" onclick="openReportForm()">Report (testing)</a> 
+                TODO : enlever quand form terminée -->
+            {% if live and user.is_authenticated: %}
+            | <a class="w3-hover-red" onclick="openReportForm()">Report</a>
+            {% endif %}
+        </small>
+        <div class="form-popup w3-card-4 w3-container" id="reportForm">
+            <h4>What is the reason of your report (read the text below before doing anything).</h4>
+            <h5>
+                The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any
+                queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a
+                traduction error) you can contact me by clicking on my name in the footer at the bottom of the page.<br>
+                Do not report for no reason because you will have to quote the part of the broadcast where the offense
+                was made in the input at the end of the form.<br>
+                For the input at the end of the form, you have to quote at least 2 words (a word is something that is
+                surrounded by a space or a period), which mean you cannot split a word in half. (for
+                example "in half" is valid, "in.half is valid but "in hal" isn't)<br>
+                Be careful to fill this form correctly as you will not be able to modify or delete it.
+            </h5>
+            <input type="button" value="I have read the text above." id="activatorButton"
+                onclick="enableSubmitButton('submitButton', 'activatorButton')">
+            <form action="/report-callback" class="w3-light-grey" method="post"
+                onsubmit="return validateReportForm('{{ post.content }}')">
+                <label>
+                    <input type="radio" name="reason" value="harassement"
+                        onclick="changeReportFormBottomInputLabel('harassement')" required>
+                    Is this broadcast harassing, insulting or encouraging hate against anyone ?
+                </label><br>
+                <label>
+                    <input type="radio" name="reason" value="mild-lang"
+                        onclick="changeReportFormBottomInputLabel('mild-lang')" required>
+                    Is this broadcast using too much mild language for a family friendly website ?
+                </label><br>
+                <label>
+                    <input type="radio" name="reason" value="link" onclick="changeReportFormBottomInputLabel('link')"
+                        required>
+                    Does this broadcast contain any link (like "http://example.com") or pseudo link (like "example.com")
+                    or attempts at putting a link that doesn't look like one (like "e x a m p l e . c o m" or "example
+                    dot com") ?
+                </label><br><br>
+                Here is the broadcast so you can copy and paste easily : "{{ post["content"] }}"<br>
+                <label>
+                    <span id="quote_label">This is where you have quote the part of the message where the offense was
+                        made. This label is going to change as you select different options.</span><br>
+                    <input type="text" name="message_quote" id="quote_input" required>
+                </label><br>
+                <input type="submit" value="Submit" id="submitButton" class="w3-disabled" disabled>
+            </form><br>
+            <img src="/static/img/close.png" alt="Close" class="hover-zoom" onclick="closeReportForm()"
+                style="position:fixed; right:10%; top:10%; height: 50px;">
+        </div>
     </div>
 </div>
 {%- endmacro %}
