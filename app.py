@@ -251,16 +251,15 @@ def google_login_callback():
     token = oauth.google.authorize_access_token()
     response_json = token["userinfo"]
 
-    if response_json.get("email_verified"):
-        unique_id = "gg-" + response_json["sub"]
-        users_name = response_json["name"]
-        users_email = response_json["email"]
-        if response_json["locale"] in LANGUAGE_CODES:
-            lang = response_json["locale"]
-        else:
-            lang = "en"
-    else:
+    if not response_json.get("email_verified"):
         return "User email not available or not verified by Google.", 400
+    
+    unique_id = "gg-" + response_json["sub"]
+    users_name = response_json["name"]
+    users_email = response_json["email"]
+    lang = response_json["locale"]
+    if lang not in LANGUAGE_CODES:
+        lang = "en"
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -282,20 +281,20 @@ def twitter_login():
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
     token = oauth.twitter.authorize_access_token()
-    resp = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
-    response_json = resp.json()
+    response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
+    response_json = response.json()
 
-    if response_json.get("email"):
-        unique_id = "tw-" + response_json["id_str"]
-        users_name = response_json["name"]
-        users_email = response_json["email"]
-        resp = oauth.twitter.get("account/settings.json")
-        resp_json = resp.json()
-        lang = resp_json.get("language")
-        if not lang in LANGUAGE_CODES:
-            lang = "en"
-    else:
+    unique_id = "tw-" + response_json["id_str"]
+    users_name = response_json["name"]
+    users_email = response_json.get("email")
+    if not users_email:
         return "User email not available or not verified by Twitter.", 400
+
+    settings_response = oauth.twitter.get("account/settings.json")
+    settings_response_json = settings_response.json()
+    lang = settings_response_json.get("language")
+    if lang not in LANGUAGE_CODES:
+        lang = "en"
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -318,13 +317,13 @@ def github_login():
 @app.route('/login/github/callback')
 def github_login_callback():
     token = oauth.github.authorize_access_token()
-    resp = oauth.github.get("user")
-    response_json = resp.json()
+    response = oauth.github.get("user")
+    response_json = response.json()
 
     if not response_json.get('email'):
-        resp = oauth.github.get('user/emails')
-        emails = resp.json()
-        response_json["email"] = next(email['email'] for email in emails if email['primary'])
+        emails_response = oauth.github.get('user/emails')
+        emails_json = emails_response.json()
+        response_json["email"] = [email['email'] for email in emails_json if email['primary']][0]
 
     unique_id = "gh-" + str(response_json["id"])
     users_name = response_json["name"]
