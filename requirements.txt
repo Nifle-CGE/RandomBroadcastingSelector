@@ -3,6 +3,6 @@ flask_login
 authlib
 pyopenssl
 requests
-azure_cosmos
+azure_cosmos==4.2.0
 sendgrid
 deepl
