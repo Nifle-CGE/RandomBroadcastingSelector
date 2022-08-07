@@ -648,6 +648,10 @@ def sitemap(lang):
 def robots():
     return render_template("robots.html")
 
+@app.route("/ping/")
+def ping():
+    return "App online", 200
+
 # Error handling
 @app.errorhandler(401)
 def method_not_allowed(e):
