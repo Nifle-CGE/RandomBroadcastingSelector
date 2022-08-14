@@ -33,8 +33,7 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # User session management setup
-login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager = LoginManager(app)
 
 # Setting anonymous user
 def anon_user_getter():
@@ -51,7 +50,7 @@ stats = _stuffimporter.get_json("stats")
 stats["time"]["start_time"] = time.time()
 _stuffimporter.set_stats(stats)
 
-# Deepl traduction setup
+# Deepl translation setup
 translator = deepl.Translator(config["deepl_auth_key"])
 
 LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
@@ -75,7 +74,7 @@ oauth = OAuth(app)
 def load_user(user_id, active=True):
     user = User()
     if not user.uimport(u_cont, user_id):
-        return user
+        return None
 
     if user.id_ == stats["broadcast"]["author"]:
         user.is_broadcaster = True
@@ -127,19 +126,19 @@ def verify_broadcast(func):
 
     _stuffimporter.set_stats(stats)
 
-    brod_obj = load_user(stats["broadcast"]["author"], active=False)
-    if not brod_obj.email:
+    brod = load_user(stats["broadcast"]["author"], active=False)
+    if not brod.email:
         end_message = "error : selected user doesn't have an email"
         return func
 
-    with open(f"templates/mail.html", "r", encoding="utf-8") as mail_file:
+    with open(f"templates/brod_mail.html", "r", encoding="utf-8") as mail_file:
         mail_content = mail_file.read()
     mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
     mail_content.replace("{{ brod_code }}", code)
 
     message = Mail(
         from_email="random.broadcasting.selector@gmail.com",
-        to_emails=brod_obj.email,
+        to_emails=brod.email,
         subject="RandomBroadcastingSelector : You are the one.",
         html_content=mail_content
     )
@@ -211,17 +210,15 @@ def index_redirect():
 @app.route("/<lang>/")
 @verify_broadcast
 def index(lang):
-    if not lang in LANGUAGE_CODES:
+    if lang not in LANGUAGE_CODES:
         abort(404)
 
-    try:
-        test = render_template(f"{lang}/index.html", stats=stats)
-    except jinja2.exceptions.TemplateNotFound:
+    if lang not in SUPPORTED_LANGUAGES:
         set_lang("en")
         return render_template("en/message.html", message="This language has not been implemented yet.")
 
     set_lang(lang)
-    return test
+    return render_template(f"{lang}/index.html", stats=stats)
 
 # All the login stuff
 @app.route("/<lang>/login/")
@@ -329,6 +326,43 @@ def github_login_callback():
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = "en"
+
+    return login_or_create_user(unique_id, users_name, users_email, lang)
+
+@app.route("/login/discord/")
+def discord_login():
+    # Discord Oauth Config
+	oauth.register(
+		name='discord',
+		client_id=config["discord"]["client_id"],
+		client_secret=config["discord"]["client_secret"],
+        api_base_url='https://discordapp.com/api/',
+        access_token_url='https://discordapp.com/api/oauth2/token',
+        authorize_url='https://discordapp.com/api/oauth2/authorize',
+		client_kwargs={
+			'scope': 'identify email'
+		}
+	)
+	
+	# Redirect to discord_login_callback function
+	redirect_uri = url_for("discord_login_callback", _external=True)
+	return oauth.discord.authorize_redirect(redirect_uri)
+
+@app.route("/login/discord/callback")
+def discord_login_callback():
+    token = oauth.discord.authorize_access_token()
+    response = oauth.discord.get("users/@me")
+    response_json = response.json()
+
+    if not response_json.get("verified"):
+        return "User email not available or not verified by Discord.", 400
+    
+    unique_id = "di-" + response_json["id"]
+    users_name = response_json["username"]
+    users_email = response_json["email"]
+    lang = response_json["locale"]
+    if lang not in LANGUAGE_CODES:
+        lang = "en"
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -461,7 +495,6 @@ def broadcast(lang):
 @login_required
 def broadcast_callback():
     lang = get_lang()
-    return request.form
     
     if stats["codes"]["broadcast"] != request.form["brod_code"]:
         return render_template(f"{lang}/message.html", message=
@@ -503,7 +536,6 @@ def broadcast_callback():
 @app.route("/ban-appeal-callback", methods=["POST"])
 def ban_appeal_callback():
     lang = get_lang()
-    return request.form
 
     try:
         stats["codes"]["ban_appeal"].remove(request.form["appeal_code"])
@@ -530,48 +562,50 @@ def ban_appeal_callback():
 def upvote_callback():
     lang = get_lang()
     if not stats["broadcast"]["content"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't upvote one.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang])
+        return {"en": "No post is live right now so you can't upvote one.",
+                "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang]
 
-    if current_user.upvote != stats["broadcast"]["id"]:
-        current_user.upvote = stats["broadcast"]["id"]
-        stats["broadcast"]["upvote"] += 1
-        current_user.downvote = ""
-        stats["broadcast"]["downvote"] -= 1
-    else:
+    if current_user.upvote == stats["broadcast"]["id"]:
         current_user.upvote = ""
-        stats["broadcast"]["upvote"] -= 1
+        stats["broadcast"]["upvotes"] -= 1
+    else:
+        current_user.upvote = stats["broadcast"]["id"]
+        stats["broadcast"]["upvotes"] += 1
+        if current_user.downvote == stats["broadcast"]["id"]:
+            current_user.downvote = ""
+            stats["broadcast"]["downvotes"] -= 1
 
     current_user.uexport(u_cont)
     _stuffimporter.set_stats(stats)
+
+    return "upvote"
 
 @app.route("/downvote-callback", methods=["POST"])
 @login_required
 def downvote_callback():
     lang = get_lang()
     if not stats["broadcast"]["content"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't downvote one.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang])
+        return {"en": "No post is live right now so you can't downvote one.",
+                "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang]
 
-    if current_user.downvote != stats["broadcast"]["id"]:
-        current_user.downvote = stats["broadcast"]["id"]
-        stats["broadcast"]["downvote"] += 1
-        current_user.upvote = ""
-        stats["broadcast"]["upvote"] -= 1
-    else:
+    if current_user.downvote == stats["broadcast"]["id"]:
         current_user.downvote = ""
-        stats["broadcast"]["downvote"] -= 1
+        stats["broadcast"]["downvotes"] -= 1
+    else:
+        current_user.downvote = stats["broadcast"]["id"]
+        stats["broadcast"]["downvotes"] += 1
+        if current_user.upvote == stats["broadcast"]["id"]:
+            current_user.upvote = ""
+            stats["broadcast"]["upvotes"] -= 1
 
     current_user.uexport(u_cont)
     _stuffimporter.set_stats(stats)
 
+    return "downvote"
+
 @app.route("/report-callback", methods=["POST"])
 @login_required
 def report_callback():
-    return request.form
-    
     lang = get_lang()
     if not stats["broadcast"]["content"]:
         return render_template(f"{lang}/message.html", message=
@@ -621,14 +655,33 @@ def report_callback():
                     results[quote] += 1
 
         results = sorted(results.items(), key=lambda x:x[1])
-        most_quoted = results[0][0]
-        brod.most_quoted = most_quoted
+        brod.ban_most_quoted = results[0][0]
 
         brod.uexport(u_cont)
+
+        if brod.email:
+            with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
+                mail_content = mail_file.read()
+            mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+            mail_content.replace("{{ brod.ban_message }}", brod.ban_message)
+            mail_content.replace("{{ brod.ban_reason }}", brod.ban_reason)
+            mail_content.replace("{{ brod.ban_most_quoted }}", brod.ban_most_quoted)
+
+            message = Mail(
+                from_email="random.broadcasting.selector@gmail.com",
+                to_emails=brod.email,
+                subject="RandomBroadcastingSelector : You were banned.",
+                html_content=mail_content
+            )
+            sg_client.send(message)
 
         stats["users"]["banned"] += 1
 
     _stuffimporter.set_stats(stats)
+
+    return render_template(f"{lang}/message.html", message=
+    {"en": "Your report as been saved.",
+    "fr": "Votre signalement a été enregistré."}[lang])
 
 # Legal stuff
 @app.route("/privacy-policy/")
@@ -648,6 +701,7 @@ def sitemap(lang):
 def robots():
     return render_template("robots.html")
 
+# Health check
 @app.route("/ping/")
 def ping():
     return "App online", 200
