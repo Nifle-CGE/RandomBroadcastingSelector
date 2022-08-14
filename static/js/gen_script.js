@@ -8,21 +8,47 @@ function redirectToPost() {
     }
 }
 
-function invertColorUpvote() {
-    upvoteButton = document.getElementById("upvoteButton");
-    if (upvoteButton.className.match(/(?:^|\s)w3-text-green(?!\S)/)) {
-        upvoteButton.className = upvoteButton.className.replace(/(?:^|\s)w3-text-green(?!\S)/g, "");
-    } else {
-        upvoteButton.className += " w3-text-green";
-    }
-}
+async function invertColorVote(action) {
+    var resp = await fetch("/" + action + "-callback", {
+        method: "POST"
+    });
+    var text = await resp.text()
 
-function invertColorDownvote() {
+    if (text !== action) {
+        alert(text);
+    }
+
     downvoteButton = document.getElementById("downvoteButton");
-    if (downvoteButton.className.match(/(?:^|\s)w3-text-red(?!\S)/)) { // TODO : vérif que le match fonctionne
-        downvoteButton.className = downvoteButton.className.replace(/(?:^|\s)w3-text-red(?!\S)/g, "");
+    downvoteNum = document.getElementById("downvote_num");
+    upvoteButton = document.getElementById("upvoteButton");
+    upvoteNum = document.getElementById("upvote_num");
+
+    if (action === "upvote") {
+        if (upvoteButton.className.match(/(?:^|\s)w3-text-green w3-hover-text-green(?!\S)/)) {
+            upvoteButton.className = upvoteButton.className.replace(/(?:^|\s)w3-text-green w3-hover-text-green(?!\S)/g, "");
+            upvoteNum.innerHTML = parseInt(upvoteNum.innerHTML) - 1
+        } else {
+            upvoteButton.className += " w3-text-green w3-hover-text-green";
+            upvoteNum.innerHTML = parseInt(upvoteNum.innerHTML) + 1
+
+            if (downvoteButton.className.match(/(?:^|\s)w3-text-red w3-hover-text-red(?!\S)/)) {
+                downvoteButton.className = downvoteButton.className.replace(/(?:^|\s)w3-text-red w3-hover-text-red(?!\S)/g, "");
+                downvoteNum.innerHTML = parseInt(downvoteNum.innerHTML) - 1
+            }
+        }
     } else {
-        downvoteButton.className += " w3-text-red";
+        if (downvoteButton.className.match(/(?:^|\s)w3-text-red w3-hover-text-red(?!\S)/)) {
+            downvoteButton.className = downvoteButton.className.replace(/(?:^|\s)w3-text-red w3-hover-text-red(?!\S)/g, "");
+            downvoteNum.innerHTML = parseInt(downvoteNum.innerHTML) - 1
+        } else {
+            downvoteButton.className += " w3-text-red w3-hover-text-red";
+            downvoteNum.innerHTML = parseInt(downvoteNum.innerHTML) + 1
+
+            if (upvoteButton.className.match(/(?:^|\s)w3-text-green w3-hover-text-green(?!\S)/)) {
+                upvoteButton.className = upvoteButton.className.replace(/(?:^|\s)w3-text-green w3-hover-text-green(?!\S)/g, "");
+                upvoteNum.innerHTML = parseInt(upvoteNum.innerHTML) - 1
+            }
+        }
     }
 }
 

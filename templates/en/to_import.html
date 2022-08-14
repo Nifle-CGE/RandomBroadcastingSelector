@@ -2,24 +2,20 @@
 <div class="w3-container" style="padding:0;">
     <div class="w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
         {% if live and user.is_authenticated: %}
-        <form action="/upvote-callback" , method="post">
-            <input type="submit" id="upvoteButton" name="upvote" onclick="invertColorUpvote()" class="w3-button w3-round-large w3-hover-light-green
-                {% if user.upvote == post['id']: %} w3-text-green{% endif %}
-                " value=" ▲"><br>
-        </form>
+        <input type="button" id="upvoteButton" onclick="invertColorVote('upvote')" class="w3-button w3-round-large w3-hover-light-green
+        {% if user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}
+        " value="▲"><br>
         {% else: %}
         <input type="button" class="w3-button w3-round-large w3-hover-light-green" value="▲"><br>
         {% endif %}
 
-        <span class="w3-text-green">{{ post["upvotes"] }}</span><br>
-        <span class="w3-text-red">{{ post["downvotes"] }}</span><br>
+        <span class="w3-text-green" id="upvote_num">{{ post["upvotes"] }}</span><br>
+        <span class="w3-text-red" id="downvote_num">{{ post["downvotes"] }}</span><br>
 
         {% if live and user.is_authenticated: %}
-        <form action="/downvote-callback" , method="post">
-            <input type="submit" id="downvoteButton" name="downvote" onclick="invertColorDownvote()" class="w3-button w3-round-large w3-hover-orange
-                {% if user.downvote != post['id']: %} w3-text-red{% endif %}
-                " value="▼"><br>
-        </form>
+        <input type="button" id="downvoteButton" onclick="invertColorVote('downvote')" class="w3-button w3-round-large w3-hover-orange
+        {% if user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}
+        " value="▼"><br>
         {% else: %}
         <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
         {% endif %}
@@ -27,7 +23,7 @@
     <div class="w3-container w3-cell w3-round-large w3-light-grey">
         <h4>❝{{ post["content"] }}❞</h4>
         {% if target_lang and target_lang != post["lang"]: %}
-        <h5>Traduction : {{ post["trads"][target_lang] }}</h5>
+        <h5>Translation : {{ post["trads"][target_lang] }}</h5>
         {% endif %}
         <p>by {{ post["author_name"] }}</p>
         <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}
@@ -42,12 +38,15 @@
             <h5>
                 The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any
                 queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a
-                traduction error) you can contact me by clicking on my name in the footer at the bottom of the page.<br>
+                translation error) you can contact me by clicking on my name in the footer at the bottom of the
+                page.<br>
                 Do not report for no reason because you will have to quote the part of the broadcast where the offense
                 was made in the input at the end of the form.<br>
                 For the input at the end of the form, you have to quote at least 2 words (a word is something that is
                 surrounded by a space or a period), which mean you cannot split a word in half. (for
                 example "in half" is valid, "in.half is valid but "in hal" isn't)<br>
+                Another thing about the input at the end, you can only quote the original message and not the
+                translation that has been made, because we can't risk banning people because of bad translations.<br>
                 Be careful to fill this form correctly as you will not be able to modify or delete it.
             </h5>
             <input type="button" value="I have read the text above." id="activatorButton"
