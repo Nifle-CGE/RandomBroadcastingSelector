@@ -23,14 +23,21 @@ function validateReportForm(message) {
         return false;
     }
 
-    var splitted_quote = quote.split(/ |\,|\./);
+    var rx = new RegExp("[\w']+", "g");
+    var splitted_quote = new Array();
+    while ((match = rx.exec(quote)) !== null) {
+        splitted_quote.push(match);
+    }
     splitted_quote = splitted_quote.filter(Boolean); // to remove empty elements
     if (splitted_quote.length < 2) {
         alert("The quote you supplied has only got one word when it has to have at least two.");
         return false;
     }
 
-    var splitted_msg = message.split(/ |\,|\./);
+    var splitted_msg = new Array();
+    while ((match = rx.exec(message)) !== null) {
+        splitted_msg.push(match);
+    }
     splitted_msg = splitted_msg.filter(Boolean); // to remove empty elements
 
     var quote_index = 0;
