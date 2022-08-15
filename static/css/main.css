@@ -4,6 +4,13 @@ html {
 
 body {
     background-color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+footer {
+    margin-top: auto;
 }
 
 img.logo {
