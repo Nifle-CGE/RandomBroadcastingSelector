@@ -7,6 +7,7 @@ import time
 import random
 import copy
 import math
+import re
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
@@ -17,7 +18,6 @@ from flask_login import (
     login_user,
     logout_user,
 )
-import jinja2
 from authlib.integrations.flask_client import OAuth
 from azure.cosmos import CosmosClient
 from sendgrid import SendGridAPIClient
@@ -113,12 +113,16 @@ def verify_broadcast(func):
 
     stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
     stats["broadcast"]["content"] = ""
+
     stats["broadcasts"]["msgs_sent"] += 1
     try:
         stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] += 1
     except KeyError:
         stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
 
+    stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"]))
+    stats["broadcasts"]["characters_sent"] += len(new_post["content"])
+    
     stats["time"]["last_broadcaster"] = time.time()
 
     code = secrets.token_urlsafe(32)

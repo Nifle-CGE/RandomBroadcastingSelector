@@ -18,7 +18,9 @@
             "fr": 0,
             "es": 0,
             "de": 0
-        }
+        },
+        "words_sent": 0,
+        "characters_sent": 0
     },
     "users": {
         "num": 2,
@@ -26,15 +28,15 @@
         "seen_msg": 0,
         "lastact_hour": 0,
         "lastact_24h": 0,
-        "lastact_week": 0
+        "lastact_week": 2
     },
     "time": {
-        "start_time": 1659779361.5438223,
-        "stats_getting": 8.815144300460815,
-        "stats_last_edited": 1659779540.953866,
+        "start_time": 1660589483.7637515,
+        "stats_getting": 6.322250127792358,
+        "stats_last_edited": 1660589622.4933395,
         "last_broadcast": 16490601329.47,
         "last_broadcaster": 16490601329.47,
-        "uptime_str": "2 minutes 59.41 seconds"
+        "uptime_str": "2 minutes 18.73 seconds"
     },
     "top_posts": {
         "5_most_upped": [

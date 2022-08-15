@@ -25,6 +25,8 @@ Broadcasts sent : {{ stats["broadcasts"]["msgs_sent"] }}<br>
 {% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
 Broadcasts in {{ lang_code }} sent : {{ number }}<br>
 {% endfor %}
+Total words sent : {{ stats["broadcasts"]["words_sent"] }}<br>
+Total characters sent : {{ stats["broadcasts"]["characters_sent"] }}<br>
 
 <h2>Users info</h2>
 Registered (and not banned) users : {{ stats["users"]["num"] }}<br>
