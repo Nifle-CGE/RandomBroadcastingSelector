@@ -20,12 +20,12 @@
         <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
         {% endif %}
     </div>
-    <div class="w3-container w3-cell w3-round-large w3-light-grey">
+    <div class="w3-container w3-cell w3-round-large w3-light-grey" style="padding:0 16px 16px 16px;">
         <h4>❝{{ post["content"] }}❞</h4>
         {% if target_lang and target_lang != post["lang"]: %}
         <h5>Translation : {{ post["trads"][target_lang] }}</h5>
         {% endif %}
-        <p>by {{ post["author_name"] }}</p>
+        <h6>by {{ post["author_name"] }}</h6>
         <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}
             <!-- | <a class="w3-hover-red" onclick="openReportForm()">Report (testing)</a> 
                 TODO : enlever quand form terminée -->
