@@ -8,6 +8,7 @@ import random
 import copy
 import math
 import re
+import logging
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
@@ -23,14 +24,25 @@ from azure.cosmos import CosmosClient
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 import deepl
+import requests
 
 # Internal imports
 import _stuffimporter
 from user import User
 
+# Logging
+# Mise en place du système de logs avec impression dans la console et enregistrement dans un fichier logs.log
+fh = logging.FileHandler("logs.log", encoding='utf-8')
+formatter = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s : %(message)s")
+fh.setFormatter(formatter)
+
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+app.logger.addHandler(fh)
+app.logger.level = logging.DEBUG
+
+app.logger.info("Je suis prêt à être prêt.")
 
 # User session management setup
 login_manager = LoginManager(app)
@@ -69,6 +81,8 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 #app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
+app.logger.info("Je suis prêt.")
+
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id, active=True):
@@ -88,10 +102,10 @@ def load_user(user_id, active=True):
 # Useful defs
 def verify_broadcast(func):
     if stats["time"]["last_broadcaster"] + 86400 > time.time():
-        end_message = "The broadcaster still has time to make his broadcast."
+        app.logger.info("The broadcaster still has time to make his broadcast.")
         return func
     elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
-        end_message = "The broadcaster has made his broadcast and this posts time isn't over yet."
+        app.logger.info("The broadcaster has made his broadcast and this posts time isn't over yet.")
         return func
 
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
@@ -132,7 +146,7 @@ def verify_broadcast(func):
 
     brod = load_user(stats["broadcast"]["author"], active=False)
     if not brod.email:
-        end_message = "error : selected user doesn't have an email"
+        app.logger.error(f"Selected user => {brod.id_} doesn't have an email.")
         return func
 
     with open(f"templates/brod_mail.html", "r", encoding="utf-8") as mail_file:
@@ -148,7 +162,7 @@ def verify_broadcast(func):
     )
     sg_client.send(message)
 
-    end_message = "New broadcaster selected."
+    app.logger.info(f"New broadcaster selected => {brod.id_}.")
     return func
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
@@ -162,7 +176,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     if not user:
         try:
             fraud_id = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
-            # TODO : vérifier que la query au dessus fonctionne
+            app.logger.info(f"Double compte empéché => {fraud_id}.")
             return render_template(f"{lang}/message.html", message=
             {"en": "Double accounts aren't allowed.",
             "fr": "Les doubles comptes ne sont pas autorisés."}[lang])
@@ -177,6 +191,8 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         _stuffimporter.set_stats(stats)
 
         user = new_user
+
+        app.logger.info(f"User created => {user.id_}.")
     if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
         stats["codes"]["ban_appeal"].append(code)
@@ -476,6 +492,7 @@ def stats_file():
                 if k.startswith("_") or k == "author":
                     stats_file["top_posts"][i][j].pop(k)
 
+    app.logger.info("Stats file exported.")
     return stats_file
 
 @app.route("/<lang>/broadcast/")
@@ -501,6 +518,7 @@ def broadcast_callback():
     lang = get_lang()
     
     if stats["codes"]["broadcast"] != request.form["brod_code"]:
+        app.logger.info("Code de vérif incorrect.")
         return render_template(f"{lang}/message.html", message=
         {"en": "You have to input the code you received in the mail we sent to you.",
         "fr": "Vous devez saisir le code que vous avez reçu dans le mail qui vous a été envoyé."}[lang])
@@ -508,9 +526,10 @@ def broadcast_callback():
         stats["codes"]["broadcast"] = ""
     
     if request.form["user_id"] != stats["broadcast"]["author"]:
+        app.logger.info("HACKER ALERT BROD")
         return render_template(f"{lang}/message.html", message=
         {"en": "I didn't think it was possible but you did it, so anyway you can only broadcast if you are the broadcaster, which you are not.",
-        "fr": "Je pensait pas que c'était possible mais tu l'a fait, bon, de toute façon tu peux pas diffuser si tu  ."}[lang])
+        "fr": "Je pensait pas que c'était possible mais tu l'a fait, bon, de toute façon tu peux pas diffuser si tu n'est pas diffuseur."}[lang])
     
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
         new_post = json.load(sample_file)
@@ -533,6 +552,7 @@ def broadcast_callback():
 
     _stuffimporter.set_stats(stats)
 
+    app.logger.info("The broadcast has been saved.")
     return render_template(f"{lang}/message.html", message=
     {"en": "Your broadcast has been saved.",
     "fr": "Votre diffusion a été enregistrée."}[lang])
@@ -545,18 +565,22 @@ def ban_appeal_callback():
         stats["codes"]["ban_appeal"].remove(request.form["appeal_code"])
         _stuffimporter.set_stats(stats)
     except ValueError:
+        app.logger.info("HACKER ALERT BAN APPEAL")
         return render_template(f"{lang}/message.html", message=
         {"en": "Get IP banned noob.",
         "fr": "Tu est maintenant ban IP."}[lang])
 
     user = load_user(request.form["user_id"], active=False)
     if not user.ban_appeal:
+        app.logger.info("Banned tryed to make another ban appeal.")
         return render_template(f"{lang}/message.html", message=
         {"en": "You have already made a ban appeal.",
         "fr": "Vous avez déja fait une demande de débannissement."}[lang])
     user.ban_appeal = request.form["reason"]
     user.uexport(u_cont)
 
+    requests.get(config["auth"]["telegram_send_url"] + "ban+appeal+received")
+    app.logger.info("Ban appeal saved.")
     return render_template(f"{lang}/message.html", message=
     {"en": "Your ban appeal has been saved.",
     "fr": "Votre demande de débannissement a été enregistrée."}[lang])
@@ -736,4 +760,4 @@ def internal_server_error(e):
                             err_msg=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0")
