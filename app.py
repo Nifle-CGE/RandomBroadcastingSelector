@@ -123,7 +123,7 @@ def verify_broadcast(func):
         new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
     except ZeroDivisionError:
         new_post["ratio"] = 1
-    p_cont.create_item(new_post)
+    p_cont.upsert_item(new_post)
 
     stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
     stats["broadcast"]["author_name"] = ""
