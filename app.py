@@ -126,7 +126,9 @@ def verify_broadcast(func):
     p_cont.create_item(new_post)
 
     stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
+    stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
+    stats["broadcast"]["date"] = ""
 
     stats["broadcasts"]["msgs_sent"] += 1
     try:
@@ -151,8 +153,7 @@ def verify_broadcast(func):
 
     with open(f"templates/brod_mail.html", "r", encoding="utf-8") as mail_file:
         mail_content = mail_file.read()
-    mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
-    mail_content.replace("{{ brod_code }}", code)
+    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod_code }}", code)
 
     message = Mail(
         from_email="random.broadcasting.selector@gmail.com",
@@ -509,7 +510,7 @@ def broadcast(lang):
         "fr": "Vous avez déja fait votre diffusion."}[lang])
 
     set_lang(lang)
-    return render_template(f"{lang}/broadcast.html")
+    return render_template(f"{lang}/broadcast.html", stats=stats)
 
 # Callbacks
 @app.route("/broadcast-callback", methods=["POST"])
