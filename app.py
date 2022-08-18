@@ -40,7 +40,7 @@ fh.setFormatter(formatter)
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 app.logger.addHandler(fh)
-app.logger.level = logging.DEBUG
+app.logger.level = logging.INFO
 
 app.logger.info("Je suis prêt à être prêt.")
 
@@ -102,10 +102,10 @@ def load_user(user_id, active=True):
 # Useful defs
 def verify_broadcast(func):
     if stats["time"]["last_broadcaster"] + 86400 > time.time():
-        app.logger.info("The broadcaster still has time to make his broadcast.")
+        app.logger.debug("The broadcaster still has time to make his broadcast.")
         return func
     elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
-        app.logger.info("The broadcaster has made his broadcast and this posts time isn't over yet.")
+        app.logger.debug("The broadcaster has made his broadcast and this posts time isn't over yet.")
         return func
 
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
@@ -298,6 +298,12 @@ def twitter_login():
 
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
+    if request.args.get("denied"):
+        lang = get_lang()
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You cancelled the Continue with Twitter action.",
+        "fr": "Vous avez annulé l'action Continuer avec Twitter."}[lang])
+
     token = oauth.twitter.authorize_access_token()
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
     response_json = response.json()
@@ -371,6 +377,12 @@ def discord_login():
 
 @app.route("/login/discord/callback")
 def discord_login_callback():
+    if request.args.get("error") == "access_denied":
+        lang = get_lang()
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You cancelled the Continue with Discord action.",
+        "fr": "Vous avez annulé l'action Continuer avec Discord."}[lang])
+
     token = oauth.discord.authorize_access_token()
     response = oauth.discord.get("users/@me")
     response_json = response.json()
