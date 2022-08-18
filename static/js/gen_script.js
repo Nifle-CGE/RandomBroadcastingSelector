@@ -52,17 +52,9 @@ async function invertColorVote(action) {
     }
 }
 
-function openReportForm() {
-    document.getElementById("reportForm").style.display = "block";
-}
-
-function closeReportForm() {
-    document.getElementById("reportForm").style.display = "none";
-}
-
 function enableSubmitButton(submitId, activatorId) {
     button = document.getElementById(submitId);
-    button.className = button.className.replace(" w3-disabled", "");
+    button.className = button.className.replace("w3-disabled", "");
     button.disabled = false;
 
     document.getElementById(activatorId).style.display = "none";
