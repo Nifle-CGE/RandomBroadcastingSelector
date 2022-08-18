@@ -9,7 +9,7 @@ def set_stats(dict_:dict):
         json.dump(dict_, stats_file)
 
 def pot_brods(u_cont, last_brod:str):
-    brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.ban.status = 0 AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
+    brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
     brods = []
     while True:
         try:
