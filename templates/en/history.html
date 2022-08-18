@@ -10,6 +10,7 @@
 {% if post_list: %}
 {% for post in post_list: %}
 {{ to_import.post(post) }}
+<br>
 {% endfor %}
 {% else: %}
 <h3>These posts don't exist yet.</h3>
