@@ -9,27 +9,10 @@ footer {
     margin-top: auto;
 }
 
-img.logo {
-    width: 50px;
-    height: 50px;
-    display: block;
-}
-
 .hover-zoom {
     transition: all .3s;
 }
 
 .hover-zoom:hover {
     transform: scale(1.1);
-}
-
-.form-popup {
-    display: none;
-    position: fixed;
-    height: 80%;
-    width: 80%;
-    top: 10%;
-    left: 10%;
-    background-color: white;
-    overflow-y: auto;
 }
