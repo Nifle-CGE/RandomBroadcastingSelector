@@ -4,9 +4,9 @@ def get_json(filename):
     with open(f"./{filename}.json", "r", encoding="utf-8") as json_file:
         return json.load(json_file)
 
-def set_stats(dict_:dict):
+def set_stats(stats:dict):
     with open(f"./stats.json", "w", encoding="utf-8") as stats_file:
-        json.dump(dict_, stats_file)
+        json.dump(stats, stats_file)
 
 def pot_brods(u_cont, last_brod:str):
     brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
