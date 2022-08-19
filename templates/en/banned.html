@@ -7,9 +7,15 @@
     <label>
         Enter why you should be unbanned.<br>
         <textarea rows="4" cols="128" name="reason" maxlength="512" autofocus required></textarea>
-    </label><br><br>
+    </label><br>
     <input type="hidden" name="user_id" value="{{ user_id }}">
     <input type="hidden" name="appeal_code" value="{{ appeal_code }}">
     <input type="submit" value="Submit">
 </form>
+<br>
+<p>
+    <span class="w3-text-red">Important</span> : If after submitting, you get any other message than "Your ban appeal
+    has been saved.", you will have to go back to the login page and try to login again to be able to correct you ban
+    appeal.
+</p>
 {% endblock %}
