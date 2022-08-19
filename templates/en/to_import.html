@@ -27,8 +27,9 @@
         {% endif %}
         <h6>by {{ post["author_name"] }}</h6>
         <small>Id : {{ post["id"] }} | Date : {{ post["date"] }}
-            <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report (testing)</a>
-             TODO : enlever quand form terminée -->
+            <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report
+                (testing)</a>
+            TODO : enlever quand form terminée -->
             {% if live and user.is_authenticated: %}
             | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report</a>
             {% endif %}
@@ -87,8 +88,8 @@
                     </label><br>
                     <input type="submit" value="Submit" id="submitButton" class="w3-disabled" disabled>
                 </form><br>
-                <img src="/static/img/close.png" alt="Close" class="w3-display-topright w3-hover-red"
-                    onclick="document.getElementById('reportForm').style.display = 'none';" style="height: 50px;">
+                <i class="fa fa-close w3-display-topright w3-hover-red w3-xxxlarge" style="padding: 0 9px;"
+                    onclick="document.getElementById('reportForm').style.display = 'none';"></i>
             </div>
         </div>
     </div>
