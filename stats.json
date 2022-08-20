@@ -39,81 +39,13 @@
         "uptime_str": "2 minutes 18.73 seconds"
     },
     "top_posts": {
-        "5_most_upped": [
-            {
-                "id": "0",
-                "content": "Ceci est un message de test.",
-                "author": "",
-                "author_name": "admin",
-                "date": "2022-06-09",
-                "lang": "fr",
-                "upvotes": 1,
-                "downvotes": 1,
-                "ratio": 1,
-                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
-                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
-                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
-                "_attachments": "attachments/",
-                "_ts": 1655819390
-            }
-        ],
-        "5_most_downed": [
-            {
-                "id": "0",
-                "content": "Ceci est un message de test.",
-                "author": "",
-                "author_name": "admin",
-                "date": "2022-06-09",
-                "lang": "fr",
-                "upvotes": 1,
-                "downvotes": 1,
-                "ratio": 1,
-                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
-                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
-                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
-                "_attachments": "attachments/",
-                "_ts": 1655819390
-            }
-        ],
-        "5_most_pop": [
-            {
-                "id": "0",
-                "content": "Ceci est un message de test.",
-                "author": "",
-                "author_name": "admin",
-                "date": "2022-06-09",
-                "lang": "fr",
-                "upvotes": 1,
-                "downvotes": 1,
-                "ratio": 1,
-                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
-                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
-                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
-                "_attachments": "attachments/",
-                "_ts": 1655819390
-            }
-        ],
-        "5_most_unpop": [
-            {
-                "id": "0",
-                "content": "Ceci est un message de test.",
-                "author": "",
-                "author_name": "admin",
-                "date": "2022-06-09",
-                "lang": "fr",
-                "upvotes": 1,
-                "downvotes": 1,
-                "ratio": 1,
-                "_rid": "Tz0sAMNRLt8BAAAAAAAAAA==",
-                "_self": "dbs/Tz0sAA==/colls/Tz0sAMNRLt8=/docs/Tz0sAMNRLt8BAAAAAAAAAA==/",
-                "_etag": "\"8e08b5f6-0000-0700-0000-62b1cc7e0000\"",
-                "_attachments": "attachments/",
-                "_ts": 1655819390
-            }
-        ]
+        "5_most_upped": [],
+        "5_most_downed": [],
+        "5_most_pop": [],
+        "5_most_unpop": []
     },
     "codes": {
         "broadcast": "",
-        "ban_appeal": []
+        "ban_appeal": {}
     }
 }

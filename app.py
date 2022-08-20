@@ -196,7 +196,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         app.logger.info(f"L'utilisateur {user.id_} a été créé.")
     if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
-        stats["codes"]["ban_appeal"].append(code)
+        stats["codes"]["ban_appeal"][user.id_] = code
         _stuffimporter.set_stats(stats)
 
         return render_template(f"{lang}/banned.html", user_id=user.id_, appeal_code=code)
@@ -591,14 +591,18 @@ def broadcast_callback():
 def ban_appeal_callback():
     lang = get_lang()
     try:
-        stats["codes"]["ban_appeal"].remove(request.form["appeal_code"])
-        _stuffimporter.set_stats(stats)
-    except ValueError:
+        if stats["codes"]["ban_appeal"].pop(request.form["user_id"]) != request.form["appeal_code"]:
+            app.logger.info(f"{request.form['user_id']} a essayé de faire la malin en changeant le html des hidden inputs sur la page de demande de débannissement.")
+            return render_template(f"{lang}/message.html", message=
+            {"en": "Hey smartass, quit trying.",
+            "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
+    except KeyError:
         app.logger.warning(f"ALERTE HACKER {request.form['user_id']} BAN APPEAL")
         return render_template(f"{lang}/message.html", message=
-        {"en": "Get IP banned noob.",
-        "fr": "Tu est maintenant ban IP."}[lang])
+        {"en": "The admin has been notified of your recent actions on this website, he will contact you shortly.",
+        "fr": "L'administrateur a été notifié de vos récentes actions sur ce sie web, il vous contactera dans les plus brefs délais."}[lang])
 
+    _stuffimporter.set_stats(stats)
     user = load_user(request.form["user_id"], active=False)
     if not user.ban_appeal:
         app.logger.info(f"{request.form['user_id']} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
