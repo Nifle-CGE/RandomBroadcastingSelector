@@ -11,7 +11,7 @@ import re
 import logging
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, url_for, session, request, abort
+from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
 from flask_login import (
     LoginManager,
     current_user,
@@ -101,44 +101,51 @@ def load_user(user_id, active=True):
 
 # Useful defs
 def verify_broadcast(func):
-    if stats["time"]["last_broadcaster"] + 86400 > time.time():
+    skip_save = False
+    if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
+        skip_save = True
+    elif stats["time"]["last_broadcaster"] + 86400 > time.time():
         app.logger.debug("Le diffuseur a toujours du temps pour faire sa diffusion.")
         return func
     elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
         app.logger.debug("Le diffuseur a fait sa diffusion et le temps du post n'est pas terminé.")
         return func
 
-    with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
-        new_post = json.load(sample_file)
+    if not skip_save:
+        # Save current post
+        with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
+            new_post = json.load(sample_file)
 
-    new_post["id"] = stats["broadcast"]["id"]
-    new_post["content"] = stats["broadcast"]["content"]
-    new_post["author"] = stats["broadcast"]["author"]
-    new_post["author_name"] = stats["broadcast"]["author_name"]
-    new_post["date"] = stats["broadcast"]["date"]
-    new_post["lang"] = stats["broadcast"]["lang"]
-    new_post["upvotes"] = stats["broadcast"]["upvotes"]
-    new_post["downvotes"] = stats["broadcast"]["downvotes"]
-    try:
-        new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
-    except ZeroDivisionError:
-        new_post["ratio"] = 1
-    p_cont.upsert_item(new_post)
+        new_post["id"] = stats["broadcast"]["id"]
+        new_post["content"] = stats["broadcast"]["content"]
+        new_post["author"] = stats["broadcast"]["author"]
+        new_post["author_name"] = stats["broadcast"]["author_name"]
+        new_post["date"] = stats["broadcast"]["date"]
+        new_post["lang"] = stats["broadcast"]["lang"]
+        new_post["upvotes"] = stats["broadcast"]["upvotes"]
+        new_post["downvotes"] = stats["broadcast"]["downvotes"]
+        try:
+            new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
+        except ZeroDivisionError:
+            new_post["ratio"] = 1
+        p_cont.upsert_item(new_post)
 
+        # Update stats in relation of the current post
+        stats["broadcasts"]["msgs_sent"] += 1
+        try:
+            stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] += 1
+        except KeyError:
+            stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
+
+        stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"]))
+        stats["broadcasts"]["characters_sent"] += len(new_post["content"])
+    
+    # Select another broadcaster
     stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
     stats["broadcast"]["date"] = ""
 
-    stats["broadcasts"]["msgs_sent"] += 1
-    try:
-        stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] += 1
-    except KeyError:
-        stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
-
-    stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"]))
-    stats["broadcasts"]["characters_sent"] += len(new_post["content"])
-    
     stats["time"]["last_broadcaster"] = time.time()
 
     code = secrets.token_urlsafe(32)
@@ -149,6 +156,7 @@ def verify_broadcast(func):
         app.logger.error(f"L'utilisateur sélectionné {brod.id_} n'a pas d'email.")
         return func
 
+    # Send mail to the new broadcaster
     with open(f"templates/brod_mail.html", "r", encoding="utf-8") as mail_file:
         mail_content = mail_file.read()
     mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod_code }}", code)
@@ -756,6 +764,12 @@ def report_callback():
 
         stats["users"]["banned"] += 1
 
+        # Delete the banned user's message
+        stats["broadcast"]["author_name"] = "[deleted]"
+        stats["broadcast"]["content"] = "[deleted]"
+
+        app.logger.info(f"Le diffuseur {brod.id_} a été banni.")
+
     _stuffimporter.set_stats(stats)
 
     return render_template(f"{lang}/message.html", message=
@@ -784,6 +798,138 @@ def robots():
 @app.route("/ping/")
 def ping():
     return "App online", 200
+
+# Admin
+@app.route("/super-secret-admin-panel/", methods=["GET", "POST"])
+def admin_panel():
+    identifier = current_user.id_ if current_user.is_authenticated else request.remote_addr
+    if request.method == "GET":
+        if request.args.get("touma") != "toumatoumatoutoumatoumateo" or request.args.get("pouma") != "poumapoumatoupoumapoumateo" :
+            app.logger.warning(f"{identifier} est arrivé sur l'admin panel.")
+            abort(404)
+
+        banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
+
+        app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
+        return render_template("admin_panel.html", verif_code=app.secret_key, banned_user=banned_user)
+    elif request.method == "POST":
+        if request.form.get("verif_code") != app.secret_key:
+            app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
+            abort(404)
+
+        if request.form["action"] == "ban_unban":
+            if request.form["whatodo"] == "ban":
+                user_to_ban = load_user(request.form["user_id"], active=False)
+                if user_to_ban.is_broadcaster:
+                    # Delete the banned user's message
+                    stats["broadcast"]["author_name"] = "[deleted]"
+                    stats["broadcast"]["content"] = "[deleted]"
+
+                user_to_ban.banned = 1
+                user_to_ban.ban_message = request.form["ban_message"]
+                user_to_ban.ban_reason = request.form["ban_reason"]
+                user_to_ban.ban_most_quoted = request.form["ban_most_quoted"]
+
+                user_to_ban.uexport(u_cont)
+                
+                if not request.form.get("slienced"):
+                    with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
+                        mail_content = mail_file.read()
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ user_to_ban.ban_message }}", user_to_ban.ban_message).replace("{{ user_to_ban.ban_reason }}", user_to_ban.ban_reason).replace("{{ user_to_ban.ban_most_quoted }}", user_to_ban.ban_most_quoted)
+
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=user_to_ban.email,
+                        subject="RandomBroadcastingSelector : You were banned.",
+                        html_content=mail_content
+                    )
+                    sg_client.send(message)
+
+                stats["users"]["banned"] += 1
+
+                _stuffimporter.set_stats(stats)
+                app.logger.info(f"{identifier} a banni {user_to_ban.id_} avec succès.")
+            else:
+                user_to_unban = load_user(request.form["user_id"], active=False)
+                user_to_unban.banned = 0
+
+                user_to_unban.uexport()
+
+                if not request.form.get("slienced"):
+                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
+                        mail_content = mail_file.read()
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=user_to_unban.email,
+                        subject="RandomBroadcastingSelector : You are no longer banned.",
+                        html_content=mail_content
+                    )
+                    sg_client.send(message)
+                
+                stats["users"]["banned"] -= 1
+
+                _stuffimporter.set_stats(stats)
+                app.logger.info(f"{identifier} a débanni {user_to_unban.id_} avec succès.")
+        elif request.form["action"] == "ban_appeal":
+            if request.form["acc_ref"] == "accepté":
+                user_to_unban = load_user(request.form["user_id"], active=False)
+                user_to_unban.banned = 0
+
+                user_to_unban.uexport()
+
+                if not request.form.get("slienced"):
+                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
+                        mail_content = mail_file.read()
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=user_to_unban.email,
+                        subject="RandomBroadcastingSelector : You are no longer banned.",
+                        html_content=mail_content
+                    )
+                    sg_client.send(message)
+
+                stats["users"]["banned"] -= 1
+
+                _stuffimporter.set_stats(stats)
+                app.logger.info(f"{identifier} a accepté la demande de débannissement de {user_to_unban.id_} avec succès.")
+            else:
+                user_to_refuse = load_user(request.form["user_id"], active=False)
+                user_to_refuse.ban_appeal = ""
+
+                user_to_refuse.uexport()
+
+                if not request.form.get("slienced"):
+                    with open(f"templates/refused_mail.html", "r", encoding="utf-8") as mail_file:
+                        mail_content = mail_file.read()
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=user_to_refuse.email,
+                        subject="RandomBroadcastingSelector : Your ban appeal was refused.",
+                        html_content=mail_content
+                    )
+                    sg_client.send(message)
+        elif request.form["action"] == "import_stats":
+            stats = json.load(request.files[request.files.keys()[0]].stream)
+            request.files[request.files.keys()[0]].stream.close()
+        elif request.form["action"] == "export_stats":
+            send_file("./stats.json", as_attachment=True)
+        elif request.form["action"] == "import_logs":
+            with open("./logs.log", "w", encoding="utf-8") as logs_file:
+                logs_file.write(request.files[request.files.keys()[0]].stream.read())
+            request.files[request.files.keys()[0]].stream.close()
+        elif request.form["action"] == "export_logs":
+            send_file("./logs.log", as_attachment=True)
+
+        return render_template("en/message.html", message="Succès de l'action " + request.form["action"])
+    else:
+        app.logger.warning(f"{identifier} a essayé d'utiliser une autre méthode sur le panneau d'admin.")
+        abort(404)
 
 # Error handling
 @app.errorhandler(401)

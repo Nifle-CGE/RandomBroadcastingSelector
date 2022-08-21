@@ -1,0 +1,95 @@
+{% extends "en/base.html" %}
+
+{% block title %}Admin Panel{% endblock %}
+
+{% block content %}
+<h1>Admin Panel</h1>
+<h2>Tout ce qui est ban</h2>
+<h3>Pour ban qqun</h3>
+<form action="/super-secret-admin-panel/" method="post">
+    <label>
+        Id de la personne concernée : <input type="text" name="user_id" required>
+    </label><br>
+    <label>
+        <input type="radio" name="whatodo" value="ban"
+            onclick="document.getElementById('ban_inputs').style.display = 'block';"> Bannir
+    </label>
+    <label>
+        <input type="radio" name="whatodo" value="déban"> Débannir
+    </label><br>
+    <label>
+        <input type="checkbox" name="slienced" value="true"> Sliencieux
+    </label><br>
+    <div id="ban_inputs" style="display: none;">
+        <label>
+            user_to_ban.ban_message : <input type="text" name="ban_message">
+        </label><br>
+        <label>
+            user_to_ban.ban_reason : <input type="text" name="ban_reason">
+        </label><br>
+        <label>
+            user_to_ban.ban_most_quoted : <input type="text" name="ban_most_quoted">
+        </label><br>
+    </div>
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="ban_unban">
+    <input type="submit" value="Submit">
+</form>
+
+<h3>Pour reviewer une demande de déban et accepter ou refuser</h3>
+<p>
+    banned_user.id_ : {{ banned_user.id_ }}<br>
+    banned_user.ban_message : {{ banned_user.ban_message }}<br>
+    banned_user.ban_reason : {{ banned_user.ban_reason }}<br>
+    banned_user.ban_most_quoted : {{ banned_user.ban_most_quoted }}<br>
+    banned_user.ban_appeal : {{ banned_user.ban_appeal }}
+</p>
+<form action="/super-secret-admin-panel/" method="post">
+    <label>
+        <input type="radio" name="acc_ref" value="accepté"> Accepter
+    </label>
+    <label>
+        <input type="radio" name="acc_ref" value="refusé"> Refuser
+    </label><br>
+    <label>
+        <input type="checkbox" name="slienced" value="true"> Sliencieux
+    </label><br>
+    <input type="hidden" name="user_id" value="{{ banned_user.id_ }}"><br>
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="ban_appeal">
+    <input type="submit" value="Submit">
+</form>
+
+<h2>Tout ce qui est fichiers</h2>
+<h3>Stats</h3>
+<form action="/super-secret-admin-panel/" method="post" enctype="multipart/form-data">
+    <label>
+        Import
+        <input type="file" name="stats_file">
+    </label><br>
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="import_stats">
+    <input type="submit" value="Submit">
+</form>
+<form action="/super-secret-admin-panel/" method="post">
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="export_stats">
+    <input type="submit" value="Export">
+</form>
+
+<h3>Logs</h3>
+<form action="/super-secret-admin-panel/" method="post" enctype="multipart/form-data">
+    <label>
+        Import
+        <input type="file" name="logs_file">
+    </label><br>
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="import_logs">
+    <input type="submit" value="Submit">
+</form>
+<form action="/super-secret-admin-panel/" method="post">
+    <input type="hidden" name="verif_code" value="{{ verif_code }}">
+    <input type="hidden" name="action" value="export_logs">
+    <input type="submit" value="Export">
+</form>
+{% endblock %}
