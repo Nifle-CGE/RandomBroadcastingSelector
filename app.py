@@ -808,7 +808,10 @@ def admin_panel():
             app.logger.warning(f"{identifier} est arrivé sur l'admin panel.")
             abort(404)
 
-        banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
+        try:
+            banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
+        except StopIteration:
+            banned_user = anon_user_getter()
 
         app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
         return render_template("admin_panel.html", verif_code=app.secret_key, banned_user=banned_user)
