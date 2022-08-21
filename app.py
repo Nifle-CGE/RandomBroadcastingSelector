@@ -56,11 +56,8 @@ def anon_user_getter():
     return anon_user
 login_manager.anonymous_user = anon_user_getter
 
-# Config elements setup
-config = _stuffimporter.get_json("config")
-stats = _stuffimporter.get_json("stats")
-stats["time"]["start_time"] = time.time()
-_stuffimporter.set_stats(stats)
+# Config setup
+config = _stuffimporter.StuffImporter.get_config()
 
 # Deepl translation setup
 translator = deepl.Translator(config["deepl_auth_key"])
@@ -73,6 +70,13 @@ cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
 u_cont = db.get_container_client("Web RBS Users")
 p_cont = db.get_container_client("Web RBS Posts")
+
+stuffimporter = _stuffimporter.StuffImporter(u_cont)
+
+# Stats setup
+stats = stuffimporter.get_stats()
+stats["time"]["start_time"] = time.time()
+stuffimporter.set_stats(stats)
 
 # Mail client setup
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
@@ -141,7 +145,7 @@ def verify_broadcast(func):
         stats["broadcasts"]["characters_sent"] += len(new_post["content"])
     
     # Select another broadcaster
-    stats["broadcast"]["author"] = random.choice(_stuffimporter.pot_brods(u_cont, stats["broadcast"]["author"]))
+    stats["broadcast"]["author"] = random.choice(stuffimporter.pot_brods(stats["broadcast"]["author"]))
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
     stats["broadcast"]["date"] = ""
@@ -153,6 +157,7 @@ def verify_broadcast(func):
 
     brod = load_user(stats["broadcast"]["author"], active=False)
     if not brod.email:
+        stats = stuffimporter.rollback_stats()
         app.logger.error(f"L'utilisateur sélectionné {brod.id_} n'a pas d'email.")
         return func
 
@@ -169,7 +174,7 @@ def verify_broadcast(func):
     )
     sg_client.send(message)
 
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     app.logger.info(f"Nouveau diffuseur {brod.id_} a été sélectionné.")
     return func
@@ -197,7 +202,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         new_user.uexport(u_cont)
 
         stats["users"]["num"] += 1
-        _stuffimporter.set_stats(stats)
+        stuffimporter.set_stats(stats)
 
         user = new_user
 
@@ -205,7 +210,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
         stats["codes"]["ban_appeal"][user.id_] = code
-        _stuffimporter.set_stats(stats)
+        stuffimporter.set_stats(stats)
 
         return render_template(f"{lang}/banned.html", user_id=user.id_, appeal_code=code)
 
@@ -486,19 +491,19 @@ def statistics(lang):
         stats["users"]["lastact_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
         stats["users"]["lastact_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
         
-        stats["top_posts"]["5_most_upped"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_downed"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_pop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_unpop"] = _stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_upped"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_downed"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_pop"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_unpop"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
         stats["time"]["stats_last_edited"] = time.time()
         stats["time"]["stats_getting"] = time.time() - start_time
 
         app.logger.debug("Les stats ont étés mis a jour")
 
-    stats["time"]["uptime_str"] = _stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
+    stats["time"]["uptime_str"] = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
 
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     set_lang(lang)
     return render_template(f"{lang}/stats.html", stats=stats)
@@ -545,10 +550,7 @@ def broadcast_callback():
         return render_template(f"{lang}/message.html", message=
         {"en": "You have to input the code you received in the mail we sent to you.",
         "fr": "Vous devez saisir le code que vous avez reçu dans le mail qui vous a été envoyé."}[lang])
-    else:
-        stats["codes"]["broadcast"] = ""
-    
-    if current_user.id_ != stats["broadcast"]["author"] or request.form["user_id"] != stats["broadcast"]["author"]:
+    elif current_user.id_ != stats["broadcast"]["author"] or request.form["user_id"] != stats["broadcast"]["author"]:
         app.logger.warning(f"ALERTE HACKER {request.form['user_id']} BROD")
         return render_template(f"{lang}/message.html", message=
         {"en": "I didn't think it was possible but you did it, so anyway you can only broadcast if you are the broadcaster, which you are not.",
@@ -568,6 +570,8 @@ def broadcast_callback():
         return render_template(f"{lang}/message.html", message=
         {"en": "Hey smartass, quit trying.",
         "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
+    else:
+        stats["codes"]["broadcast"] = ""
     
     with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
         new_post = json.load(sample_file)
@@ -588,7 +592,7 @@ def broadcast_callback():
     
     stats["time"]["last_broadcast"] = time.time()
 
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     app.logger.info("La diffusion a été enregistrée.")
     return render_template(f"{lang}/message.html", message=
@@ -610,7 +614,7 @@ def ban_appeal_callback():
         {"en": "The admin has been notified of your recent actions on this website, he will contact you shortly.",
         "fr": "L'administrateur a été notifié de vos récentes actions sur ce sie web, il vous contactera dans les plus brefs délais."}[lang])
 
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
     user = load_user(request.form["user_id"], active=False)
     if not user.ban_appeal:
         app.logger.info(f"{request.form['user_id']} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
@@ -642,8 +646,9 @@ def ban_appeal_callback():
 def upvote_callback():
     lang = get_lang()
     if not stats["broadcast"]["content"]:
-        return {"en": "No post is live right now so you can't upvote one.",
-                "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang]
+        return render_template(f"{lang}/message.html", message=
+        {"en": "No post is live right now so you can't upvote one.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang])
 
     if current_user.upvote == stats["broadcast"]["id"]:
         current_user.upvote = ""
@@ -656,7 +661,7 @@ def upvote_callback():
             stats["broadcast"]["downvotes"] -= 1
 
     current_user.uexport(u_cont)
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     return "upvote"
 
@@ -665,8 +670,9 @@ def upvote_callback():
 def downvote_callback():
     lang = get_lang()
     if not stats["broadcast"]["content"]:
-        return {"en": "No post is live right now so you can't downvote one.",
-                "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang]
+        return render_template(f"{lang}/message.html", message=
+        {"en": "No post is live right now so you can't downvote one.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang])
 
     if current_user.downvote == stats["broadcast"]["id"]:
         current_user.downvote = ""
@@ -679,7 +685,7 @@ def downvote_callback():
             stats["broadcast"]["upvotes"] -= 1
 
     current_user.uexport(u_cont)
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     return "downvote"
 
@@ -722,7 +728,7 @@ def report_callback():
         brod.banned = 1
         brod.ban_message = stats["broadcast"]["content"]
 
-        reports = _stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
+        reports = stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
         reason_effectives = {}
         for user_report in reports:
             report = user_report["user"]
@@ -770,7 +776,7 @@ def report_callback():
 
         app.logger.info(f"Le diffuseur {brod.id_} a été banni.")
 
-    _stuffimporter.set_stats(stats)
+    stuffimporter.set_stats(stats)
 
     return render_template(f"{lang}/message.html", message=
     {"en": "Your report as been saved.",
@@ -850,7 +856,7 @@ def admin_panel():
 
                 stats["users"]["banned"] += 1
 
-                _stuffimporter.set_stats(stats)
+                stuffimporter.set_stats(stats)
                 app.logger.info(f"{identifier} a banni {user_to_ban.id_} avec succès.")
             else:
                 user_to_unban = load_user(request.form["user_id"], active=False)
@@ -873,7 +879,7 @@ def admin_panel():
                 
                 stats["users"]["banned"] -= 1
 
-                _stuffimporter.set_stats(stats)
+                stuffimporter.set_stats(stats)
                 app.logger.info(f"{identifier} a débanni {user_to_unban.id_} avec succès.")
         elif request.form["action"] == "ban_appeal":
             if request.form["acc_ref"] == "accepté":
@@ -897,7 +903,7 @@ def admin_panel():
 
                 stats["users"]["banned"] -= 1
 
-                _stuffimporter.set_stats(stats)
+                stuffimporter.set_stats(stats)
                 app.logger.info(f"{identifier} a accepté la demande de débannissement de {user_to_unban.id_} avec succès.")
             else:
                 user_to_refuse = load_user(request.form["user_id"], active=False)

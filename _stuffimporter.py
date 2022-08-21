@@ -1,46 +1,59 @@
 import json
 
-def get_json(filename):
-    with open(f"./{filename}.json", "r", encoding="utf-8") as json_file:
-        return json.load(json_file)
+class StuffImporter(object):
+    def __init__(self, u_cont) -> None:
+        self.u_cont = u_cont
+        
+    def get_stats(self) -> dict:
+        self.stats = self.u_cont.read_item("stats.json", "stats.json")
+        return self.stats
 
-def set_stats(stats:dict):
-    with open(f"./stats.json", "w", encoding="utf-8") as stats_file:
-        json.dump(stats, stats_file, indent=4)
+    @staticmethod
+    def get_config() -> dict:
+        with open(f"./config.json", "r", encoding="utf-8") as json_file:
+            return json.load(json_file)
 
-def pot_brods(u_cont, last_brod:str):
-    brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
-    brods = []
-    while True:
-        try:
-            brods.append(brods_query.next()["id"])
-        except StopIteration:
-            break
+    def set_stats(self, stats:dict):
+        if stats != self.stats:
+            self.u_cont.replace_item("stats.json", stats)
+            self.stats = stats
 
-    return brods
+    def rollback_stats(self) -> dict:
+        return self.stats
 
-def seconds_to_str(seconds:float):
-    days = round(seconds // 86400)
-    hours = round((seconds % 86400) // 3600)
-    minutes = round(((seconds % 86400) % 3600) // 60)
-    rem_seconds = round(((seconds % 86400) % 3600) % 60, 2)
+    def pot_brods(self, last_brod:str) -> list:
+        brods_query = self.u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
+        brods = []
+        while True:
+            try:
+                brods.append(brods_query.next()["id"])
+            except StopIteration:
+                break
 
-    result = []
-    if days:
-        result.append(f"{days} days")
-    if hours:
-        result.append(f"{hours} hours")
-    if minutes:
-        result.append(f"{minutes} minutes")
-    if rem_seconds:
-        result.append(f"{rem_seconds} seconds")
+        return brods
 
-    return " ".join(result)
+    def seconds_to_str(self, seconds:float) -> str:
+        days = round(seconds // 86400)
+        hours = round((seconds % 86400) // 3600)
+        minutes = round(((seconds % 86400) % 3600) // 60)
+        rem_seconds = round(((seconds % 86400) % 3600) % 60, 2)
 
-def itempaged_to_list(itempaged) -> list:
-    result = []
-    while True:
-        try:
-            result.append(itempaged.next())
-        except StopIteration:
-            return result
+        result = []
+        if days:
+            result.append(f"{days} days")
+        if hours:
+            result.append(f"{hours} hours")
+        if minutes:
+            result.append(f"{minutes} minutes")
+        if rem_seconds:
+            result.append(f"{rem_seconds} seconds")
+
+        return " ".join(result)
+
+    def itempaged_to_list(self, itempaged) -> list:
+        result = []
+        while True:
+            try:
+                result.append(itempaged.next())
+            except StopIteration:
+                return result
