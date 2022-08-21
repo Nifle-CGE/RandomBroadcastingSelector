@@ -44,22 +44,18 @@ Time to get stats : {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 <h3>5 most upvoted</h3>
 {% for post in stats["top_posts"]["5_most_upped"]: %}
 {{ to_import.post(post) }}
-<br>
 {% endfor %}
 <h3>5 most downvoted</h3>
 {% for post in stats["top_posts"]["5_most_downed"]: %}
 {{ to_import.post(post) }}
-<br>
 {% endfor %}
 <h3>5 most popular (highest upvotes/downvotes ratio)</h3>
 {% for post in stats["top_posts"]["5_most_pop"]: %}
 {{ to_import.post(post) }}
-<br>
 {% endfor %}
 <h3>5 most unpopular (lowest upvotes/downvotes ratio)</h3>
 {% for post in stats["top_posts"]["5_most_unpop"]: %}
 {{ to_import.post(post) }}
-<br>
 {% endfor %}
 <small>
     These stats are updated every 10 minutes.<br>

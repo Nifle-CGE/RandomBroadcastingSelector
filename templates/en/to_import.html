@@ -1,5 +1,5 @@
 {% macro post(post, target_lang="", live=False, user=None) -%}
-<div class="w3-container" style="padding:0;">
+<div class="w3-padding-16">
     <div class="w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
         {% if live and user.is_authenticated: %}
         <input type="button" id="upvoteButton" onclick="invertColorVote('upvote')" class="w3-button w3-round-large w3-hover-light-green
