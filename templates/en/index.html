@@ -8,7 +8,7 @@
 
 {% block content %}
 {% if stats["broadcast"]["content"]: %}
-{{ to_import.post(stats["broadcast"], target_lang="en", live=True, user=current_user) }}
+{{ to_import.post(stats["broadcast"], target_lang="en", live=True, user=current_user, form=form) }}
 {% else: %}
 <h2>The new broadcaster hasn't responded yet so the post isn't here.<br>
     Meanwhile, you can check out every other posts that ever existed <a href="/en/history/1">here</a>, or make a <a

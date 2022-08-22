@@ -25,20 +25,35 @@
 </h4>
 <input type="button" value="I have read the text above." id="activatorButton"
     onclick="enableSubmitButton('submitButton', 'activatorButton')">
-<form action="/broadcast-callback" method="post">
-    <label>
-        Enter the message you want to send to this websites users.<br>
-        <textarea rows="4" cols="128" name="message" maxlength="512" autofocus required></textarea>
-    </label><br>
-    <label>
-        Author of this message (name that you want to be designated as that everyone will see.) :<br>
-        <input type="text" name="display_name" value="{{ current_user.name }}" maxlength="64" required>
-    </label><br>
-    <label>
-        Verification code from the email you received :<br>
-        <input type="text" name="brod_code" placeholder="For example : Drmhze6E..." maxlength="43" size="43" required>
-    </label><br><br>
-    <input type="hidden" name="user_id" value="{{ current_user.id_ }}">
-    <input type="submit" value="Submit" id="submitButton" class="w3-disabled" disabled>
+<form method="post">
+    {{ form.csrf_token }}
+    {% if form.csrf_token.errors: %}
+    There was an error with the csrf token : {{ form.csrf_token.errors }}<br>
+    {% endif %}
+
+    {{ form.user_id(value=current_user.id_) }}
+    {% if form.user_id.errors: %}
+    This was not supposed to happen : {{ form.user_id.errors }}<br>
+    {% endif %}
+
+    {{ form.message.label }}<br>
+    {{ form.message(rows="4", cols="128") }}<br>
+    {% if form.message.errors: %}
+    The field above had an error : {{ form.message.errors }}<br>
+    {% endif %}
+
+    {{ form.display_name.label }}<br>
+    {{ form.display_name(size="64") }}<br>
+    {% if form.display_name.errors: %}
+    The field above had an error : {{ form.display_name.errors }}<br>
+    {% endif %}
+
+    {{ form.brod_code.label }}<br>
+    {{ form.brod_code(placeholder="For example : Drmhze6E...", size="43") }}<br>
+    {% if form.brod_code.errors: %}
+    The field above had an error : {{ form.brod_code.errors }}<br>
+    {% endif %}
+
+    {{ form.submit(id="submitButton", style="cursor: not-allowed;", disabled=True) }}
 </form>
 {% endblock %}

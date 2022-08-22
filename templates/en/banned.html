@@ -3,14 +3,24 @@
 {% block title %}Ban appeal{% endblock %}
 
 {% block content %}
-<form action="/ban-appeal-callback" method="post">
-    <label>
-        Enter why you should be unbanned.<br>
-        <textarea rows="4" cols="128" name="reason" maxlength="512" autofocus required></textarea>
-    </label><br>
-    <input type="hidden" name="user_id" value="{{ user_id }}">
-    <input type="hidden" name="appeal_code" value="{{ appeal_code }}">
-    <input type="submit" value="Submit">
+<form method="post">
+    {{ form.csrf_token }}
+    {% if form.csrf_token.errors: %}
+    There was an error with the csrf token : {{ form.csrf_token.errors }}<br>
+    {% endif %}
+
+    {{ form.user_id(value=user_id) }}
+    {% if form.user_id.errors: %}
+    This was not supposed to happen : {{ form.user_id.errors }}<br>
+    {% endif %}
+
+    {{ form.reason.label }}<br>
+    {{ form.reason(rows="4", cols="128") }}<br>
+    {% if form.reason.errors: %}
+    The field above had an error : {{ form.reason.errors }}<br>
+    {% endif %}
+
+    {{ form.submit }}
 </form>
 <br>
 <p>

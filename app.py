@@ -11,7 +11,16 @@ import re
 import logging
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
+from flask import (
+    Flask,
+    redirect,
+    render_template,
+    url_for,
+    session,
+    request,
+    abort,
+    send_file
+)
 from flask_login import (
     LoginManager,
     current_user,
@@ -19,6 +28,18 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from flask_wtf import (
+    FlaskForm
+)
+from wtforms.fields import (
+    StringField,
+    TextAreaField,
+    HiddenField,
+    RadioField,
+    SubmitField,
+    BooleanField
+)
+from wtforms import validators
 from authlib.integrations.flask_client import OAuth
 from azure.cosmos import CosmosClient
 from sendgrid import SendGridAPIClient
@@ -74,6 +95,7 @@ p_cont = db.get_container_client("Web RBS Posts")
 stuffimporter = _stuffimporter.StuffImporter(u_cont)
 
 # Stats setup
+global stats
 stats = stuffimporter.get_stats()
 stats["time"]["start_time"] = time.time()
 stuffimporter.set_stats(stats)
@@ -105,6 +127,7 @@ def load_user(user_id, active=True):
 
 # Useful defs
 def verify_broadcast(func):
+    global stats
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
@@ -180,7 +203,7 @@ def verify_broadcast(func):
     return func
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
-    if lang not in SUPPORTED_LANGUAGES:
+    if lang not in LANGUAGE_CODES:
         lang = "en"
 
     # Test to see if the user exists in the db
@@ -197,7 +220,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         except StopIteration:
             pass
 
-        new_user = User(id_=id_, name=name, email=email)
+        new_user = User(id_=id_, name=name, email=email, lang=lang)
         new_user.last_active = time.time()
         new_user.uexport(u_cont)
 
@@ -212,7 +235,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         stats["codes"]["ban_appeal"][user.id_] = code
         stuffimporter.set_stats(stats)
 
-        return render_template(f"{lang}/banned.html", user_id=user.id_, appeal_code=code)
+        return redirect(url_for("ban_appeal", lang=lang, user_id=user.id_, appeal_code=code))
 
     # Begin user session by logging the user in
     user.is_authenticated = True
@@ -241,7 +264,7 @@ def set_lang(lang):
 def index_redirect():
     return redirect(url_for("index", lang=get_lang()))
 
-@app.route("/<lang>/")
+@app.route("/<lang>/", methods=["GET", "POST"])
 @verify_broadcast
 def index(lang):
     if lang not in LANGUAGE_CODES:
@@ -251,8 +274,93 @@ def index(lang):
         set_lang("en")
         return render_template("en/message.html", message="This language has not been implemented yet.")
 
+    form = ReportForm()
+    
+    if form.validate_on_submit(): # Report callback
+        if not stats["broadcast"]["content"]:
+            app.logger.warning(f"{current_user.id_} a essayé de signaler un post alors qu'il n'y en a pas.")
+            return render_template(f"{lang}/message.html", message=
+            {"en": "No post is live right now so you can't report one.",
+            "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler."}[lang])
+        elif current_user.report_post_id == stats["broadcast"]["id"]:
+            app.logger.debug(f"{current_user.id_} a essayé de resignaler le post.")
+            return render_template(f"{lang}/message.html", message=
+            {"en": "You have already reported this post so you can't report it again.",
+            "fr": "Vous avez déja signalé ce post, vous ne pouvez pas le signaler une deuxième fois."}[lang])
+
+        current_user.report_post_id = stats["broadcast"]["id"]
+        current_user.report_reason = form.reason.data
+        current_user.report_quote = form.message_quote.data
+
+        current_user.uexport(u_cont)
+
+        stats["broadcast"]["reports"] += 1
+
+        if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2):
+            brod = load_user(stats["broadcast"]["author"], active=False)
+
+            brod.banned = 1
+            brod.ban_message = stats["broadcast"]["content"]
+
+            reports = stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
+            reason_effectives = {}
+            for user_report in reports:
+                report = user_report["user"]
+
+                # Extract the most present reason from the dicts
+                try:
+                    reason_effectives[report["reason"]] += 1
+                except KeyError:
+                    reason_effectives[report["reason"]] = 1
+
+            reason_effectives = sorted(reason_effectives.items(), key=lambda x:x[1])
+            most_reason = reason_effectives[0][0]
+            brod.ban_reason = most_reason
+
+            if most_reason != "offensive_name":
+                reason_quotes = [user["quote"] for user in reports if user["reason"] == most_reason]
+                results = {}
+                for quote in reason_quotes:
+                    results[quote] = 0
+                    for secquote in reason_quotes:
+                        if quote in secquote:
+                            results[quote] += 1
+
+                results = sorted(results.items(), key=lambda x:x[1])
+                brod.ban_most_quoted = results[0][0]
+            else:
+                brod.ban_most_quoted = stats["broadcast"]["author_name"]
+
+            brod.uexport(u_cont)
+
+            with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
+                mail_content = mail_file.read()
+            mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod.ban_message }}", brod.ban_message).replace("{{ brod.ban_reason }}", brod.ban_reason).replace("{{ brod.ban_most_quoted }}", brod.ban_most_quoted)
+
+            message = Mail(
+                from_email="random.broadcasting.selector@gmail.com",
+                to_emails=brod.email,
+                subject="RandomBroadcastingSelector : You were banned.",
+                html_content=mail_content
+            )
+            sg_client.send(message)
+
+            stats["users"]["banned"] += 1
+
+            # Delete the banned user's message
+            stats["broadcast"]["author_name"] = "[deleted]"
+            stats["broadcast"]["content"] = "[deleted]"
+
+            app.logger.info(f"Le diffuseur {brod.id_} a été banni.")
+
+        stuffimporter.set_stats(stats)
+
+        return render_template(f"{lang}/message.html", message=
+        {"en": "Your report as been saved.",
+        "fr": "Votre signalement a été enregistré."}[lang])
+
     set_lang(lang)
-    return render_template(f"{lang}/index.html", stats=stats)
+    return render_template(f"{lang}/index.html", stats=stats, form=form)
 
 # All the login stuff
 @app.route("/<lang>/login/")
@@ -438,7 +546,7 @@ def facebook_login_callback():
 	return redirect(url_for("index", lang=session.get("lang")))
 """
 
-@app.route("/logout")
+@app.route("/logout/")
 @login_required
 def logout():
     logout_user()
@@ -523,124 +631,87 @@ def stats_file():
     app.logger.debug("Fichier stats exporté.")
     return stats_file
 
-@app.route("/<lang>/broadcast/")
+@app.route("/<lang>/broadcast/", methods=["GET", "POST"])
 @login_required
 def broadcast(lang):
     if current_user.id_ != stats["broadcast"]["author"]:
         return render_template(f"{lang}/message.html", message=
         {"en": "You have to be broadcaster to have access to this page.",
         "fr": "Vous devez être diffuseur pour accéder a cette page."}[lang])
-
-    if stats["broadcast"]["content"]:
+    elif stats["broadcast"]["content"]:
         return render_template(f"{lang}/message.html", message=
         {"en": "You have already made your broadcast.",
         "fr": "Vous avez déja fait votre diffusion."}[lang])
 
+    form = BroadcastForm()
+    
+    if form.validate_on_submit():
+        stats["codes"]["broadcast"] = ""
+
+        stats["broadcast"]["id"] = int(stats["broadcast"]["id"]) + 1
+        stats["broadcast"]["content"] = form.message.data
+        stats["broadcast"]["author_name"] = form.display_name.data
+        stats["broadcast"]["date"] = str(datetime.datetime.today().date())
+    
+        test = translator.translate_text(form.message.data, target_lang="EN-US")
+        stats["broadcast"]["lang"] = test.detected_source_lang.lower()
+    
+        for language in translator.get_target_languages():
+            lang_code = language.code
+            if len(lang_code) != 2:
+                lang_code = lang_code.split("-")[0]
+            stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(form.message.data, target_lang=language.code).text
+        
+        stats["time"]["last_broadcast"] = time.time()
+    
+        stuffimporter.set_stats(stats)
+    
+        app.logger.info("La diffusion a été enregistrée.")
+        return render_template(f"{lang}/message.html", message=
+        {"en": "Your broadcast has been saved.",
+        "fr": "Votre diffusion a été enregistrée."}[lang])
+
     set_lang(lang)
-    return render_template(f"{lang}/broadcast.html", stats=stats)
+    return render_template(f"{lang}/broadcast.html", form=form, stats=stats)
+
+@app.route("/<lang>/ban-appeal/", methods=["GET", "POST"])
+def ban_appeal(lang):
+    if request.args.get("user_id") not in stats["codes"]["ban_appeal"].keys():
+        return render_template(f"{lang}/message.html", message=
+        {"en": "You have to be banned to have access to this page.",
+        "fr": "Vous devez être banni pour accéder a cette page."}[lang])
+    elif stats["codes"]["ban_appeal"][request.args.get("user_id")] != request.args.get("appeal_code"):
+        app.logger.info(f"{request.args.get['user_id']} a essayé de faire la malin en changeant le html des hidden inputs sur la page de demande de débannissement.")
+        return render_template(f"{lang}/message.html", message=
+        {"en": "Hey smartass, quit trying.",
+        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
+
+    form = BanAppealForm()
+    
+    if form.validate_on_submit():
+        user = load_user(form.user_id.data, active=False)
+        if user.ban_appeal:
+            app.logger.info(f"{form.user_id.data} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
+            return render_template(f"{lang}/message.html", message=
+            {"en": "You have already made a ban appeal.",
+            "fr": "Vous avez déja fait une demande de débannissement."}[lang])
+
+        user.ban_appeal = form.reason.data
+        user.uexport(u_cont)
+
+        stats["codes"]["ban_appeal"].pop(request.args.get("user_id"))
+        stuffimporter.set_stats(stats)
+
+        requests.get(config["telegram_send_url"] + "ban+appeal+received")
+        app.logger.info("Une demande de débannissment a été enregistrée.")
+        return render_template(f"{lang}/message.html", message=
+        {"en": "Your ban appeal has been saved, it will be reviewed shortly.",
+        "fr": "Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais."}[lang])
+
+    set_lang(lang)
+    return render_template(f"{lang}/banned.html", form=form, user_id=request.args.get("user_id"))
 
 # Callbacks
-@app.route("/broadcast-callback", methods=["POST"])
-@login_required
-def broadcast_callback():
-    lang = get_lang()
-    
-    if stats["codes"]["broadcast"] != request.form["brod_code"]:
-        app.logger.info("Code de vérif incorrect.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have to input the code you received in the mail we sent to you.",
-        "fr": "Vous devez saisir le code que vous avez reçu dans le mail qui vous a été envoyé."}[lang])
-    elif current_user.id_ != stats["broadcast"]["author"] or request.form["user_id"] != stats["broadcast"]["author"]:
-        app.logger.warning(f"ALERTE HACKER {request.form['user_id']} BROD")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "I didn't think it was possible but you did it, so anyway you can only broadcast if you are the broadcaster, which you are not.",
-        "fr": "Je pensait pas que c'était possible mais tu l'a fait, bon, de toute façon tu peux pas diffuser si tu n'est pas diffuseur."}[lang])
-    elif len(re.findall(r"[\w']+", request.form["message"])) < 2:
-        app.logger.info(f"Le message de {request.form['user_id']} est trop court.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "I'm sorry but you are going to have to write more than one word.",
-        "fr": "Je suis désolé mais tu va devoir écrire plus d'un mot."}[lang])
-    elif len(request.form["reason"]) > 512:
-        app.logger.info(f"{request.form['user_id']} a essayé de faire la malin en changeant le html du message sur la page de diffusion.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
-    elif len(request.form["display_name"]) > 64:
-        app.logger.info(f"{request.form['user_id']} a essayé de faire la malin en changeant le html du display_name sur la page de diffusion.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
-    else:
-        stats["codes"]["broadcast"] = ""
-    
-    with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
-        new_post = json.load(sample_file)
-
-    stats["broadcast"]["id"] = int(stats["broadcast"]["id"]) + 1
-    stats["broadcast"]["content"] = request.form["message"]
-    stats["broadcast"]["author_name"] = request.form["display_name"]
-    stats["broadcast"]["date"] = str(datetime.datetime.today().date())
-
-    test = translator.translate_text(request.form["message"], target_lang="EN-US")
-    stats["broadcast"]["lang"] = test.detected_source_lang.lower()
-
-    for language in translator.get_target_languages():
-        lang_code = language.code
-        if len(lang_code) != 2:
-            lang_code = lang_code.split("-")[0]
-        stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(request.form["message"], target_lang=language.code).text
-    
-    stats["time"]["last_broadcast"] = time.time()
-
-    stuffimporter.set_stats(stats)
-
-    app.logger.info("La diffusion a été enregistrée.")
-    return render_template(f"{lang}/message.html", message=
-    {"en": "Your broadcast has been saved.",
-    "fr": "Votre diffusion a été enregistrée."}[lang])
-
-@app.route("/ban-appeal-callback", methods=["POST"])
-def ban_appeal_callback():
-    lang = get_lang()
-    try:
-        if stats["codes"]["ban_appeal"].pop(request.form["user_id"]) != request.form["appeal_code"]:
-            app.logger.info(f"{request.form['user_id']} a essayé de faire la malin en changeant le html des hidden inputs sur la page de demande de débannissement.")
-            return render_template(f"{lang}/message.html", message=
-            {"en": "Hey smartass, quit trying.",
-            "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
-    except KeyError:
-        app.logger.warning(f"ALERTE HACKER {request.form['user_id']} BAN APPEAL")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "The admin has been notified of your recent actions on this website, he will contact you shortly.",
-        "fr": "L'administrateur a été notifié de vos récentes actions sur ce sie web, il vous contactera dans les plus brefs délais."}[lang])
-
-    stuffimporter.set_stats(stats)
-    user = load_user(request.form["user_id"], active=False)
-    if not user.ban_appeal:
-        app.logger.info(f"{request.form['user_id']} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have already made a ban appeal.",
-        "fr": "Vous avez déja fait une demande de débannissement."}[lang])
-    elif len(request.form["reason"]) < 10:
-        app.logger.info(f"La demande de débannissement de {request.form['user_id']} était trop courte.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "If you really want to get unbanned you should write a bit more than that.",
-        "fr": "Si tu veux vraiment être débanni.e tu devrais écrire un peu plus que ça."}[lang])
-    elif len(request.form["reason"]) > 512:
-        app.logger.info(f"{request.form['user_id']} a essayé de faire la malin en changeant le html sur la page de demande de débannissement.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
-
-    user.ban_appeal = request.form["reason"]
-    user.uexport(u_cont)
-
-    requests.get(config["telegram_send_url"] + "ban+appeal+received")
-    app.logger.info("La demande de débannissment a été enregistrée.")
-    return render_template(f"{lang}/message.html", message=
-    {"en": "Your ban appeal has been saved.",
-    "fr": "Votre demande de débannissement a été enregistrée."}[lang])
-
 @app.route("/upvote-callback", methods=["POST"])
 @login_required
 def upvote_callback():
@@ -689,98 +760,144 @@ def downvote_callback():
 
     return "downvote"
 
-@app.route("/report-callback", methods=["POST"])
-@login_required
-def report_callback():
-    lang = get_lang()
-    if not stats["broadcast"]["content"]:
-        app.logger.warning(f"{current_user.id_} a essayé de signaler un post alors qu'il n'y en a pas.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't report one.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler."}[lang])
-    elif current_user.report_post_id == stats["broadcast"]["id"]:
-        app.logger.debug(f"{current_user.id_} a essayé de resignaler le post.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have already reported this post so you can't report it again.",
-        "fr": "Vous avez déja signalé ce post, vous ne pouvez pas le signaler une deuxième fois."}[lang])
-    elif request.form["message_quote"] not in stats["broadcast"]["content"]:
-        app.logger.warning(f"{current_user.id_} a essayé de faire la malin en changeant le javascript qui verif que quote in msg de la page de report.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
-    elif len(re.findall(r"[\w']+", request.form["message_quote"])) < 2:
-        app.logger.warning(f"{current_user.id_} a essayé de faire la malin en changeant le javascript qui verif que quote fait plus de 2 mots de la page de report.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
+# Custom validators
+class MinWords(object):
+    def __init__(self, minimum=-1, message=None):
+        self.minimum = minimum
+        if not message:
+            message = f'Field must have at least {minimum} words.'
+        self.message = message
 
-    current_user.report_post_id = stats["broadcast"]["id"]
-    current_user.report_reason = request.form["reason"]
-    current_user.report_quote = request.form["message_quote"]
+    def __call__(self, form, field):
+        words = field.data and len(re.findall(r"[\w']+", field.data)) or 0
+        if words < self.minimum:
+            raise validators.ValidationError(self.message)
 
-    current_user.uexport(u_cont)
+class InString(object):
+    def __init__(self, string="", message=None):
+        self.string = string
+        if not message:
+            message = f'Field must be included in "{string}".'
+        self.message = message
+
+    def __call__(self, form, field):
+        if field.data not in self.string and form.reason.data != "offensive_name":
+            raise validators.ValidationError(self.message)
+
+class StopIfBlah(object):
+    def __init__(self, message=None):
+        if not message:
+            message = 'blah.'
+        self.message = message
+
+    def __call__(self, form, field):
+        if form.reason.data == "offensive_name":
+            raise validators.StopValidation
+
+# WTForms
+class BroadcastForm(FlaskForm):
+    user_id = HiddenField(validators=[
+        validators.InputRequired(),
+        validators.AnyOf([stats["broadcast"]["author"]])
+    ])
+
+    message = TextAreaField("Enter the message you want to send to this websites users.", validators=[
+        validators.InputRequired(),
+        validators.Length(0, 512),
+        MinWords(2, message="I'm sorry but you are going to have to write more than one word.")
+    ])
+
+    display_name = StringField("Author of this message (name that you want to be designated as that everyone will see.) :", validators=[
+        validators.InputRequired(),
+        validators.Length(0, 64)
+    ])
+
+    brod_code = StringField("Verification code from the email you received :", validators=[
+        validators.InputRequired(),
+        validators.Length(43, 43),
+        validators.AnyOf([stats["codes"]["broadcast"]], message="You have to input the code you received in the mail we sent to you.")
+    ])
+
+    submit = SubmitField()
+
+class BanAppealForm(FlaskForm):
+    user_id = HiddenField(validators=[
+        validators.InputRequired(),
+        validators.AnyOf(stats["codes"]["ban_appeal"].keys(), message="You have to be banned to submit this form.")
+    ])
+
+    reason = TextAreaField("Enter why you should be unbanned.", validators=[
+        validators.InputRequired(),
+        validators.Length(0, 512),
+        MinWords(2, message="If you really want to get unbanned you should write a bit more than that (more than one word).")
+    ])
+
+    submit = SubmitField()
+
+class ReportForm(FlaskForm):
+    reason = RadioField(choices=[
+        ("harassement", "Is this broadcast harassing, insulting or encouraging hate against anyone ?"),
+        ("mild_language", "Is this broadcast using too much mild language for a family friendly website ?"),
+        ("link", 'Does this broadcast contain any link (like "http://example.com") or pseudo link (like "example.com") or attempts at putting a link that doesn\'t look like one (like "e x a m p l e . c o m" or "example dot com") ?'),
+        ("offensive_name", "Has this broadcasts author chosen an offending name ?")
+    ], validators=[
+        validators.InputRequired(),
+    ])
     
-    stats["broadcast"]["reports"] += 1
+    message_quote = StringField(validators=[
+        StopIfBlah(),
+        validators.InputRequired(),
+        InString(stats["broadcast"]["content"], message="The quote you supplied isn't in the broadcast."),
+        MinWords(2, message="The quote you supplied has only got one word when it has to have at least two.")
+    ])
 
-    if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2):
-        brod = load_user(stats["broadcast"]["author"], active=False)
+    submit = SubmitField()
 
-        brod.banned = 1
-        brod.ban_message = stats["broadcast"]["content"]
+class BanUnbanForm(FlaskForm):
+    verif_code = HiddenField()
 
-        reports = stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
-        reason_effectives = {}
-        for user_report in reports:
-            report = user_report["user"]
+    user_id = StringField("Id de la personne concernée : ", validators=[
+        validators.InputRequired()
+    ])
 
-            # Extract the most present reason from the dicts
-            try:
-                reason_effectives[report["reason"]] += 1
-            except KeyError:
-                reason_effectives[report["reason"]] = 1
+    whatodo = RadioField(choices=[
+        ("ban", "Bannir"),
+        ("déban", "Débannir")
+    ], validators=[
+        validators.InputRequired(),
+    ])
 
-        reason_effectives = sorted(reason_effectives.items(), key=lambda x:x[1])
-        most_reason = reason_effectives[0][0]
-        brod.ban_reason = most_reason
+    ban_message = StringField("user_to_ban.ban_message : ", validators=[
+        validators.Optional()
+    ])
 
-        reason_quotes = [user["quote"] for user in reports if user["reason"] == most_reason]
-        results = {}
-        for quote in reason_quotes:
-            results[quote] = 0
-            for secquote in reason_quotes:
-                if quote in secquote:
-                    results[quote] += 1
+    ban_reason = StringField("user_to_ban.ban_reason : ", validators=[
+        validators.Optional()
+    ])
 
-        results = sorted(results.items(), key=lambda x:x[1])
-        brod.ban_most_quoted = results[0][0]
+    ban_most_quoted = StringField("user_to_ban.ban_most_quoted : ", validators=[
+        validators.Optional()
+    ])
 
-        brod.uexport(u_cont)
+    silenced = BooleanField("Silencieux")
 
-        with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
-            mail_content = mail_file.read()
-        mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod.ban_message }}", brod.ban_message).replace("{{ brod.ban_reason }}", brod.ban_reason).replace("{{ brod.ban_most_quoted }}", brod.ban_most_quoted)
-        
-        message = Mail(
-            from_email="random.broadcasting.selector@gmail.com",
-            to_emails=brod.email,
-            subject="RandomBroadcastingSelector : You were banned.",
-            html_content=mail_content
-        )
-        sg_client.send(message)
+    submit = SubmitField()
 
-        stats["users"]["banned"] += 1
+class AppealViewForm(FlaskForm):
+    verif_code = HiddenField()
 
-        # Delete the banned user's message
-        stats["broadcast"]["author_name"] = "[deleted]"
-        stats["broadcast"]["content"] = "[deleted]"
+    user_id = HiddenField()
 
-        app.logger.info(f"Le diffuseur {brod.id_} a été banni.")
+    whatodo = RadioField(choices=[
+        ("accepté", "Accepter"),
+        ("refusé", "Refuser")
+    ], validators=[
+        validators.InputRequired(),
+    ])
 
-    stuffimporter.set_stats(stats)
+    silenced = BooleanField("Silencieux")
 
-    return render_template(f"{lang}/message.html", message=
-    {"en": "Your report as been saved.",
-    "fr": "Votre signalement a été enregistré."}[lang])
+    submit = SubmitField()
 
 # Legal stuff
 @app.route("/privacy-policy/")
@@ -808,47 +925,48 @@ def ping():
 # Admin
 @app.route("/super-secret-admin-panel/", methods=["GET", "POST"])
 def admin_panel():
+    global stats
     identifier = current_user.id_ if current_user.is_authenticated else request.remote_addr
-    if request.method == "GET":
-        if request.args.get("touma") != "toumatoumatoutoumatoumateo" or request.args.get("pouma") != "poumapoumatoupoumapoumateo" :
-            app.logger.warning(f"{identifier} est arrivé sur l'admin panel.")
-            abort(404)
 
-        try:
-            banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
-        except StopIteration:
-            banned_user = anon_user_getter()
+    if request.args.get("touma") != "toumatoumatoutoumatoumateo" or request.args.get("pouma") != "poumapoumatoupoumapoumateo" :
+        app.logger.warning(f"{identifier} est arrivé sur l'admin panel.")
+        abort(404)
 
-        app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
-        return render_template("admin_panel.html", verif_code=app.secret_key, banned_user=banned_user)
-    elif request.method == "POST":
-        if request.form.get("verif_code") != app.secret_key:
-            app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
-            abort(404)
+    try:
+        banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
+    except StopIteration:
+        banned_user = anon_user_getter()
+        banned_user.id_ = "no_ban_appeal"
 
-        if request.form["action"] == "ban_unban":
-            if request.form["whatodo"] == "ban":
-                user_to_ban = load_user(request.form["user_id"], active=False)
-                if user_to_ban.is_broadcaster:
+    banunban = BanUnbanForm()
+    appealview = AppealViewForm()
+
+    if request.method == "POST":
+        if banunban.submit.data and banunban.verify():
+            if banunban.verif_code.data != stats["codes"]["admin_action"]:
+                app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
+                abort(404)
+
+            user = load_user(banunban.user_id.data, active=False)
+            if banunban.whatodo.data == "ban":
+                if user.is_broadcaster:
                     # Delete the banned user's message
                     stats["broadcast"]["author_name"] = "[deleted]"
                     stats["broadcast"]["content"] = "[deleted]"
 
-                user_to_ban.banned = 1
-                user_to_ban.ban_message = request.form["ban_message"]
-                user_to_ban.ban_reason = request.form["ban_reason"]
-                user_to_ban.ban_most_quoted = request.form["ban_most_quoted"]
+                user.banned = 1
+                user.ban_message = banunban.ban_message.data
+                user.ban_reason = banunban.ban_reason.data
+                user.ban_most_quoted = banunban.ban_most_quoted.data
 
-                user_to_ban.uexport(u_cont)
-                
-                if not request.form.get("slienced"):
+                if not banunban.slienced.data:
                     with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
                         mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ user_to_ban.ban_message }}", user_to_ban.ban_message).replace("{{ user_to_ban.ban_reason }}", user_to_ban.ban_reason).replace("{{ user_to_ban.ban_most_quoted }}", user_to_ban.ban_most_quoted)
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ user.ban_message }}", user.ban_message).replace("{{ user.ban_reason }}", user.ban_reason).replace("{{ user.ban_most_quoted }}", user.ban_most_quoted)
 
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user_to_ban.email,
+                        to_emails=user.email,
                         subject="RandomBroadcastingSelector : You were banned.",
                         html_content=mail_content
                     )
@@ -856,46 +974,19 @@ def admin_panel():
 
                 stats["users"]["banned"] += 1
 
-                stuffimporter.set_stats(stats)
-                app.logger.info(f"{identifier} a banni {user_to_ban.id_} avec succès.")
+                app.logger.info(f"{identifier} a banni {user.id_} avec succès.")
             else:
-                user_to_unban = load_user(request.form["user_id"], active=False)
-                user_to_unban.banned = 0
+                user = load_user(banunban.user_id.data, active=False)
+                user.banned = 0
 
-                user_to_unban.uexport()
-
-                if not request.form.get("slienced"):
+                if not banunban.slienced.data:
                     with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
                         mail_content = mail_file.read()
                     mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
 
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user_to_unban.email,
-                        subject="RandomBroadcastingSelector : You are no longer banned.",
-                        html_content=mail_content
-                    )
-                    sg_client.send(message)
-                
-                stats["users"]["banned"] -= 1
-
-                stuffimporter.set_stats(stats)
-                app.logger.info(f"{identifier} a débanni {user_to_unban.id_} avec succès.")
-        elif request.form["action"] == "ban_appeal":
-            if request.form["acc_ref"] == "accepté":
-                user_to_unban = load_user(request.form["user_id"], active=False)
-                user_to_unban.banned = 0
-
-                user_to_unban.uexport()
-
-                if not request.form.get("slienced"):
-                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
-                        mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
-
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user_to_unban.email,
+                        to_emails=user.email,
                         subject="RandomBroadcastingSelector : You are no longer banned.",
                         html_content=mail_content
                     )
@@ -903,42 +994,79 @@ def admin_panel():
 
                 stats["users"]["banned"] -= 1
 
+                app.logger.info(f"{identifier} a débanni {user.id_} avec succès.")
+
+            user.uexport(u_cont)
+            stuffimporter.set_stats(stats)
+            
+        elif appealview.submit.data and appealview.verify():
+            if appealview.verif_code.data != stats["codes"]["admin_action"]:
+                app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
+                abort(404)
+
+            user = load_user(appealview.user_id.data, active=False)
+            if appealview.whatodo.data == "accepté":
+                user.banned = 0
+
+                if not appealview.slienced.data:
+                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
+                        mail_content = mail_file.read()
+                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
+
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=user.email,
+                        subject="RandomBroadcastingSelector : You are no longer banned.",
+                        html_content=mail_content
+                    )
+                    sg_client.send(message)
+
+                stats["users"]["banned"] -= 1
+
                 stuffimporter.set_stats(stats)
-                app.logger.info(f"{identifier} a accepté la demande de débannissement de {user_to_unban.id_} avec succès.")
+                app.logger.info(f"{identifier} a accepté la demande de débannissement de {user.id_} avec succès.")
             else:
-                user_to_refuse = load_user(request.form["user_id"], active=False)
-                user_to_refuse.ban_appeal = ""
+                user = load_user(appealview.user_id.data, active=False)
+                user.ban_appeal = ""
 
-                user_to_refuse.uexport()
-
-                if not request.form.get("slienced"):
+                if not appealview.slienced.data:
                     with open(f"templates/refused_mail.html", "r", encoding="utf-8") as mail_file:
                         mail_content = mail_file.read()
                     mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
 
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user_to_refuse.email,
+                        to_emails=user.email,
                         subject="RandomBroadcastingSelector : Your ban appeal was refused.",
                         html_content=mail_content
                     )
                     sg_client.send(message)
+
+            user.uexport()
+
         elif request.form["action"] == "import_stats":
-            stats = json.load(request.files[request.files.keys()[0]].stream)
-            request.files[request.files.keys()[0]].stream.close()
+            filename = list(request.files.to_dict().keys())[0]
+            stats = json.load(request.files[filename].stream)
+            stuffimporter.set_stats(stats)
+            request.files[filename].stream.close()
         elif request.form["action"] == "export_stats":
-            send_file("./stats.json", as_attachment=True)
+            return stats
         elif request.form["action"] == "import_logs":
-            with open("./logs.log", "w", encoding="utf-8") as logs_file:
-                logs_file.write(request.files[request.files.keys()[0]].stream.read())
-            request.files[request.files.keys()[0]].stream.close()
+            filename = list(request.files.to_dict().keys())[0]
+            with open("./logs.log", "wb") as logs_file:
+                logs_file.write(request.files[filename].stream.read())
+            request.files[filename].stream.close()
         elif request.form["action"] == "export_logs":
-            send_file("./logs.log", as_attachment=True)
+            return send_file("logs.log", as_attachment=True)
 
         return render_template("en/message.html", message="Succès de l'action " + request.form["action"])
-    else:
-        app.logger.warning(f"{identifier} a essayé d'utiliser une autre méthode sur le panneau d'admin.")
-        abort(404)
+
+    code = secrets.token_urlsafe(32)
+    stats["codes"]["admin_action"] = secrets.token_urlsafe(32)
+    stuffimporter.set_stats(stats)
+
+    app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
+    return render_template("admin_panel.html", verif_code=code, banunban=banunban, appealview=appealview, banned_user=banned_user)
 
 # Error handling
 @app.errorhandler(401)
@@ -966,4 +1094,4 @@ def internal_server_error(e):
                             err_msg=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=True)

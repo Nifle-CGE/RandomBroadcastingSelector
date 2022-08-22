@@ -1,5 +1,8 @@
 flask
 flask_login
+flask_wtf
+flask_babel
+wtforms
 authlib
 pyopenssl
 requests

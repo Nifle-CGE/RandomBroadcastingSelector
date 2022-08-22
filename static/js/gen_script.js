@@ -54,8 +54,20 @@ async function invertColorVote(action) {
 
 function enableSubmitButton(submitId, activatorId) {
     button = document.getElementById(submitId);
-    button.className = button.className.replace("w3-disabled", "");
+    button.style.cursor = "default";
     button.disabled = false;
 
-    document.getElementById(activatorId).style.display = "none";
+    document.getElementById(activatorId).hidden = true;
+}
+
+function changeReportFormBottomInputLabel(target_label) {
+    document.getElementById("quote_label").hidden = true;
+    document.getElementById("quote_label_harassement").hidden = true;
+    document.getElementById("quote_label_mild_language").hidden = true;
+    document.getElementById("quote_label_link").hidden = true;
+    document.getElementById("quote_label_offensive_name").hidden = true;
+
+    document.getElementById("quote_label_" + target_label.value).hidden = false;
+
+    document.getElementById("quote_input").required = (target_label.value !== "offensive_name");
 }
