@@ -2,7 +2,7 @@
 <div class="w3-padding-16">
     <div class="w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
         {% if live and user.is_authenticated: %}
-        <input type="button" id="upvoteButton" onclick="invertColorVote('upvote')" class="w3-button w3-round-large w3-hover-light-green
+        <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green
         {% if user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}
         " value="▲"><br>
         {% else: %}
@@ -13,7 +13,7 @@
         <span class="w3-text-red" id="downvote_num">{{ post["downvotes"] }}</span><br>
 
         {% if live and user.is_authenticated: %}
-        <input type="button" id="downvoteButton" onclick="invertColorVote('downvote')" class="w3-button w3-round-large w3-hover-orange
+        <input type="button" id="downvoteButton" onclick="liveVote('downvote')" class="w3-button w3-round-large w3-hover-orange
         {% if user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}
         " value="▼"><br>
         {% else: %}
@@ -88,6 +88,8 @@
                     onclick="document.getElementById('reportForm').style.display = 'none';"></i>
             </div>
         </div>
+        {% else %}
+        </small>
         {% endif %}
     </div>
 </div>

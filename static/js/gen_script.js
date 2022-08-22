@@ -8,7 +8,7 @@ function redirectToPost() {
     }
 }
 
-async function invertColorVote(action) {
+async function liveVote(action) {
     var resp = await fetch("/" + action + "-callback", {
         method: "POST"
     });
