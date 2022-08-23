@@ -104,7 +104,8 @@ stuffimporter.set_stats(stats)
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-#app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
+#app.config["SERVER_NAME"] = "192.168.1.28:5000"
+app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
 app.logger.info("Je suis prêt.")
@@ -185,15 +186,11 @@ def verify_broadcast(func):
         return func
 
     # Send mail to the new broadcaster
-    with open(f"templates/brod_mail.html", "r", encoding="utf-8") as mail_file:
-        mail_content = mail_file.read()
-    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod_code }}", code)
-
     message = Mail(
         from_email="random.broadcasting.selector@gmail.com",
         to_emails=brod.email,
         subject="RandomBroadcastingSelector : You are the one.",
-        html_content=mail_content
+        html_content=render_template("brod_mail.html", server_name=app.config["SERVER_NAME"], brod_code=code)
     )
     sg_client.send(message)
 
@@ -333,15 +330,11 @@ def index(lang):
 
             brod.uexport(u_cont)
 
-            with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
-                mail_content = mail_file.read()
-            mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ brod.ban_message }}", brod.ban_message).replace("{{ brod.ban_reason }}", brod.ban_reason).replace("{{ brod.ban_most_quoted }}", brod.ban_most_quoted)
-
             message = Mail(
                 from_email="random.broadcasting.selector@gmail.com",
                 to_emails=brod.email,
                 subject="RandomBroadcastingSelector : You were banned.",
-                html_content=mail_content
+                html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], brod=brod)
             )
             sg_client.send(message)
 
@@ -711,8 +704,13 @@ def ban_appeal(lang):
     set_lang(lang)
     return render_template(f"{lang}/banned.html", form=form, user_id=request.args.get("user_id"))
 
+@app.route("/<lang>/donate/")
+@verify_broadcast
+def donate(lang):
+    return render_template(f"{lang}/donate.html")
+
 # Callbacks
-@app.route("/vote", methods=["POST"])
+@app.route("/vote/", methods=["POST"])
 @login_required
 def upvote_callback():
     lang = get_lang()
@@ -952,15 +950,11 @@ def admin_panel():
                 user.ban_most_quoted = banunban.ban_most_quoted.data
 
                 if not banunban.slienced.data:
-                    with open(f"templates/ban_mail.html", "r", encoding="utf-8") as mail_file:
-                        mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net").replace("{{ user.ban_message }}", user.ban_message).replace("{{ user.ban_reason }}", user.ban_reason).replace("{{ user.ban_most_quoted }}", user.ban_most_quoted)
-
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
                         to_emails=user.email,
                         subject="RandomBroadcastingSelector : You were banned.",
-                        html_content=mail_content
+                        html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], user=user)
                     )
                     sg_client.send(message)
 
@@ -972,15 +966,11 @@ def admin_panel():
                 user.banned = 0
 
                 if not banunban.slienced.data:
-                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
-                        mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
-
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
                         to_emails=user.email,
                         subject="RandomBroadcastingSelector : You are no longer banned.",
-                        html_content=mail_content
+                        html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
                     )
                     sg_client.send(message)
 
@@ -1001,15 +991,11 @@ def admin_panel():
                 user.banned = 0
 
                 if not appealview.slienced.data:
-                    with open(f"templates/unban_mail.html", "r", encoding="utf-8") as mail_file:
-                        mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
-
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
                         to_emails=user.email,
                         subject="RandomBroadcastingSelector : You are no longer banned.",
-                        html_content=mail_content
+                        html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
                     )
                     sg_client.send(message)
 
@@ -1022,15 +1008,11 @@ def admin_panel():
                 user.ban_appeal = ""
 
                 if not appealview.slienced.data:
-                    with open(f"templates/refused_mail.html", "r", encoding="utf-8") as mail_file:
-                        mail_content = mail_file.read()
-                    mail_content = mail_content.replace("{{ server_name }}", "rbs.azurewebsites.net")
-
                     message = Mail(
                         from_email="random.broadcasting.selector@gmail.com",
                         to_emails=user.email,
                         subject="RandomBroadcastingSelector : Your ban appeal was refused.",
-                        html_content=mail_content
+                        html_content=render_template("refused_mail.html", server_name=app.config["SERVER_NAME"])
                     )
                     sg_client.send(message)
 
