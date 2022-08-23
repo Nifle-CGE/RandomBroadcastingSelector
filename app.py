@@ -712,53 +712,45 @@ def ban_appeal(lang):
     return render_template(f"{lang}/banned.html", form=form, user_id=request.args.get("user_id"))
 
 # Callbacks
-@app.route("/upvote-callback", methods=["POST"])
+@app.route("/vote", methods=["POST"])
 @login_required
 def upvote_callback():
     lang = get_lang()
     if not stats["broadcast"]["content"]:
         return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't upvote one.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas l'upvoter."}[lang])
+        {"en": "No post is live right now so you can't vote.",
+        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas voter."}[lang])
 
-    if current_user.upvote == stats["broadcast"]["id"]:
-        current_user.upvote = ""
-        stats["broadcast"]["upvotes"] -= 1
-    else:
-        current_user.upvote = stats["broadcast"]["id"]
-        stats["broadcast"]["upvotes"] += 1
-        if current_user.downvote == stats["broadcast"]["id"]:
-            current_user.downvote = ""
-            stats["broadcast"]["downvotes"] -= 1
-
-    current_user.uexport(u_cont)
-    stuffimporter.set_stats(stats)
-
-    return "upvote"
-
-@app.route("/downvote-callback", methods=["POST"])
-@login_required
-def downvote_callback():
-    lang = get_lang()
-    if not stats["broadcast"]["content"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't downvote one.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le downvoter."}[lang])
-
-    if current_user.downvote == stats["broadcast"]["id"]:
-        current_user.downvote = ""
-        stats["broadcast"]["downvotes"] -= 1
-    else:
-        current_user.downvote = stats["broadcast"]["id"]
-        stats["broadcast"]["downvotes"] += 1
+    if request.form["action"] == "upvote":
         if current_user.upvote == stats["broadcast"]["id"]:
             current_user.upvote = ""
             stats["broadcast"]["upvotes"] -= 1
+        else:
+            current_user.upvote = stats["broadcast"]["id"]
+            stats["broadcast"]["upvotes"] += 1
+            if current_user.downvote == stats["broadcast"]["id"]:
+                current_user.downvote = ""
+                stats["broadcast"]["downvotes"] -= 1
 
-    current_user.uexport(u_cont)
-    stuffimporter.set_stats(stats)
+        current_user.uexport(u_cont)
+        stuffimporter.set_stats(stats)
 
-    return "downvote"
+        return "upvote"
+    else:
+        if current_user.downvote == stats["broadcast"]["id"]:
+            current_user.downvote = ""
+            stats["broadcast"]["downvotes"] -= 1
+        else:
+            current_user.downvote = stats["broadcast"]["id"]
+            stats["broadcast"]["downvotes"] += 1
+            if current_user.upvote == stats["broadcast"]["id"]:
+                current_user.upvote = ""
+                stats["broadcast"]["upvotes"] -= 1
+
+        current_user.uexport(u_cont)
+        stuffimporter.set_stats(stats)
+
+        return "downvote"
 
 # Custom validators
 class MinWords(object):

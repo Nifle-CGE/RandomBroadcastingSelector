@@ -9,8 +9,11 @@ function redirectToPost() {
 }
 
 async function liveVote(action) {
-    var resp = await fetch("/" + action + "-callback", {
-        method: "POST"
+    const data = new URLSearchParams();
+    data.append("action", action);
+    var resp = await fetch("/vote", {
+        method: "POST",
+        body: data
     });
     var text = await resp.text()
 
