@@ -39,7 +39,7 @@ async function liveVote(action) {
                 downvoteNum.innerHTML = parseInt(downvoteNum.innerHTML) - 1
             }
         }
-    } else {
+    } else if (action === "downvote") {
         if (downvoteButton.className.indexOf(" w3-text-red w3-hover-text-red") !== -1) {
             downvoteButton.className = downvoteButton.className.replace(" w3-text-red w3-hover-text-red", "");
             downvoteNum.innerHTML = parseInt(downvoteNum.innerHTML) - 1
