@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% import "to_import.html" as to_import %}
+
+{% block title %}{{ _("Home") }}{% endblock %}
+
+{% block home_main %} w3-teal{% endblock %}
+
+{% block content %}
+{% if stats["broadcast"]["content"]: %}
+{{ to_import.post(stats["broadcast"], live=True, user=current_user, form=form) }}
+{% else: %}
+<h2>{{ _("The new broadcaster hasn't responded yet so the post isn't here.") }}<br>
+    {{ _("Meanwhile, you can check out every other posts that ever existed") }} <a href="/en/history/1">{{ _("here") }}</a>{{ _(", or make a") }} <a href="/en/donate">{{ _("donation") }}</a> {{ _("to keep this website running.") }}
+</h2>
+{% endif %}
+<hr>
+<div class="w3-container w3-round-xlarge w3-pale-blue">
+    <h1 style="word-wrap: break-word;"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</h1>
+    <h3>
+        {{ _("The concept of this website is simple and its name is pretty self-explanatory.") }}<br>
+        {{ _("Once a day, someone from this website's users is randomly selected and gets to display a message on this here front page for everyone else to see.") }}
+    </h3>
+</div>
+{% endblock %}

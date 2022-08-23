@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Post search") }}{% endblock %}
+
+{% block history_main %} w3-teal{% endblock %}
+
+{% block content %}
+<label>
+    {{ _("Input the number of the post you want to view.") }}<br>
+    <input type="number" id="postIdInput" name="post_id" placeholder="0-{{ max_post_id }}" min="0" max="{{ max_post_id }}">
+</label><br><br>
+<input type="button" value="{{ _('Submit' }}" onclick="redirectToPost()">
+{% endblock %}

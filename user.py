@@ -2,10 +2,11 @@ from azure.cosmos.exceptions import *
 import json
 
 class User:
-    def __init__(self, id_="", name="", email="") -> None:
+    def __init__(self, id_="", name="", email="", lang="en") -> None:
         self.id_ = id_
         self.name = name
         self.email = email
+        self.lang = lang
         self.upvote = ""
         self.downvote = ""
         self.last_active = 0
@@ -40,6 +41,7 @@ class User:
         self.id_ = user["id"]
         self.name = user["name"]
         self.email = user["email"]
+        self.lang = user["lang"]
         self.upvote = user["upvote"]
         self.downvote = user["downvote"]
         self.last_active = user["last_active"]
@@ -70,6 +72,7 @@ class User:
         user["id"] = self.id_
         user["name"] = self.name
         user["email"] = self.email
+        user["lang"] = self.lang
         user["upvote"] = self.upvote
         user["downvote"] = self.downvote
         user["last_active"] = self.last_active

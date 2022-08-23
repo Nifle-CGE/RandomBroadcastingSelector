@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% import "to_import.html" as to_import %}
+
+{% block title %}{{ _("Statistics") }}{% endblock %}
+
+{% block stats_main %} w3-teal{% endblock %}
+
+{% block content %}
+<h2>{{ _("This Broadcasts info") }}</h2>
+{% if stats["broadcast"]["lang"] == lang: %}
+{{ _("Current message:") }} ❝{{ stats["broadcast"]["content"] }}❞<br>
+{% else: %}
+{{ _("Original message:") }} ❝{{ stats["broadcast"]["content"] }}❞<br>
+{{ _("Traducted message:") }} ❝{{ stats["broadcast"]["trads"][lang] }}❞<br>
+{{ _("Message language:") }} {{ stats["broadcast"]["lang"] }}<br>
+{% endif %}
+{{ _("Broadcaster:") }} {{ stats["broadcast"]["author_name"] }}<br>
+{{ _("Upvotes:") }} {{ stats["broadcast"]["upvotes"] }}<br>
+{{ _("Downvotes:") }} {{ stats["broadcast"]["downvotes"] }}<br>
+{{ _("Reports for this message:") }} {{ stats["broadcast"]["reports"] }}<br>
+
+<h2>{{ _("General Broadcasting info") }}</h2>
+{{ _("Broadcasts sent:") }} {{ stats["broadcasts"]["msgs_sent"] }}<br>
+{% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
+{{ _("Broadcasts in %(lang_code)s sent: %(number)s", lang_code=lang_code, number=number) }}<br>
+{% endfor %}
+{{ _("Total words sent:") }} {{ stats["broadcasts"]["words_sent"] }}<br>
+{{ _("Total characters sent:") }} {{ stats["broadcasts"]["characters_sent"] }}<br>
+
+<h2>{{ _("Users info") }}</h2>
+{{ _("Registered (and not banned) users:") }} {{ stats["users"]["num"] }}<br>
+{{ _("Banned users:") }} {{ stats["users"]["banned"] }}<br>
+{{ _("Number of users that have seen the current broadcast:") }} {{ stats["users"]["seen_msg"] }}<br>
+{{ _("Users who were active in the last hour:") }} {{ stats["users"]["lastact_hour"] }}<br>
+{{ _("Users who were active in the last 24 hour:") }} {{ stats["users"]["lastact_24h"] }}<br>
+{{ _("Users who were active in the last week:") }} {{ stats["users"]["lastact_week"] }}<br>
+
+<h2>{{ _("Time info") }}</h2>
+{{ _("Uptime:") }} {{ stats["time"]["uptime_str"] }}<br>
+{{ _("Time to get stats:") }} {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
+
+<h2>{{ _("Top broadcasts in different categories") }}</h2>
+<h3>{{ _("5 most upvoted") }}</h3>
+{% for post in stats["top_posts"]["5_most_upped"]: %}
+{{ to_import.post(post) }}
+{% endfor %}
+<h3>{{ _("5 most downvoted") }}</h3>
+{% for post in stats["top_posts"]["5_most_downed"]: %}
+{{ to_import.post(post) }}
+{% endfor %}
+<h3>{{ _("5 most popular (highest upvotes/downvotes ratio)") }}</h3>
+{% for post in stats["top_posts"]["5_most_pop"]: %}
+{{ to_import.post(post) }}
+{% endfor %}
+<h3>{{ _("5 most unpopular (lowest upvotes/downvotes ratio)") }}</h3>
+{% for post in stats["top_posts"]["5_most_unpop"]: %}
+{{ to_import.post(post) }}
+{% endfor %}
+<small>
+    {{ _("These stats are updated every 10 minutes.") }}<br>
+    {{ _("Click") }} <a href="/stats.json">{{ _("here") }}</a> {{ _("to get the raw stats file.") }}
+</small>
+{% endblock %}

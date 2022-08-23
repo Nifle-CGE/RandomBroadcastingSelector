@@ -1,8 +1,9 @@
 import json
 
 class StuffImporter(object):
-    def __init__(self, u_cont) -> None:
+    def __init__(self, u_cont, n_) -> None:
         self.u_cont = u_cont
+        self.n_ = n_
         
     def get_stats(self) -> dict:
         self.stats = self.u_cont.read_item("stats.json", "stats.json")
@@ -40,13 +41,13 @@ class StuffImporter(object):
 
         result = []
         if days:
-            result.append(f"{days} days")
+            result.append(self.n_("%(days)s day", "%(days)s days", days=days))
         if hours:
-            result.append(f"{hours} hours")
+            result.append(self.n_("%(hours)s hour", "%(hours)s hours", hours=hours))
         if minutes:
-            result.append(f"{minutes} minutes")
+            result.append(self.n_("%(minutes)s minute", "%(minutes)s minutes", minutes=minutes))
         if rem_seconds:
-            result.append(f"{rem_seconds} seconds")
+            result.append(self.n_("%(rem_seconds)s second", "%(rem_seconds)s seconds", rem_seconds=rem_seconds))
 
         return " ".join(result)
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <link rel="stylesheet" href="/static/css/main.css">
+    <link rel="stylesheet" href="/static/css/w3.css">
+
+    <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
+
+    <script src="https://kit.fontawesome.com/280bdb224c.js" crossorigin="anonymous"></script>
+    <script src="/static/js/script.js"></script>
+
+    <title>{% block title required %}{% endblock %} - RandomBroadcastingSelector</title>
+</head>
+
+<nav class="w3-bar w3-border-bottom w3-light-grey" style="overflow: visible;">
+    <a href="/"><img class="hover-zoom w3-bar-item" style="padding: 0;height: 54.5px;" src="/static/img/logo RBS.png" alt="RBS logo"></a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block home_main %}{% endblock %}" href="/"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block history_main %}{% endblock %}" href="/history/1">{{ _("History") }}</a>
+    {% if current_user.is_broadcaster: %}
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
+    {% endif %}
+
+    {% if current_user.is_authenticated: %}
+    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left" href="/logout/">{{ _("Logout") }}</a>
+    <span class="w3-bar-item w3-right w3-padding-16 w3-border-left">{{ current_user.name }}</span>
+    {% else: %}
+    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left{% block login_main %}{% endblock %}" href="/login/">{{ _("Login") }}</a>
+    {% endif %}
+    <div class="w3-dropdown-hover w3-right">
+        <button class="w3-button w3-padding-16 w3-border-left">{{ _("Language") }}</button>
+        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+            <a href="/?lang=en" class="w3-bar-item w3-button">{{ _("English") }}</a>
+            <a href="/?lang=fr" class="w3-bar-item w3-button">{{ _("French") }}</a>
+            <a href="/?lang=de" class="w3-bar-item w3-button">{{ _("German (Not Implemented)") }}</a>
+            <a href="/?lang=es" class="w3-bar-item w3-button">{{ _("Spanish (Not Implemented)") }}</a>
+        </div>
+    </div>
+</nav>
+
+<body>
+    <div class="w3-container">
+        {% block content required %}{% endblock %}
+    </div>
+    <br>
+    <footer class="w3-container w3-light-grey w3-padding-16">
+        <i>{{ _("Created by") }} <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a></i> | <a href="/donate/">{{ _("Donate") }}</a> | <a href="/post/">{{ _("Lookup an individual post") }}</a> | <a href="/sitemap/">{{ _("Sitemap") }}</a> | <a href="/privacy-policy/">{{ _("Privacy Policy") }}</a> | <a href="/terms-of-service/">{{ _("Terms of Service") }}</a>
+        <br>
+        <small>{{ _("If you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above.") }}</small>
+    </footer>
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Ban appeal{% endblock %}
+
+{% block content %}
+<form method="post">
+    {{ form.csrf_token }}
+    {% if form.csrf_token.errors: %}
+    {{ _("There was an error with the csrf token:") }} {{ form.csrf_token.errors }}<br>
+    {% endif %}
+
+    {{ form.user_id(value=user_id) }}
+    {% if form.user_id.errors: %}
+    {{ _("This was not supposed to happen:") }} {{ form.user_id.errors }}<br>
+    {% endif %}
+
+    {{ form.reason.label }}<br>
+    {{ form.reason(rows="4", cols="128") }}<br>
+    {% if form.reason.errors: %}
+    {{ _("The field above had an error:") }} {{ form.reason.errors }}<br>
+    {% endif %}
+
+    {{ form.submit }}
+</form>
+<br>
+<p>
+    <span class="w3-text-red">{{ _("Important") }}</span> {{ _(': If after submitting, you get any other message than "Your ban appeal has been saved.", you will have to go back to the login page and try to login again to be able to correct you ban appeal.') }}
+</p>
+{% endblock %}

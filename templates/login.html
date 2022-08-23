@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Login") }}{% endblock %}
+
+{% block login_main %} w3-teal{% endblock %}
+
+{% block content %}
+<br>
+<div class="w3-container w3-cell w3-round-xlarge w3-light-grey w3-center" style="padding: 20px 50px 30px;">
+    <h1 style="text-align:center;">{{ _("Continue with Social Media") }}</h1>
+    <a href="/login/google" class="w3-button w3-block w3-section w3-round-large w3-red w3-hover-orange">
+        <i class="fa-brands fa-google fa-fw"></i> {{ _("Continue with Google") }}
+    </a>
+    <a href="/login/twitter" class="w3-button w3-block w3-section w3-round-large w3-blue w3-hover-cyan">
+        <i class="fa-brands fa-twitter fa-fw"></i> {{ _("Continue with Twitter") }}
+    </a>
+    <a href="/login/discord" class="w3-button w3-block w3-section w3-round-large w3-deep-purple w3-hover-purple w3-hover-text-black">
+        <i class="fa-brands fa-discord fa-fw"></i> {{ _("Continue with Discord") }}
+    </a>
+    <a href="/login/github" class="w3-button w3-block w3-section w3-round-large w3-black w3-hover-grey">
+        <i class="fa-brands fa-github fa-fw"></i> {{ _("Continue with Github") }}
+    </a>
+    <a href="/login/facebook" class="w3-hide w3-button w3-block w3-section w3-round-large w3-indigo w3-hover-blue">
+        <i class="fa-brands fa-facebook fa-fw"></i> {{ _("Continue with Facebook") }}
+    </a>
+    <small style="text-align:center;">{{ _('By pressing "Continue" you agree to the') }} <a href="/privacy-policy/">{{ _("Privacy Policy") }}</a> {{ _("and") }} <a href="/terms-of-service/">{{ _("Terms of Service") }}</a> {{ _("of this site.") }}</small>
+</div>
+{% endblock %}

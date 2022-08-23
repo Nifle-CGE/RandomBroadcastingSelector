@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% import "to_import.html" as to_import %}
+
+{% block title %}{{ _("Post number %(number)s", post["id"]) }}{% endblock %}
+
+{% block content %}
+{{ to_import.post(post) }}
+{% endblock %}

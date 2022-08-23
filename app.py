@@ -11,40 +11,25 @@ import re
 import logging
 
 # Third-party libraries
-from flask import (
-    Flask,
-    redirect,
-    render_template,
-    url_for,
-    session,
-    request,
-    abort,
-    send_file
-)
-from flask_login import (
-    LoginManager,
-    current_user,
-    login_required,
-    login_user,
-    logout_user,
-)
-from flask_wtf import (
-    FlaskForm
-)
-from wtforms.fields import (
-    StringField,
-    TextAreaField,
-    HiddenField,
-    RadioField,
-    SubmitField,
-    BooleanField
-)
+from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
+
+from flask_login import LoginManager, current_user, login_required, login_user, logout_user
+
+from flask_wtf import FlaskForm
+from wtforms.fields import StringField, TextAreaField, HiddenField, RadioField, SubmitField, BooleanField
 from wtforms import validators
+
+from flask_babel import Babel, format_date, format_number, _, ngettext, lazy_gettext, lazy_ngettext, force_locale as babel_force_locale
+
 from authlib.integrations.flask_client import OAuth
+
 from azure.cosmos import CosmosClient
+
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
+
 import deepl
+
 import requests
 
 # Internal imports
@@ -86,13 +71,16 @@ translator = deepl.Translator(config["deepl_auth_key"])
 LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
 SUPPORTED_LANGUAGES = ["en"]
 
+# Internationalization setup
+babel = Babel(app)
+
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
 u_cont = db.get_container_client("Web RBS Users")
 p_cont = db.get_container_client("Web RBS Posts")
 
-stuffimporter = _stuffimporter.StuffImporter(u_cont)
+stuffimporter = _stuffimporter.StuffImporter(u_cont, ngettext)
 
 # Stats setup
 global stats
@@ -104,8 +92,8 @@ stuffimporter.set_stats(stats)
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-#app.config["SERVER_NAME"] = "192.168.1.28:5000"
-app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
+app.config["SERVER_NAME"] = "192.168.1.28:5000"
+#app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
 app.logger.info("Je suis prêt.")
@@ -125,6 +113,20 @@ def load_user(user_id, active=True):
         user.uexport(u_cont)
 
     return user
+
+# Babel stuff
+@babel.localeselector
+def get_lang():
+    lang = request.args.get("lang")
+    if lang and lang in LANGUAGE_CODES:
+        session["lang"] = lang
+        return lang
+    elif session.get("lang") in LANGUAGE_CODES:
+        return session["lang"]
+    elif current_user.is_authenticated:
+        return current_user.lang
+
+    return request.accept_languages.best_match(SUPPORTED_LANGUAGES)
 
 # Useful defs
 def verify_broadcast(func):
@@ -186,12 +188,13 @@ def verify_broadcast(func):
         return func
 
     # Send mail to the new broadcaster
-    message = Mail(
-        from_email="random.broadcasting.selector@gmail.com",
-        to_emails=brod.email,
-        subject="RandomBroadcastingSelector : You are the one.",
-        html_content=render_template("brod_mail.html", server_name=app.config["SERVER_NAME"], brod_code=code)
-    )
+    with babel_force_locale(brod.lang):
+        message = Mail(
+            from_email="random.broadcasting.selector@gmail.com",
+            to_emails=brod.email,
+            subject=_("RandomBroadcastingSelector : You are the one."),
+            html_content=render_template("brod_mail.html", server_name=app.config["SERVER_NAME"], brod_code=code)
+        )
     sg_client.send(message)
 
     stuffimporter.set_stats(stats)
@@ -211,9 +214,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         try:
             fraud_id = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
             app.logger.info(f"Double compte de {fraud_id} empéché.")
-            return render_template(f"{lang}/message.html", message=
-            {"en": "Double accounts aren't allowed.",
-            "fr": "Les doubles comptes ne sont pas autorisés."}[lang])
+            return render_template("message.html", message=_("Double accounts aren't allowed."))
         except StopIteration:
             pass
 
@@ -232,58 +233,28 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         stats["codes"]["ban_appeal"][user.id_] = code
         stuffimporter.set_stats(stats)
 
-        return redirect(url_for("ban_appeal", lang=lang, user_id=user.id_, appeal_code=code))
+        return redirect(url_for("ban_appeal", user_id=user.id_, appeal_code=code))
 
     # Begin user session by logging the user in
     user.is_authenticated = True
     login_user(user)
 
     # Send user back to homepage
-    set_lang(lang)
-    return redirect(url_for("index", lang=lang))
-
-def get_lang():
-    lang = session.get("lang")
-    if lang not in SUPPORTED_LANGUAGES:
-        lang = "en"
-        session["lang"] = lang
-
-    return lang
-
-def set_lang(lang):
-    if lang not in SUPPORTED_LANGUAGES:
-        lang = "en"
-
-    session["lang"] = lang
+    return redirect(url_for("index"))
 
 # Routing
-@app.route("/")
-def index_redirect():
-    return redirect(url_for("index", lang=get_lang()))
-
-@app.route("/<lang>/", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 @verify_broadcast
-def index(lang):
-    if lang not in LANGUAGE_CODES:
-        abort(404)
-
-    if lang not in SUPPORTED_LANGUAGES:
-        set_lang("en")
-        return render_template("en/message.html", message="This language has not been implemented yet.")
-
+def index():
     form = ReportForm()
     
     if form.validate_on_submit(): # Report callback
         if not stats["broadcast"]["content"]:
             app.logger.warning(f"{current_user.id_} a essayé de signaler un post alors qu'il n'y en a pas.")
-            return render_template(f"{lang}/message.html", message=
-            {"en": "No post is live right now so you can't report one.",
-            "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler."}[lang])
+            return render_template("message.html", message=_("No post is live right now so you can't report one."))
         elif current_user.report_post_id == stats["broadcast"]["id"]:
             app.logger.debug(f"{current_user.id_} a essayé de resignaler le post.")
-            return render_template(f"{lang}/message.html", message=
-            {"en": "You have already reported this post so you can't report it again.",
-            "fr": "Vous avez déja signalé ce post, vous ne pouvez pas le signaler une deuxième fois."}[lang])
+            return render_template("message.html", message=_("You have already reported this post so you can't report it again."))
 
         current_user.report_post_id = stats["broadcast"]["id"]
         current_user.report_reason = form.reason.data
@@ -330,12 +301,13 @@ def index(lang):
 
             brod.uexport(u_cont)
 
-            message = Mail(
-                from_email="random.broadcasting.selector@gmail.com",
-                to_emails=brod.email,
-                subject="RandomBroadcastingSelector : You were banned.",
-                html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], brod=brod)
-            )
+            with babel_force_locale(brod.lang):
+                message = Mail(
+                    from_email="random.broadcasting.selector@gmail.com",
+                    to_emails=brod.email,
+                    subject=_("RandomBroadcastingSelector : You were banned."),
+                    html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], brod=brod)
+                )
             sg_client.send(message)
 
             stats["users"]["banned"] += 1
@@ -348,18 +320,15 @@ def index(lang):
 
         stuffimporter.set_stats(stats)
 
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Your report as been saved.",
-        "fr": "Votre signalement a été enregistré."}[lang])
+        return render_template("message.html", message=_("Your report as been saved."))
 
-    set_lang(lang)
-    return render_template(f"{lang}/index.html", stats=stats, form=form)
+    return render_template("index.html", stats=stats, form=form, lang=get_lang())
 
 # All the login stuff
-@app.route("/<lang>/login/")
+@app.route("/login/")
 @verify_broadcast
-def login(lang):
-    return render_template(f"{lang}/login.html")
+def login():
+    return render_template("login.html")
 
 @app.route("/login/google/")
 def google_login():
@@ -384,14 +353,14 @@ def google_login_callback():
     response_json = token["userinfo"]
 
     if not response_json.get("email_verified"):
-        return "User email not available or not verified by Google.", 400
+        return _("User email not available or not verified by Google."), 400
     
     unique_id = "gg-" + response_json["sub"]
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = response_json["locale"]
     if lang not in LANGUAGE_CODES:
-        lang = "en"
+        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -414,9 +383,7 @@ def twitter_login():
 def twitter_login_callback():
     if request.args.get("denied"):
         lang = get_lang()
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You cancelled the Continue with Twitter action.",
-        "fr": "Vous avez annulé l'action Continuer avec Twitter."}[lang])
+        return render_template("message.html", message=_("You cancelled the Continue with Twitter action."))
 
     token = oauth.twitter.authorize_access_token()
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
@@ -426,13 +393,13 @@ def twitter_login_callback():
     users_name = response_json["name"]
     users_email = response_json.get("email")
     if not users_email:
-        return "User email not available or not verified by Twitter.", 400
+        return _("User email not available or not verified by Twitter."), 400
 
     settings_response = oauth.twitter.get("account/settings.json")
     settings_response_json = settings_response.json()
     lang = settings_response_json.get("language")
     if lang not in LANGUAGE_CODES:
-        lang = "en"
+        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -466,7 +433,7 @@ def github_login_callback():
     unique_id = "gh-" + str(response_json["id"])
     users_name = response_json["name"]
     users_email = response_json["email"]
-    lang = "en"
+    lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -493,23 +460,21 @@ def discord_login():
 def discord_login_callback():
     if request.args.get("error") == "access_denied":
         lang = get_lang()
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You cancelled the Continue with Discord action.",
-        "fr": "Vous avez annulé l'action Continuer avec Discord."}[lang])
+        return render_template("message.html", message=_("You cancelled the Continue with Discord action."))
 
     token = oauth.discord.authorize_access_token()
     response = oauth.discord.get("users/@me")
     response_json = response.json()
 
     if not response_json.get("verified"):
-        return "User email not available or not verified by Discord.", 400
+        return _("User email not available or not verified by Discord."), 400
     
     unique_id = "di-" + response_json["id"]
     users_name = response_json["username"]
     users_email = response_json["email"]
     lang = response_json["locale"]
     if lang not in LANGUAGE_CODES:
-        lang = "en"
+        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -543,14 +508,12 @@ def facebook_login_callback():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index", lang=get_lang()))
+    return redirect(url_for("index"))
 
 # General stuff
-@app.route("/<lang>/history/<int:page>")
+@app.route("/history/<int:page>")
 @verify_broadcast
-def history(lang, page):
-    set_lang(lang)
-
+def history(page):
     post_list = []
     for post_id in range((5 * page) - 4, (5 * page) + 1):
         try:
@@ -558,32 +521,28 @@ def history(lang, page):
         except StopIteration:
             pass
     
-    return render_template(f"{lang}/history.html", post_list=post_list, hist_page=int(page))
+    return render_template("history.html", post_list=post_list, hist_page=int(page))
 
-@app.route("/<lang>/post/")
+@app.route("/post/")
 @verify_broadcast
-def specific_post_search(lang):
-    set_lang(lang)
-
+def specific_post_search():
     max_id = int(stats["broadcast"]["id"]) - 1
         
-    return render_template(f"{lang}/post_search.html", max_post_id=max_id)
+    return render_template("post_search.html", max_post_id=max_id)
 
-@app.route("/<lang>/post/<int:id>")
+@app.route("/post/<int:id>")
 @verify_broadcast
-def specific_post(lang, id):
-    set_lang(lang)
-
+def specific_post(id):
     try:
         post = p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
     except StopIteration:
         abort(404)
 
-    return render_template(f"{lang}/post.html", post=post)
+    return render_template("post.html", post=post)
 
-@app.route("/<lang>/statistics/")
+@app.route("/statistics/")
 @verify_broadcast
-def statistics(lang):
+def statistics():
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
 
@@ -606,8 +565,7 @@ def statistics(lang):
 
     stuffimporter.set_stats(stats)
 
-    set_lang(lang)
-    return render_template(f"{lang}/stats.html", stats=stats)
+    return render_template("stats.html", stats=stats, lang=get_lang())
 
 @app.route("/stats.json")
 def stats_file():
@@ -624,17 +582,13 @@ def stats_file():
     app.logger.debug("Fichier stats exporté.")
     return stats_file
 
-@app.route("/<lang>/broadcast/", methods=["GET", "POST"])
+@app.route("/broadcast/", methods=["GET", "POST"])
 @login_required
-def broadcast(lang):
+def broadcast():
     if current_user.id_ != stats["broadcast"]["author"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have to be broadcaster to have access to this page.",
-        "fr": "Vous devez être diffuseur pour accéder a cette page."}[lang])
+        return render_template("message.html", message=_("You have to be broadcaster to have access to this page."))
     elif stats["broadcast"]["content"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have already made your broadcast.",
-        "fr": "Vous avez déja fait votre diffusion."}[lang])
+        return render_template("message.html", message=_("You have already made your broadcast."))
 
     form = BroadcastForm()
     
@@ -660,24 +614,17 @@ def broadcast(lang):
         stuffimporter.set_stats(stats)
     
         app.logger.info("La diffusion a été enregistrée.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Your broadcast has been saved.",
-        "fr": "Votre diffusion a été enregistrée."}[lang])
+        return render_template("message.html", message=_("Your broadcast has been saved."))
 
-    set_lang(lang)
-    return render_template(f"{lang}/broadcast.html", form=form, stats=stats)
+    return render_template("broadcast.html", form=form, stats=stats)
 
-@app.route("/<lang>/ban-appeal/", methods=["GET", "POST"])
-def ban_appeal(lang):
+@app.route("/ban-appeal/", methods=["GET", "POST"])
+def ban_appeal():
     if request.args.get("user_id") not in stats["codes"]["ban_appeal"].keys():
-        return render_template(f"{lang}/message.html", message=
-        {"en": "You have to be banned to have access to this page.",
-        "fr": "Vous devez être banni pour accéder a cette page."}[lang])
+        return render_template("message.html", message=_("You have to be banned to have access to this page."))
     elif stats["codes"]["ban_appeal"][request.args.get("user_id")] != request.args.get("appeal_code"):
         app.logger.info(f"{request.args.get['user_id']} a essayé de faire la malin en changeant le html des hidden inputs sur la page de demande de débannissement.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Hey smartass, quit trying.",
-        "fr": "Hé petit.e malin.e, arrête d'essayer."}[lang])
+        return render_template("message.html", message=_("Hey smartass, quit trying."))
 
     form = BanAppealForm()
     
@@ -685,9 +632,7 @@ def ban_appeal(lang):
         user = load_user(form.user_id.data, active=False)
         if user.ban_appeal:
             app.logger.info(f"{form.user_id.data} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
-            return render_template(f"{lang}/message.html", message=
-            {"en": "You have already made a ban appeal.",
-            "fr": "Vous avez déja fait une demande de débannissement."}[lang])
+            return render_template("message.html", message=_("You have already made a ban appeal."))
 
         user.ban_appeal = form.reason.data
         user.uexport(u_cont)
@@ -697,27 +642,21 @@ def ban_appeal(lang):
 
         requests.get(config["telegram_send_url"] + "ban+appeal+received")
         app.logger.info("Une demande de débannissment a été enregistrée.")
-        return render_template(f"{lang}/message.html", message=
-        {"en": "Your ban appeal has been saved, it will be reviewed shortly.",
-        "fr": "Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais."}[lang])
+        return render_template("message.html", message=_("Your ban appeal has been saved, it will be reviewed shortly."))
 
-    set_lang(lang)
-    return render_template(f"{lang}/banned.html", form=form, user_id=request.args.get("user_id"))
+    return render_template("banned.html", form=form, user_id=request.args.get("user_id"))
 
-@app.route("/<lang>/donate/")
+@app.route("/donate/")
 @verify_broadcast
-def donate(lang):
-    return render_template(f"{lang}/donate.html")
+def donate():
+    return render_template("donate.html")
 
 # Callbacks
 @app.route("/vote/", methods=["POST"])
 @login_required
-def upvote_callback():
-    lang = get_lang()
+def vote_callback():
     if not stats["broadcast"]["content"]:
-        return render_template(f"{lang}/message.html", message=
-        {"en": "No post is live right now so you can't vote.",
-        "fr": "Aucun post n'est en train d'être noté donc tu ne peux pas voter."}[lang])
+        return render_template("message.html", message=_("No post is live right now so you can't vote."))
 
     if request.form["action"] == "upvote":
         if current_user.upvote == stats["broadcast"]["id"]:
@@ -729,12 +668,7 @@ def upvote_callback():
             if current_user.downvote == stats["broadcast"]["id"]:
                 current_user.downvote = ""
                 stats["broadcast"]["downvotes"] -= 1
-
-        current_user.uexport(u_cont)
-        stuffimporter.set_stats(stats)
-
-        return "upvote"
-    else:
+    elif request.form["action"] == "downvote":
         if current_user.downvote == stats["broadcast"]["id"]:
             current_user.downvote = ""
             stats["broadcast"]["downvotes"] -= 1
@@ -745,17 +679,17 @@ def upvote_callback():
                 current_user.upvote = ""
                 stats["broadcast"]["upvotes"] -= 1
 
-        current_user.uexport(u_cont)
-        stuffimporter.set_stats(stats)
+    current_user.uexport(u_cont)
+    stuffimporter.set_stats(stats)
 
-        return "downvote"
+    return request.form["action"]
 
 # Custom validators
 class MinWords(object):
     def __init__(self, minimum=-1, message=None):
         self.minimum = minimum
         if not message:
-            message = f'Field must have at least {minimum} words.'
+            message = lazy_ngettext('Field must have at least %(minimum)s word.', 'Field must have at least %(minimum)s words.', minimum=minimum)
         self.message = message
 
     def __call__(self, form, field):
@@ -767,7 +701,7 @@ class InString(object):
     def __init__(self, string="", message=None):
         self.string = string
         if not message:
-            message = f'Field must be included in "{string}".'
+            message = lazy_gettext('Field must be included in "%(string)s".', string=string)
         self.message = message
 
     def __call__(self, form, field):
@@ -791,45 +725,45 @@ class BroadcastForm(FlaskForm):
         validators.AnyOf([stats["broadcast"]["author"]])
     ])
 
-    message = TextAreaField("Enter the message you want to send to this websites users.", validators=[
+    message = TextAreaField(lazy_gettext("Enter the message you want to send to this websites users."), validators=[
         validators.InputRequired(),
         validators.Length(0, 512),
-        MinWords(2, message="I'm sorry but you are going to have to write more than one word.")
+        MinWords(2, message=lazy_gettext("I'm sorry but you are going to have to write more than one word."))
     ])
 
-    display_name = StringField("Author of this message (name that you want to be designated as that everyone will see.) :", validators=[
+    display_name = StringField(lazy_gettext("Author of this message (name that you want to be designated as that everyone will see.):"), validators=[
         validators.InputRequired(),
         validators.Length(0, 64)
     ])
 
-    brod_code = StringField("Verification code from the email you received :", validators=[
+    brod_code = StringField(lazy_gettext("Verification code from the email you received:"), validators=[
         validators.InputRequired(),
         validators.Length(43, 43),
-        validators.AnyOf([stats["codes"]["broadcast"]], message="You have to input the code you received in the mail we sent to you.")
+        validators.AnyOf([stats["codes"]["broadcast"]], message=lazy_gettext("You have to input the code you received in the mail we sent to you."))
     ])
 
-    submit = SubmitField()
+    submit = SubmitField(lazy_gettext("Submit"))
 
 class BanAppealForm(FlaskForm):
     user_id = HiddenField(validators=[
         validators.InputRequired(),
-        validators.AnyOf(stats["codes"]["ban_appeal"].keys(), message="You have to be banned to submit this form.")
+        validators.AnyOf(stats["codes"]["ban_appeal"].keys(), message=lazy_gettext("You have to be banned to submit this form."))
     ])
 
     reason = TextAreaField("Enter why you should be unbanned.", validators=[
         validators.InputRequired(),
         validators.Length(0, 512),
-        MinWords(2, message="If you really want to get unbanned you should write a bit more than that (more than one word).")
+        MinWords(2, message=lazy_gettext("If you really want to get unbanned you should write a bit more than that (more than one word)."))
     ])
 
-    submit = SubmitField()
+    submit = SubmitField(lazy_gettext("Submit"))
 
 class ReportForm(FlaskForm):
     reason = RadioField(choices=[
-        ("harassement", "Is this broadcast harassing, insulting or encouraging hate against anyone ?"),
-        ("mild_language", "Is this broadcast using too much mild language for a family friendly website ?"),
-        ("link", 'Does this broadcast contain any link (like "http://example.com") or pseudo link (like "example.com") or attempts at putting a link that doesn\'t look like one (like "e x a m p l e . c o m" or "example dot com") ?'),
-        ("offensive_name", "Has this broadcasts author chosen an offending name ?")
+        ("harassement", lazy_gettext("Is this broadcast harassing, insulting or encouraging hate against anyone ?")),
+        ("mild_language", lazy_gettext("Is this broadcast using too much mild language for a family friendly website ?")),
+        ("link", lazy_gettext('Does this broadcast contain any link (like "http://example.com") or pseudo link (like "example.com") or attempts at putting a link that doesn\'t look like one (like "e x a m p l e . c o m" or "example dot com") ?')),
+        ("offensive_name", lazy_gettext("Has this broadcasts author chosen an offending name ?"))
     ], validators=[
         validators.InputRequired(),
     ])
@@ -837,11 +771,11 @@ class ReportForm(FlaskForm):
     message_quote = StringField(validators=[
         StopIfBlah(),
         validators.InputRequired(),
-        InString(stats["broadcast"]["content"], message="The quote you supplied isn't in the broadcast."),
-        MinWords(2, message="The quote you supplied has only got one word when it has to have at least two.")
+        InString(stats["broadcast"]["content"], message=lazy_gettext("The quote you supplied isn't in the broadcast.")),
+        MinWords(2, message=lazy_gettext("The quote you supplied has only got one word when it has to have at least two."))
     ])
 
-    submit = SubmitField()
+    submit = SubmitField(lazy_gettext("Submit"))
 
 class BanUnbanForm(FlaskForm):
     verif_code = HiddenField()
@@ -898,9 +832,9 @@ def privacy_policy():
 def terms_of_service():
     return render_template("terms_of_service.html")
 
-@app.route("/<lang>/sitemap/")
-def sitemap(lang):
-    render_template(f"{lang}/sitemap.html")
+@app.route("/sitemap/")
+def sitemap():
+    render_template("sitemap.html")
 
 # Crawling control
 @app.route("/robots.txt")
@@ -910,7 +844,7 @@ def robots():
 # Health check
 @app.route("/ping/")
 def ping():
-    return "App online", 200
+    return _("App online"), 200
 
 # Admin
 @app.route("/super-secret-admin-panel/", methods=["GET", "POST"])
@@ -950,12 +884,13 @@ def admin_panel():
                 user.ban_most_quoted = banunban.ban_most_quoted.data
 
                 if not banunban.slienced.data:
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user.email,
-                        subject="RandomBroadcastingSelector : You were banned.",
-                        html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], user=user)
-                    )
+                    with babel_force_locale(user.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=user.email,
+                            subject=_("RandomBroadcastingSelector : You were banned."),
+                            html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], user=user)
+                        )
                     sg_client.send(message)
 
                 stats["users"]["banned"] += 1
@@ -966,12 +901,13 @@ def admin_panel():
                 user.banned = 0
 
                 if not banunban.slienced.data:
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user.email,
-                        subject="RandomBroadcastingSelector : You are no longer banned.",
-                        html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
-                    )
+                    with babel_force_locale(user.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=user.email,
+                            subject=_("RandomBroadcastingSelector : You are no longer banned."),
+                            html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
+                        )
                     sg_client.send(message)
 
                 stats["users"]["banned"] -= 1
@@ -991,12 +927,13 @@ def admin_panel():
                 user.banned = 0
 
                 if not appealview.slienced.data:
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user.email,
-                        subject="RandomBroadcastingSelector : You are no longer banned.",
-                        html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
-                    )
+                    with babel_force_locale(user.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=user.email,
+                            subject=_("RandomBroadcastingSelector : You are no longer banned."),
+                            html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
+                        )
                     sg_client.send(message)
 
                 stats["users"]["banned"] -= 1
@@ -1008,12 +945,13 @@ def admin_panel():
                 user.ban_appeal = ""
 
                 if not appealview.slienced.data:
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=user.email,
-                        subject="RandomBroadcastingSelector : Your ban appeal was refused.",
-                        html_content=render_template("refused_mail.html", server_name=app.config["SERVER_NAME"])
-                    )
+                    with babel_force_locale(user.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=user.email,
+                            subject=_("RandomBroadcastingSelector : Your ban appeal was refused."),
+                            html_content=render_template("refused_mail.html", server_name=app.config["SERVER_NAME"])
+                        )
                     sg_client.send(message)
 
             user.uexport()
@@ -1033,7 +971,7 @@ def admin_panel():
         elif request.form["action"] == "export_logs":
             return send_file("logs.log", as_attachment=True)
 
-        return render_template("en/message.html", message="Succès de l'action " + request.form["action"])
+        return render_template("message.html", message="Succès de l'action " + request.form["action"])
 
     code = secrets.token_urlsafe(32)
     stats["codes"]["admin_action"] = secrets.token_urlsafe(32)
@@ -1045,7 +983,7 @@ def admin_panel():
 # Error handling
 @app.errorhandler(401)
 def method_not_allowed(e):
-    return render_template(f"{get_lang()}/error.html",
+    return render_template("error.html",
                             err_title="401 Unauthorized",
                             err_img_src="/static/img/you shall not pass.gif",
                             err_img_alt="Gandalf you shall not pass GIF",
@@ -1053,7 +991,7 @@ def method_not_allowed(e):
 
 @app.errorhandler(404)
 def not_found(e):
-    return render_template(f"{get_lang()}/error.html",
+    return render_template("error.html",
                             err_title="404 Not Found",
                             err_img_src="/static/img/confused travolta.gif",
                             err_img_alt="Confused Travolta GIF",
@@ -1061,7 +999,7 @@ def not_found(e):
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template(f"{get_lang()}/error.html",
+    return render_template("error.html",
                             err_title="500 Internal Server Error",
                             err_img_src="/static/img/this is fine.gif",
                             err_img_alt="This is fine dog GIF",

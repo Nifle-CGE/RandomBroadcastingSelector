@@ -1,8 +1,8 @@
-{% extends "en/base.html" %}
+{% extends "base.html" %}
 
-{% import "en/to_import.html" as to_import %}
+{% import "to_import.html" as to_import %}
 
-{% block title %}History page {{ hist_page }}{% endblock %}
+{% block title %}{{ _("History page %(page)s", page=hist_page) }}{% endblock %}
 
 {% block history_main %} w3-teal{% endblock %}
 
@@ -12,7 +12,7 @@
 {{ to_import.post(post) }}
 {% endfor %}
 {% else: %}
-<h3>These posts don't exist yet.</h3>
+<h3>{{ _("These posts don't exist yet.") }}</h3>
 {% endif %}
 
 <div class="w3-bar">

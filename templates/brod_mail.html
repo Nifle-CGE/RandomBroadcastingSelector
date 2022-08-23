@@ -1,21 +1,11 @@
 <body style="font-family: Verdana, sans-serif;">
     <h1><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</h1>
-    <h3>You remember that weird website you signed in to, thinking you'll never get selected?<br>
-        Well, you actually got selected.<br>
-        You can click <a href="https://{{ server_name }}/en/login">here</a> to login and then click on the Broadcast tab
-        on the navigation bar and make your broadcast.<br>
-        You are going to need this code to make the broadcast : "<strong>{{ brod_code }}</strong>"</h3>
-    <p>If you think this is a scam, then all right, don't click on the link, just go on the website by
-        searching for it on the web and you'll see.</p>
-    <small>If you spot any spelling mistakes, you can respond to this email and I'll correct them.</small>
-    <br><br>
-    <hr>
-    <h3>Tu te souviens du site bizarre auquel tu t'est inscrit pensant que tu serait jamais sélectionné ?<br>
-        Ben, tu a été sélectionné.<br>
-        Tu peux cliquer <a href="https://{{ server_name }}/fr/login">ici</a> pour te connecter et ensuite clique sur
-        l'onglet Diffusion sur la barre de navigation en haut de la page et tu pourras faire ta diffusion.<br>
-        Tu va aussi avoir besoin de ce code pour faire la diffusion : "<strong>{{ brod_code }}</strong>"</h3>
-    <p>Si tu pense que c'est une arnaque, ben ok, pas de problème, ne clique pas sur le lien dans ce mail, tu peux juste
-        aller sur le site par une recherche web et tu verras.</p>
-    <small>Si tu vois des erreurs d'orthographe tu peux répondre a cet email et je corrigerais.</small>
+    <h3>
+        {{ _("You remember that weird website you signed in to, thinking you'll never get selected?") }}<br>
+        {{ _("Well, you actually got selected.") }}<br>
+        {{ _("You can click") }} <a href="https://{{ server_name }}/en/login">{{ _("here") }}</a> {{ _("to login and then click on the Broadcast tab on the navigation bar and make your broadcast.") }}<br>
+        {{ _("You are going to need this code to make the broadcast:") }} "<strong>{{ brod_code }}</strong>"
+    </h3>
+    <p>{{ _("If you think this is a scam, then all right, don't click on the link, just go on the website by searching for it on the web and you'll see.") }}</p>
+    <small>{{ _("If you spot any spelling mistakes, you can respond to this email and I'll correct them.") }}</small>
 </body>

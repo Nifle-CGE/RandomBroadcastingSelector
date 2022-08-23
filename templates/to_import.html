@@ -1,0 +1,77 @@
+{% macro post(post, live=False, user=None, lang="en", form=None) -%}
+<div class="w3-padding-16">
+    <div class="w3-container w3-cell w3-center" style="padding:0 16px 0 0;">
+        {% if live and user.is_authenticated: %}
+        <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green{% if user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" value="▲"><br>
+        {% else: %}
+        <input type="button" class="w3-button w3-round-large w3-hover-light-green" value="▲"><br>
+        {% endif %}
+
+        <span class="w3-text-green" id="upvote_num">{{ post["upvotes"] }}</span><br>
+        <span class="w3-text-red" id="downvote_num">{{ post["downvotes"] }}</span><br>
+
+        {% if live and user.is_authenticated: %}
+        <input type="button" id="downvoteButton" onclick="liveVote('downvote')" class="w3-button w3-round-large w3-hover-orange{% if user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}" value="▼"><br>
+        {% else: %}
+        <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
+        {% endif %}
+    </div>
+    <div class="w3-container w3-cell w3-round-large w3-light-grey" style="padding:0 16px 16px 16px;">
+        <h4>❝{{ post["content"] }}❞</h4>
+        {% if live and lang != post["lang"]: %}
+        <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
+        {% endif %}
+        <h6>{{ _("by") }} {{ post["author_name"] }}</h6>
+        <small>Id : {{ post["id"] }} | {{ _("Date") }} {{ post["date"] }}
+            <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report (testing)</a>
+            TODO : enlever quand form terminée -->
+            {% if live and user.is_authenticated: %}
+            | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">{{ _("Report") }}</a>
+        </small>
+        <div class="w3-modal" id="reportForm">
+            <div class="w3-container w3-card-4 w3-modal-content w3-animate-zoom">
+                <h3>{{ _("Before doing anything, read the text below.") }}</h3>
+                <h5>
+                    {{ _("The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a translation error) you can contact me by clicking on my name in the footer at the bottom of the page.") }}<br>
+                    {{ _("Do not report for no reason because you will have to quote the part of the broadcast where the offense was made in the input at the end of the form.") }}<br>
+                    {{ _("For the input at the end of the form, you have to quote at least 2 words.") }}<br>
+                    {{ _("Another thing about the input at the end, you can only quote the original message and not the translation that has been made, because I can't risk banning people because of bad translations.") }}<br>
+                    {{ _("Be careful to fill this form correctly as you will not be able to modify or delete it.") }}
+                </h5>
+                <input type="button" value="{{ _('I have read the text above.') }}" id="activatorButton" onclick="enableSubmitButton('submitButton', 'activatorButton')">
+                <h4>{{ _("What is the reason of your report?") }}</h4>
+                {{ _("Here is the broadcast so you can copy and paste easily:") }} "{{ post["content"] }}"<br>
+                <form class="w3-light-grey" method="post">
+                    {{ form.csrf_token }}
+                    {% if form.csrf_token.errors: %}
+                    {{ _("There was an error with the csrf token:") }} {{ form.csrf_token.errors }}<br>
+                    {% endif %}
+
+                    {% for subfield in form.reason: %}
+                    {{ subfield(onclick="changeReportFormBottomInputLabel(this)") }} {{ subfield.label }}<br>
+                    {% endfor %}
+                    {% if form.reason.errors: %}
+                    {{ _("This was not supposed to happen:") }} {{ form.reason.errors }}<br>
+                    {% endif %}<br>
+
+                    <label for="quote_input" id="quote_label">{{ _("This is where you have quote the part of the message where the offense was made. This label is going to change as you select different options.") }}</label>
+                    <label for="quote_input" id="quote_label_harassement" hidden>{{ _("You have to quote the part of the message that is concerned.") }}</label>
+                    <label for="quote_input" id="quote_label_mild_language" hidden>{{ _("You have to quote the part of the message that isn't family friendly.") }}</label>
+                    <label for="quote_input" id="quote_label_link" hidden>{{ _("You have to quote the link.") }}</label>
+                    <label for="quote_input" id="quote_label_offensive_name" hidden>{{ _("You can leave this input empty.") }}</label><br>
+                    {{ form.message_quote(id="quote_input") }}<br>
+                    {% if form.message_quote.errors: %}
+                    {{ _("The field above had an error:") }} {{ form.message_quote.errors }}<br>
+                    {% endif %}
+
+                    {{ form.submit(id="submitButton", style="cursor: not-allowed;", disabled=True) }}
+                </form><br>
+                <i class="fa fa-close w3-display-topright w3-hover-red w3-xxxlarge" style="padding: 0 9px;" onclick="document.getElementById('reportForm').style.display = 'none';"></i>
+            </div>
+        </div>
+        {% else %}
+        </small>
+        {% endif %}
+    </div>
+</div>
+{%- endmacro %}
