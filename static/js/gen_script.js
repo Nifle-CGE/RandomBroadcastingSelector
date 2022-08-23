@@ -11,7 +11,7 @@ function redirectToPost() {
 async function liveVote(action) {
     const data = new URLSearchParams();
     data.append("action", action);
-    var resp = await fetch("/vote", {
+    var resp = await fetch("/vote/", {
         method: "POST",
         body: data
     });
