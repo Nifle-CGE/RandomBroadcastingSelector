@@ -69,7 +69,7 @@ config = _stuffimporter.StuffImporter.get_config()
 translator = deepl.Translator(config["deepl_auth_key"])
 
 LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
-SUPPORTED_LANGUAGES = ["en"]
+SUPPORTED_LANGUAGES = ["en", "fr"]
 
 # Internationalization setup
 babel = Babel(app)
@@ -92,7 +92,6 @@ stuffimporter.set_stats(stats)
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-#app.config["SERVER_NAME"] = "192.168.1.28:5000"
 app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
