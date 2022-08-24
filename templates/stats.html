@@ -43,19 +43,19 @@
 <h2>{{ _("Top broadcasts in different categories") }}</h2>
 <h3>{{ _("5 most upvoted") }}</h3>
 {% for post in stats["top_posts"]["5_most_upped"]: %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endfor %}
 <h3>{{ _("5 most downvoted") }}</h3>
 {% for post in stats["top_posts"]["5_most_downed"]: %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endfor %}
 <h3>{{ _("5 most popular (highest upvotes/downvotes ratio)") }}</h3>
 {% for post in stats["top_posts"]["5_most_pop"]: %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endfor %}
 <h3>{{ _("5 most unpopular (lowest upvotes/downvotes ratio)") }}</h3>
 {% for post in stats["top_posts"]["5_most_unpop"]: %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endfor %}
 <small>
     {{ _("These stats are updated every 10 minutes.") }}<br>

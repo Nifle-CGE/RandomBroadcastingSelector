@@ -1,4 +1,4 @@
-{% macro post(post, live=False, user=None, lang="en", form=None) -%}
+{% macro post(post, live=False, user=None, lang="en", form=None, random=None) -%}
 <div class="w3-padding-16" style="display:flex;justify-content:center;">
     <div class="w3-container w3-cell w3-center">
         {% if live and user.is_authenticated: %}
@@ -16,7 +16,7 @@
         <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
         {% endif %}
     </div>
-    <div id="text_container" class="w3-container w3-cell w3-round-large" style="padding:0 16px 16px 16px;">
+    <div id="text_container" class="w3-container w3-cell w3-round-large {{ random.choice(['w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow']) }}" style="padding:0 16px 16px 16px;">
         <h3>❝{{ post["content"] }}❞</h3>
         <h6 class="w3-right" style="margin:0;">{{ _("by") }} {{ post["author_name"] }}</h6><br>
         {% if live and lang != post["lang"]: %}
@@ -73,9 +73,5 @@
         </small>
         {% endif %}
     </div>
-    <script>
-        const pale_colours = new Array('w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow')
-        document.getElementById("text_container").className += " " + pale_colours[Math.floor(Math.random() * 4)]
-    </script>
 </div>
 {%- endmacro %}

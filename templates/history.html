@@ -9,7 +9,7 @@
 {% block content %}
 {% if post_list: %}
 {% for post in post_list: %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endfor %}
 {% else: %}
 <h3>{{ _("These posts don't exist yet.") }}</h3>

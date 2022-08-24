@@ -321,7 +321,7 @@ def index():
 
         return render_template("message.html", message=_("Your report as been saved."))
 
-    return render_template("index.html", stats=stats, form=form, lang=get_lang())
+    return render_template("index.html", stats=stats, form=form, lang=get_lang(), random=random)
 
 # All the login stuff
 @app.route("/login/")
@@ -520,7 +520,7 @@ def history(page):
         except StopIteration:
             pass
     
-    return render_template("history.html", post_list=post_list, hist_page=int(page))
+    return render_template("history.html", post_list=post_list, hist_page=int(page), random=random)
 
 @app.route("/post/")
 @verify_broadcast
@@ -537,7 +537,7 @@ def specific_post(id):
     except StopIteration:
         abort(404)
 
-    return render_template("post.html", post=post)
+    return render_template("post.html", post=post, random=random)
 
 @app.route("/statistics/")
 @verify_broadcast
@@ -564,7 +564,7 @@ def statistics():
 
     stuffimporter.set_stats(stats)
 
-    return render_template("stats.html", stats=stats, lang=get_lang())
+    return render_template("stats.html", stats=stats, lang=get_lang(), random=random)
 
 @app.route("/stats.json")
 def stats_file():

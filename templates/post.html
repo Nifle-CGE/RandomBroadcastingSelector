@@ -5,5 +5,5 @@
 {% block title %}{{ _("Post number %(number)s", post["id"]) }}{% endblock %}
 
 {% block content %}
-{{ to_import.post(post) }}
+{{ to_import.post(post, random=random) }}
 {% endblock %}
