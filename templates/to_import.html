@@ -1,8 +1,8 @@
-{% macro post(post, live=False, user=None, lang="en", form=None, random=None) -%}
+{% macro post(post, live=False) -%}
 <div class="w3-padding-16" style="display:flex;justify-content:center;">
     <div class="w3-container w3-cell w3-center">
-        {% if live and user.is_authenticated: %}
-        <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green{% if user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" value="▲"><br>
+        {% if live and current_user.is_authenticated: %}
+        <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" value="▲"><br>
         {% else: %}
         <input type="button" class="w3-button w3-round-large w3-hover-light-green" value="▲"><br>
         {% endif %}
@@ -10,8 +10,8 @@
         <span class="w3-text-green" id="upvote_num">{{ post["upvotes"] }}</span><br>
         <span class="w3-text-red" id="downvote_num">{{ post["downvotes"] }}</span><br>
 
-        {% if live and user.is_authenticated: %}
-        <input type="button" id="downvoteButton" onclick="liveVote('downvote')" class="w3-button w3-round-large w3-hover-orange{% if user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}" value="▼"><br>
+        {% if live and current_user.is_authenticated: %}
+        <input type="button" id="downvoteButton" onclick="liveVote('downvote')" class="w3-button w3-round-large w3-hover-orange{% if current_user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}" value="▼"><br>
         {% else: %}
         <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
         {% endif %}
@@ -25,7 +25,7 @@
         <small>{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["date"] }}
             <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report (testing)</a>
             TODO : enlever quand form terminée -->
-            {% if live and user.is_authenticated: %}
+            {% if live and current_user.is_authenticated: %}
             | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">{{ _("Report") }}</a>
         </small>
         <div class="w3-modal" id="reportForm">

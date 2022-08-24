@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% import "to_import.html" as to_import %}
+{% import "to_import.html" as to_import with context %}
 
 {% block title %}{{ _("History page %(page)s", page=hist_page) }}{% endblock %}
 
@@ -9,7 +9,7 @@
 {% block content %}
 {% if post_list: %}
 {% for post in post_list: %}
-{{ to_import.post(post, random=random) }}
+{{ to_import.post(post) }}
 {% endfor %}
 {% else: %}
 <h3>{{ _("These posts don't exist yet.") }}</h3>
