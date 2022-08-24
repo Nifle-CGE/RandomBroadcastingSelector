@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% import "to_import.html" as to_import %}
+{% import "to_import.html" as to_import with context %}
 
-{% block title %}{{ _("Post number %(number)s", post["id"]) }}{% endblock %}
+{% block title %}{{ _("Post number %(number)s", number=post["id"]) }}{% endblock %}
 
 {% block content %}
-{{ to_import.post(post, random=random) }}
+{{ to_import.post(post) }}
 {% endblock %}

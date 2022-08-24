@@ -187,7 +187,7 @@ def verify_broadcast(func):
         return func
 
     # Send mail to the new broadcaster
-    with babel_force_locale(brod.lang):
+    with app.app_context(), babel_force_locale(brod.lang):
         message = Mail(
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=brod.email,
@@ -300,7 +300,7 @@ def index():
 
             brod.uexport(u_cont)
 
-            with babel_force_locale(brod.lang):
+            with app.app_context(), babel_force_locale(brod.lang):
                 message = Mail(
                     from_email="random.broadcasting.selector@gmail.com",
                     to_emails=brod.email,
@@ -309,6 +309,7 @@ def index():
                 )
             sg_client.send(message)
 
+            stats["users"]["num"] -= 1
             stats["users"]["banned"] += 1
 
             # Delete the banned user's message
@@ -883,7 +884,7 @@ def admin_panel():
                 user.ban_most_quoted = banunban.ban_most_quoted.data
 
                 if not banunban.slienced.data:
-                    with babel_force_locale(user.lang):
+                    with app.app_context(), babel_force_locale(user.lang):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
@@ -892,6 +893,7 @@ def admin_panel():
                         )
                     sg_client.send(message)
 
+                stats["users"]["num"] -= 1
                 stats["users"]["banned"] += 1
 
                 app.logger.info(f"{identifier} a banni {user.id_} avec succès.")
@@ -900,7 +902,7 @@ def admin_panel():
                 user.banned = 0
 
                 if not banunban.slienced.data:
-                    with babel_force_locale(user.lang):
+                    with app.app_context(), babel_force_locale(user.lang):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
@@ -909,6 +911,7 @@ def admin_panel():
                         )
                     sg_client.send(message)
 
+                stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
 
                 app.logger.info(f"{identifier} a débanni {user.id_} avec succès.")
@@ -926,7 +929,7 @@ def admin_panel():
                 user.banned = 0
 
                 if not appealview.slienced.data:
-                    with babel_force_locale(user.lang):
+                    with app.app_context(), babel_force_locale(user.lang):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
@@ -935,6 +938,7 @@ def admin_panel():
                         )
                     sg_client.send(message)
 
+                stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
 
                 stuffimporter.set_stats(stats)
@@ -944,7 +948,7 @@ def admin_panel():
                 user.ban_appeal = ""
 
                 if not appealview.slienced.data:
-                    with babel_force_locale(user.lang):
+                    with app.app_context(), babel_force_locale(user.lang):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
@@ -1005,4 +1009,4 @@ def internal_server_error(e):
                             err_msg=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True)
+    app.run(host="0.0.0.0")
