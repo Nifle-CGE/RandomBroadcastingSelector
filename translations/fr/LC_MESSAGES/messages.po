@@ -438,16 +438,16 @@ msgid "to keep this website running."
 msgstr "pour que ce site web continue d'exister."
 
 #: templates/index.html:20
-msgid "The Concept"
-msgstr "Le Concept"
+msgid "The concept"
+msgstr "Le concept"
 
 #: templates/index.html:22
-msgid "The concept of this website is simple and its name is pretty self-explanatory."
-msgstr "Le concept de ce site web est plutôt simple et son nom est assez explicite."
+msgid "of this website is simple and its name is pretty self-explanatory."
+msgstr "de ce site web est plutôt simple et son nom est assez explicite."
 
 #: templates/index.html:23
 msgid "Once a day (24h), someone from this website's users is randomly selected and gets to display a message on this here front page for everyone else to see."
-msgstr "Une fois par jour (24h), un des utilisateurs du site web est sélectionné de façon aléatoire et peut afficher un message sur cette page d'accueil pour que tout le monde voie son message."
+msgstr "Une fois par jour (24h), un des utilisateurs du site web est sélectionné de façon aléatoire et peut afficher un message sur cette page d'accueil pour que tout le monde voit son message."
 
 #: templates/login.html:10
 msgid "Continue with Social Media"
