@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-08-25 10:43+0200\n"
+"POT-Creation-Date: 2022-08-25 18:58+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -18,33 +18,37 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: _stuffimporter.py:45
+#: _stuffimporter.py:46
 #, python-format
 msgid "%(num)s day"
 msgid_plural "%(num)s days"
 msgstr[0] "%(num)s jour"
 msgstr[1] "%(num)s jours"
 
-#: _stuffimporter.py:47
+#: _stuffimporter.py:48
 #, python-format
 msgid "%(num)s hour"
 msgid_plural "%(num)s hours"
 msgstr[0] "%(num)s heure"
 msgstr[1] "%(num)s heures"
 
-#: _stuffimporter.py:49
+#: _stuffimporter.py:50
 #, python-format
 msgid "%(num)s minute"
 msgid_plural "%(num)s minutes"
 msgstr[0] "%(num)s minute"
 msgstr[1] "%(num)s minutes"
 
-#: _stuffimporter.py:51
+#: _stuffimporter.py:52
 #, python-format
 msgid "%(num)s second"
 msgid_plural "%(num)s seconds"
 msgstr[0] "%(num)s seconde"
 msgstr[1] "%(num)s secondes"
+
+#: _stuffimporter.py:54 templates/login.html:29
+msgid "and"
+msgstr "et"
 
 #: app.py:194
 msgid "RandomBroadcastingSelector : You are the one."
@@ -212,7 +216,7 @@ msgstr "Cette partie de ton message a été la plus citée pour la raison préc�
 msgid "You can click"
 msgstr "Tu peux cliquer"
 
-#: templates/ban_mail.html:7 templates/brod_mail.html:6 templates/index.html:16
+#: templates/ban_mail.html:7 templates/brod_mail.html:6 templates/index.html:17
 #: templates/refused_mail.html:5 templates/stats.html:62
 #: templates/unban_mail.html:5
 msgid "here"
@@ -422,38 +426,38 @@ msgstr "Accueil"
 msgid "Next broadcaster in %(rem_time)s"
 msgstr "Nouveau diffuseur dans %(rem_time)s"
 
-#: templates/index.html:15
+#: templates/index.html:16
 #, python-format
 msgid "The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has %(rem_time)s to respond."
 msgstr "Le nouveau diffuseur n'a pas encore répondu donc son message n'est pas encore là. L'élu.e a encore %(rem_time)s pour répondre."
 
-#: templates/index.html:16
+#: templates/index.html:17
 msgid "Meanwhile, you can check out every other posts that ever existed"
 msgstr "En attendant tu peux regarder tout les posts qui ont existé"
 
-#: templates/index.html:16
+#: templates/index.html:17
 msgid ", or make a"
 msgstr ", ou faire un"
 
-#: templates/index.html:16
+#: templates/index.html:17
 msgid "donation"
 msgstr "don"
 
-#: templates/index.html:16
+#: templates/index.html:17
 msgid "to keep this website running."
 msgstr "pour que ce site web continue d'exister."
 
-#: templates/index.html:22
+#: templates/index.html:23
 msgid "The concept"
 msgstr "Le concept"
 
-#: templates/index.html:24
+#: templates/index.html:25
 msgid "of this website is simple and its name is pretty self-explanatory."
 msgstr "de ce site web est plutôt simple et son nom est assez explicite."
 
-#: templates/index.html:25
-msgid "Once a day (24h), someone from this website's users is randomly selected and gets to display a message on this here front page for everyone else to see."
-msgstr "Une fois par jour (24h), un des utilisateurs du site web est sélectionné de façon aléatoire et peut afficher un message sur cette page d'accueil pour que tout le monde voit son message."
+#: templates/index.html:26
+msgid "Once a day (24h), someone from this website's users (users are people who logged in to this website at least once) is randomly selected and gets to display a message on this here front page for everyone else to see."
+msgstr "Une fois par jour (24h), un des utilisateurs (sont considérés utilisateurs les gens qui se sont connectés au moins une fois) du site web est sélectionné de façon aléatoire et peut afficher un message sur cette page d'accueil pour que tout le monde voit son message."
 
 #: templates/login.html:10
 msgid "Continue with Social Media"
@@ -487,10 +491,6 @@ msgstr "Continuer avec Facebook"
 #: templates/login.html:29
 msgid "By pressing \"Continue\" you agree to the"
 msgstr "En appuyant sur \"Continuer\" tu accepte la"
-
-#: templates/login.html:29
-msgid "and"
-msgstr "et"
 
 #: templates/login.html:29
 msgid "of this site."
