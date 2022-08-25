@@ -136,7 +136,7 @@ def verify_broadcast(func):
     elif stats["time"]["last_broadcaster"] + 86400 > time.time():
         app.logger.debug("Le diffuseur a toujours du temps pour faire sa diffusion.")
         return func
-    elif stats["time"]["last_broadcast"] < stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
+    elif stats["time"]["last_broadcast"] > stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
         app.logger.debug("Le diffuseur a fait sa diffusion et le temps du post n'est pas terminé.")
         return func
 
