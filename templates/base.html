@@ -31,12 +31,13 @@
     <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left{% block login_main %}{% endblock %}" href="/login/">{{ _("Login") }}</a>
     {% endif %}
     <div class="w3-dropdown-hover w3-right">
-        <button class="w3-button w3-padding-16 w3-border-left">{{ _("Language") }}</button>
+        <button class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
         <div class="w3-dropdown-content w3-bar-block w3-card-4">
-            <a href="/?lang=en" class="w3-bar-item w3-button">{{ _("English") }}</a>
-            <a href="/?lang=fr" class="w3-bar-item w3-button">{{ _("French") }}</a>
-            <a href="/?lang=de" class="w3-bar-item w3-button">{{ _("German (Not Implemented)") }}</a>
-            <a href="/?lang=es" class="w3-bar-item w3-button">{{ _("Spanish (Not Implemented)") }}</a>
+            {% for element in ["en", "fr"]: %}
+            {% if _("en") != element: %}
+            <a href="/?lang={{ element }}" class="w3-bar-item w3-button">{{ element|upper }}</a>
+            {% endif %}
+            {% endfor %}
         </div>
     </div>
 </nav>

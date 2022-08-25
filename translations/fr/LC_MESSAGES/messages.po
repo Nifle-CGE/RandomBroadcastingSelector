@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-08-25 18:58+0200\n"
+"POT-Creation-Date: 2022-08-25 19:22+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -280,51 +280,35 @@ msgstr "Se déconnecter"
 msgid "Login"
 msgstr "Se connecter"
 
-#: templates/base.html:34
-msgid "Language"
-msgstr "Langage"
+#: templates/base.html:34 templates/base.html:37
+msgid "en"
+msgstr "fr"
 
-#: templates/base.html:36
-msgid "English"
-msgstr "Anglais"
-
-#: templates/base.html:37
-msgid "French"
-msgstr "Français"
-
-#: templates/base.html:38
-msgid "German (Not Implemented)"
-msgstr "Allemand (Pas Implémenté)"
-
-#: templates/base.html:39
-msgid "Spanish (Not Implemented)"
-msgstr "Espagnol (Pas Implémenté)"
-
-#: templates/base.html:50
+#: templates/base.html:51
 msgid "Created by"
 msgstr "Créé par"
 
-#: templates/base.html:50 templates/donate.html:3 templates/donate.html:6
+#: templates/base.html:51 templates/donate.html:3 templates/donate.html:6
 msgid "Donate"
 msgstr "Donner"
 
-#: templates/base.html:50
+#: templates/base.html:51
 msgid "Lookup an individual post"
 msgstr "Rechercher un post"
 
-#: templates/base.html:50 templates/sitemap.html:3 templates/sitemap.html:6
+#: templates/base.html:51 templates/sitemap.html:3 templates/sitemap.html:6
 msgid "Sitemap"
 msgstr "Sitemap"
 
-#: templates/base.html:50 templates/login.html:29
+#: templates/base.html:51 templates/login.html:29
 msgid "Privacy Policy"
 msgstr "Politique de confidentialité"
 
-#: templates/base.html:50 templates/login.html:29
+#: templates/base.html:51 templates/login.html:29
 msgid "Terms of Service"
 msgstr "Conditions d'utilisation"
 
-#: templates/base.html:52
+#: templates/base.html:53
 msgid "If you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above."
 msgstr "Si tu remarque une erreur d'orthographe ou si tu rencontre des bogues tu peux me contacter en cliquant sur mon nom au dessus."
 
