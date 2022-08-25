@@ -322,7 +322,13 @@ def index():
 
         return render_template("message.html", message=_("Your report as been saved."))
 
-    return render_template("index.html", stats=stats, form=form, lang=get_lang(), random=random)
+    if not stats["broadcast"]["content"]:
+        rem_secs = stats["time"]["last_broadcaster"] + 86400 - time.time()
+    else:
+        rem_secs = stats["time"]["last_broadcast"] + 86400 - time.time()
+    rem_time = stuffimporter.seconds_to_str(rem_secs)
+
+    return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time, random=random)
 
 # All the login stuff
 @app.route("/login/")
@@ -478,6 +484,7 @@ def discord_login_callback():
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
+"""
 @app.route('/login/twitch/')
 def twitch_login():
 	# Twitch Oauth Config
@@ -489,7 +496,6 @@ def twitch_login():
 		access_token_url='https://id.twitch.tv/oauth2/token',
 		authorize_url='https://id.twitch.tv/oauth2/authorize',
         client_kwargs={
-            'token_endpoint_auth_method': 'client_secret_post',
             'scope': 'user:read:email'
         }
 	)
@@ -498,30 +504,25 @@ def twitch_login():
 
 @app.route('/login/twitch/callback')
 def twitch_login_callback():
-    """if request.args.get("denied"):
+    if request.args.get("denied"):
         lang = get_lang()
-        return render_template("message.html", message=_("You cancelled the Continue with Twitch action."))"""
+        return render_template("message.html", message=_("You cancelled the Continue with Twitch action."))
 
     token = oauth.twitch.authorize_access_token()
     response = oauth.twitch.get("users")
     response_json = response.json()
     return response_json
 
-    unique_id = "twtch-" + response_json["id_str"]
-    users_name = response_json["name"]
+    unique_id = "twtch-" + response_json["id"]
+    users_name = response_json["display_name"]
     users_email = response_json.get("email")
     if not users_email:
         return _("User email not available or not verified by Twitch."), 400
 
-    settings_response = oauth.twitter.get("account/settings.json")
-    settings_response_json = settings_response.json()
-    lang = settings_response_json.get("language")
-    if lang not in LANGUAGE_CODES:
-        lang = request.accept_languages.best_match(LANGUAGE_CODES)
+    lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
-"""
 @app.route('/login/facebook/')
 def facebook_login():
 	# Facebook Oauth Config
