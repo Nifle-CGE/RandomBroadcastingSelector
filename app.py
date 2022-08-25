@@ -355,7 +355,7 @@ def google_login_callback():
     if not response_json.get("email_verified"):
         return _("User email not available or not verified by Google."), 400
     
-    unique_id = "gg-" + response_json["sub"]
+    unique_id = "ggl-" + response_json["sub"]
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = response_json["locale"]
@@ -389,7 +389,7 @@ def twitter_login_callback():
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
     response_json = response.json()
 
-    unique_id = "tw-" + response_json["id_str"]
+    unique_id = "twttr-" + response_json["id_str"]
     users_name = response_json["name"]
     users_email = response_json.get("email")
     if not users_email:
@@ -430,7 +430,7 @@ def github_login_callback():
         emails_json = emails_response.json()
         response_json["email"] = [email['email'] for email in emails_json if email['primary']][0]
 
-    unique_id = "gh-" + str(response_json["id"])
+    unique_id = "gthb-" + str(response_json["id"])
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = request.accept_languages.best_match(LANGUAGE_CODES)
@@ -469,10 +469,53 @@ def discord_login_callback():
     if not response_json.get("verified"):
         return _("User email not available or not verified by Discord."), 400
     
-    unique_id = "di-" + response_json["id"]
+    unique_id = "dscrd-" + response_json["id"]
     users_name = response_json["username"]
     users_email = response_json["email"]
     lang = response_json["locale"]
+    if lang not in LANGUAGE_CODES:
+        lang = request.accept_languages.best_match(LANGUAGE_CODES)
+
+    return login_or_create_user(unique_id, users_name, users_email, lang)
+
+@app.route('/login/twitch/')
+def twitch_login():
+	# Twitch Oauth Config
+	oauth.register(
+		name='twitch',
+		client_id=config["twitch"]["apiv1_key"],
+		client_secret=config["twitch"]["apiv1_secret"],
+		api_base_url='https://api.twitch.tv/helix/',
+		access_token_url='https://id.twitch.tv/oauth2/token',
+		authorize_url='https://id.twitch.tv/oauth2/authorize',
+        client_kwargs={
+            'token_endpoint_auth_method': 'client_secret_post',
+            'scope': 'user:read:email'
+        }
+	)
+	redirect_uri = url_for('twitch_login_callback', _external=True)
+	return oauth.twitch.authorize_redirect(redirect_uri)
+
+@app.route('/login/twitch/callback')
+def twitch_login_callback():
+    """if request.args.get("denied"):
+        lang = get_lang()
+        return render_template("message.html", message=_("You cancelled the Continue with Twitch action."))"""
+
+    token = oauth.twitch.authorize_access_token()
+    response = oauth.twitch.get("users")
+    response_json = response.json()
+    return response_json
+
+    unique_id = "twtch-" + response_json["id_str"]
+    users_name = response_json["name"]
+    users_email = response_json.get("email")
+    if not users_email:
+        return _("User email not available or not verified by Twitch."), 400
+
+    settings_response = oauth.twitter.get("account/settings.json")
+    settings_response_json = settings_response.json()
+    lang = settings_response_json.get("language")
     if lang not in LANGUAGE_CODES:
         lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
