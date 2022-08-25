@@ -483,8 +483,8 @@ def twitch_login():
 	# Twitch Oauth Config
 	oauth.register(
 		name='twitch',
-		client_id=config["twitch"]["apiv1_key"],
-		client_secret=config["twitch"]["apiv1_secret"],
+		client_id=config["twitch"]["client_id"],
+		client_secret=config["twitch"]["client_secret"],
 		api_base_url='https://api.twitch.tv/helix/',
 		access_token_url='https://id.twitch.tv/oauth2/token',
 		authorize_url='https://id.twitch.tv/oauth2/authorize',
