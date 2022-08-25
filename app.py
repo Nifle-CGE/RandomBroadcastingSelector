@@ -156,7 +156,7 @@ def verify_broadcast(func):
         try:
             new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
         except ZeroDivisionError:
-            new_post["ratio"] = 1
+            new_post["ratio"] = new_post["upvotes"]
         p_cont.upsert_item(new_post)
 
         # Update stats in relation of the current post
