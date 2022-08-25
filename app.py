@@ -80,7 +80,7 @@ db = cc.get_database_client("Main Database")
 u_cont = db.get_container_client("Web RBS Users")
 p_cont = db.get_container_client("Web RBS Posts")
 
-stuffimporter = _stuffimporter.StuffImporter(u_cont, ngettext)
+stuffimporter = _stuffimporter.StuffImporter(u_cont, _, ngettext)
 
 # Stats setup
 global stats

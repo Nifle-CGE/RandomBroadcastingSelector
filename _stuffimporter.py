@@ -2,8 +2,9 @@ import json
 import copy
 
 class StuffImporter(object):
-    def __init__(self, u_cont, ngettext) -> None:
+    def __init__(self, u_cont, _, ngettext) -> None:
         self.u_cont = u_cont
+        self._ = _
         self.ngettext = ngettext
         
     def get_stats(self) -> dict:
@@ -50,7 +51,7 @@ class StuffImporter(object):
         if rem_seconds:
             result.append(self.ngettext("%(num)s second", "%(num)s seconds", rem_seconds))
 
-        return " ".join(result)
+        return ", ".join(result[:-1]) + " " + self._("and") + " " + result[-1]
 
     def itempaged_to_list(self, itempaged) -> list:
         result = []
