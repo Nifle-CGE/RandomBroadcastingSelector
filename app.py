@@ -640,7 +640,7 @@ def broadcast():
     if form.validate_on_submit():
         stats["codes"]["broadcast"] = ""
 
-        stats["broadcast"]["id"] = int(stats["broadcast"]["id"]) + 1
+        stats["broadcast"]["id"] = str(int(stats["broadcast"]["id"]) + 1)
         stats["broadcast"]["content"] = form.message.data
         stats["broadcast"]["author_name"] = form.display_name.data
         stats["broadcast"]["date"] = str(datetime.datetime.today().date())
