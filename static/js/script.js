@@ -74,3 +74,13 @@ function changeReportFormBottomInputLabel(target_label) {
 
     document.getElementById("quote_input").required = (target_label.value !== "offensive_name");
 }
+
+function showDropdown(dropdownId) {
+    dropdown = document.getElementById(dropdownId);
+
+    if (dropdown.className.indexOf("w3-show") == -1) {
+        dropdown.className += " w3-show";
+    } else {
+        dropdown.className = dropdown.className.replace(" w3-show", "");
+    }
+}
