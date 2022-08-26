@@ -133,11 +133,12 @@ def verify_broadcast(func):
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
-    elif stats["time"]["last_broadcaster"] + 86400 > time.time():
-        app.logger.debug("Le diffuseur a toujours du temps pour faire sa diffusion.")
-        return func
-    elif stats["time"]["last_broadcast"] > stats["time"]["last_broadcaster"] and stats["time"]["last_broadcast"] + 86400 > time.time():
-        app.logger.debug("Le diffuseur a fait sa diffusion et le temps du post n'est pas terminé.")
+    elif not stats["broadcast"]["content"] and stats["time"]["last_broadcaster"] + 86400 < time.time():
+        pass
+    elif stats["time"]["last_broadcast"] + 86400 < time.time():
+        pass
+    else:
+        app.logger.debug("Le diffuseur a toujours le temps.")
         return func
 
     if not skip_save:
