@@ -25,14 +25,18 @@
     {% endif %}
 
     {% if current_user.is_authenticated: %}
-    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left" href="/logout/">{{ _("Logout") }}</a>
-    <span class="w3-bar-item w3-right w3-padding-16 w3-border-left">{{ current_user.name }}</span>
+    <div class="w3-dropdown-hover w3-right">
+        <button class="w3-button w3-padding-16 w3-border-left">{{ current_user.name }}</button>
+        <div class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity" style="right:0;">
+            <a class="w3-bar-item w3-button" href="/logout/">{{ _("Logout") }}</a>
+        </div>
+    </div>
     {% else: %}
     <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left{% block login_main %}{% endblock %}" href="/login/">{{ _("Login") }}</a>
     {% endif %}
-    <div class="w3-dropdown-hover w3-right">
-        <button class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
-        <div class="w3-dropdown-content w3-bar-block w3-card-4">
+    <div class="w3-dropdown-click w3-right">
+        <button onclick="showDropdown('lang_dropdown')" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
+        <div id="lang_dropdown" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity">
             {% for element in ["en", "fr"]: %}
             {% if _("en") != element: %}
             <a href="/?lang={{ element }}" class="w3-bar-item w3-button">{{ element|upper }}</a>
