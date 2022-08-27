@@ -175,6 +175,9 @@ def verify_broadcast(func):
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
     stats["broadcast"]["date"] = ""
+    stats["broadcast"]["upvotes"] = 0
+    stats["broadcast"]["downvotes"] = 0
+    stats["broadcast"]["reports"] = 0
 
     stats["time"]["last_broadcaster"] = time.time()
 
