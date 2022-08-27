@@ -35,7 +35,7 @@
     <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left{% block login_main %}{% endblock %}" href="/login/">{{ _("Login") }}</a>
     {% endif %}
     <div class="w3-dropdown-click w3-right">
-        <button onclick="showDropdown('lang_dropdown')" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
+        <button onclick="showDropdown('lang_dropdown')" style="min-width:66.91px;" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
         <div id="lang_dropdown" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity">
             {% for element in ["en", "fr"]: %}
             {% if _("en") != element: %}
