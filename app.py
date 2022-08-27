@@ -158,7 +158,7 @@ def verify_broadcast(func):
             new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
         except ZeroDivisionError:
             new_post["ratio"] = new_post["upvotes"]
-        p_cont.upsert_item(new_post)
+        p_cont.create_item(new_post)
 
         # Update stats in relation of the current post
         stats["broadcasts"]["msgs_sent"] += 1
@@ -358,7 +358,7 @@ def google_login_callback():
     if not response_json.get("email_verified"):
         return _("User email not available or not verified by Google."), 400
     
-    unique_id = "ggl-" + response_json["sub"]
+    unique_id = "ggl_" + response_json["sub"]
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = response_json["locale"]
@@ -392,7 +392,7 @@ def twitter_login_callback():
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
     response_json = response.json()
 
-    unique_id = "twttr-" + response_json["id_str"]
+    unique_id = "twttr_" + response_json["id_str"]
     users_name = response_json["name"]
     users_email = response_json.get("email")
     if not users_email:
@@ -433,7 +433,7 @@ def github_login_callback():
         emails_json = emails_response.json()
         response_json["email"] = [email['email'] for email in emails_json if email['primary']][0]
 
-    unique_id = "gthb-" + str(response_json["id"])
+    unique_id = "gthb_" + str(response_json["id"])
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = request.accept_languages.best_match(LANGUAGE_CODES)
@@ -472,7 +472,7 @@ def discord_login_callback():
     if not response_json.get("verified"):
         return _("User email not available or not verified by Discord."), 400
     
-    unique_id = "dscrd-" + response_json["id"]
+    unique_id = "dscrd_" + response_json["id"]
     users_name = response_json["username"]
     users_email = response_json["email"]
     lang = response_json["locale"]
@@ -510,7 +510,7 @@ def twitch_login_callback():
     response_json = response.json()
     return response_json
 
-    unique_id = "twtch-" + response_json["id"]
+    unique_id = "twtch_" + response_json["id"]
     users_name = response_json["display_name"]
     users_email = response_json.get("email")
     if not users_email:
