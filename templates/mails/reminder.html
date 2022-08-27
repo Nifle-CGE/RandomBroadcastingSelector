@@ -2,7 +2,7 @@
     <h1><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</h1>
     <h3>
         {{ _("Hey, this is just a friendly reminder that you have been selected on RBS and you still haven't made your broadcast.") }}<br>
-        {{ ngettext("You currently have %(number)s hour left to make your broadcast.", "You currently have %(number)s hours left to make your broadcast.", rem_hours) }}<br>
+        {{ ngettext("You currently have %(number)s hour left to make your broadcast.", "You currently have %(number)s hours left to make your broadcast.", number=rem_hours) }}<br>
         {{ _("You can click") }} <a href="https://{{ server_name }}/login">{{ _("here") }}</a> {{ _("to login and then click on the Broadcast tab on the navigation bar and make your broadcast.") }}<br>
         {{ _("You are going to need this code to make the broadcast:") }} "<strong>{{ brod_code }}</strong>"
     </h3>
