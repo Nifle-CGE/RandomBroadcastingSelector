@@ -135,7 +135,41 @@ def verify_broadcast(func):
     else:
         if not stats["broadcast"]["content"]:
             if stats["time"]["last_broadcaster"] + 86400 > time.time():
-                app.logger.debug("Le diffuseur a toujours le temps pour faire sa diffusion.")
+                end_msg = ""
+                if not stats["broadcast"]["warning"]["12h"] and stats["time"]["last_broadcaster"] + 43200 < time.time():
+                    brod = load_user(stats["broadcast"]["author"], active=False)
+                
+                    with app.app_context(), babel_force_locale(brod.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=brod.email,
+                            subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
+                            html_content=render_template("mail/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
+                        )
+                    sg_client.send(message)
+
+                    stats["broadcast"]["warning"]["12h"] = 1
+                    stuffimporter.set_stats(stats)
+
+                    end_msg = ", rappel des 12h envoyé"
+                elif not stats["broadcast"]["warning"]["1h"] and stats["time"]["last_broadcaster"] + 82800 < time.time():
+                    brod = load_user(stats["broadcast"]["author"], active=False)
+                
+                    with app.app_context(), babel_force_locale(brod.lang):
+                        message = Mail(
+                            from_email="random.broadcasting.selector@gmail.com",
+                            to_emails=brod.email,
+                            subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
+                            html_content=render_template("mail/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
+                        )
+                    sg_client.send(message)
+
+                    stats["broadcast"]["warning"]["1h"] = 1
+                    stuffimporter.set_stats(stats)
+                    
+                    end_msg = ", rappel des 1h envoyé"
+
+                app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion{end_msg}.")
                 return func
         elif stats["time"]["last_broadcast"] + 86400 > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
@@ -178,6 +212,8 @@ def verify_broadcast(func):
     stats["broadcast"]["upvotes"] = 0
     stats["broadcast"]["downvotes"] = 0
     stats["broadcast"]["reports"] = 0
+    stats["broadcast"]["warning"]["12h"] = 0
+    stats["broadcast"]["warning"]["1h"] = 0
 
     stats["time"]["last_broadcaster"] = time.time()
 
@@ -192,7 +228,7 @@ def verify_broadcast(func):
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=brod.email,
             subject=_("RandomBroadcastingSelector : You are the one."),
-            html_content=render_template("brod_mail.html", server_name=app.config["SERVER_NAME"], brod_code=code)
+            html_content=render_template("mail/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
         )
     sg_client.send(message)
 
@@ -305,7 +341,7 @@ def index():
                     from_email="random.broadcasting.selector@gmail.com",
                     to_emails=brod.email,
                     subject=_("RandomBroadcastingSelector : You were banned."),
-                    html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], brod=brod)
+                    html_content=render_template("mail/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
                 )
             sg_client.send(message)
 
@@ -593,9 +629,9 @@ def statistics():
         start_time = time.time()
 
         stats["users"]["seen_msg"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['time']['last_broadcast']}", enable_cross_partition_query=True).next()
-        stats["users"]["lastact_hour"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
-        stats["users"]["lastact_24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
-        stats["users"]["lastact_week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["1h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
         
         stats["top_posts"]["5_most_upped"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_downed"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
@@ -935,7 +971,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You were banned."),
-                            html_content=render_template("ban_mail.html", server_name=app.config["SERVER_NAME"], user=user)
+                            html_content=render_template("mail/banned.html", server_name=app.config["SERVER_NAME"], user=user)
                         )
                     sg_client.send(message)
 
@@ -953,7 +989,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You are no longer banned."),
-                            html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mail/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 
@@ -980,7 +1016,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You are no longer banned."),
-                            html_content=render_template("unban_mail.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mail/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 
@@ -999,7 +1035,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : Your ban appeal was refused."),
-                            html_content=render_template("refused_mail.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mail/refused.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 

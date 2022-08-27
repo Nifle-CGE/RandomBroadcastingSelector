@@ -32,9 +32,9 @@
 {{ _("Registered (and not banned) users:") }} {{ stats["users"]["num"] }}<br>
 {{ _("Banned users:") }} {{ stats["users"]["banned"] }}<br>
 {{ _("Number of users that have seen the current broadcast:") }} {{ stats["users"]["seen_msg"] }}<br>
-{{ _("Users who were active in the last hour:") }} {{ stats["users"]["lastact_hour"] }}<br>
-{{ _("Users who were active in the last 24 hour:") }} {{ stats["users"]["lastact_24h"] }}<br>
-{{ _("Users who were active in the last week:") }} {{ stats["users"]["lastact_week"] }}<br>
+{{ _("Users who were active in the last hour:") }} {{ stats["users"]["last_active"]["1h"] }}<br>
+{{ _("Users who were active in the last 24 hour:") }} {{ stats["users"]["last_active"]["24h"] }}<br>
+{{ _("Users who were active in the last week:") }} {{ stats["users"]["last_active"]["week"] }}<br>
 
 <h2>{{ _("Time info") }}</h2>
 {{ _("Uptime:") }} {{ stats["time"]["uptime_str"] }}<br>
