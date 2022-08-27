@@ -129,17 +129,17 @@ def get_lang():
 
 # Useful defs
 def verify_broadcast(func):
-    global stats
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
-    elif not stats["broadcast"]["content"] and stats["time"]["last_broadcaster"] + 86400 < time.time():
-        pass
-    elif stats["time"]["last_broadcast"] + 86400 < time.time():
-        pass
     else:
-        app.logger.debug("Le diffuseur a toujours le temps.")
-        return func
+        if not stats["broadcast"]["content"]:
+            if stats["time"]["last_broadcaster"] + 86400 > time.time():
+                app.logger.debug("Le diffuseur a toujours le temps pour faire sa diffusion.")
+                return func
+        elif stats["time"]["last_broadcast"] + 86400 > time.time():
+            app.logger.debug("Le post a toujours le temps d'être évalué.")
+            return func
 
     if not skip_save:
         # Save current post
@@ -182,11 +182,7 @@ def verify_broadcast(func):
     stats["codes"]["broadcast"] = code
 
     brod = load_user(stats["broadcast"]["author"], active=False)
-    if not brod.email:
-        stats = stuffimporter.rollback_stats()
-        app.logger.error(f"L'utilisateur sélectionné {brod.id_} n'a pas d'email.")
-        return func
-
+    
     # Send mail to the new broadcaster
     with app.app_context(), babel_force_locale(brod.lang):
         message = Mail(
@@ -560,11 +556,13 @@ def logout():
 @verify_broadcast
 def history(page):
     post_list = []
-    for post_id in range((5 * page) - 4, (5 * page) + 1):
-        try:
-            post_list.append(p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{post_id}'", enable_cross_partition_query=True).next())
-        except StopIteration:
-            pass
+    qlist = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
+    qstr = " OR ".join(qlist)
+
+    try:
+        post_list = stuffimporter.itempaged_to_list(p_cont.query_items(f"SELECT * FROM Posts p WHERE {qstr}", enable_cross_partition_query=True))
+    except StopIteration:
+        pass
     
     return render_template("history.html", post_list=post_list, hist_page=int(page), random=random)
 
