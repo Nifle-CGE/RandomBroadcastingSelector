@@ -144,7 +144,7 @@ def verify_broadcast(func):
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=brod.email,
                             subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
-                            html_content=render_template("mail/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
+                            html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
                         )
                     sg_client.send(message)
 
@@ -160,7 +160,7 @@ def verify_broadcast(func):
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=brod.email,
                             subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
-                            html_content=render_template("mail/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
+                            html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
                         )
                     sg_client.send(message)
 
@@ -228,7 +228,7 @@ def verify_broadcast(func):
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=brod.email,
             subject=_("RandomBroadcastingSelector : You are the one."),
-            html_content=render_template("mail/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
+            html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
         )
     sg_client.send(message)
 
@@ -341,7 +341,7 @@ def index():
                     from_email="random.broadcasting.selector@gmail.com",
                     to_emails=brod.email,
                     subject=_("RandomBroadcastingSelector : You were banned."),
-                    html_content=render_template("mail/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
+                    html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
                 )
             sg_client.send(message)
 
@@ -971,7 +971,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You were banned."),
-                            html_content=render_template("mail/banned.html", server_name=app.config["SERVER_NAME"], user=user)
+                            html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], user=user)
                         )
                     sg_client.send(message)
 
@@ -989,7 +989,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You are no longer banned."),
-                            html_content=render_template("mail/unbanned.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 
@@ -1016,7 +1016,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : You are no longer banned."),
-                            html_content=render_template("mail/unbanned.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 
@@ -1035,7 +1035,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector : Your ban appeal was refused."),
-                            html_content=render_template("mail/refused.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/refused.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
 
