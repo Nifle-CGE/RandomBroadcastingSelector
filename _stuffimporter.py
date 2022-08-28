@@ -39,7 +39,7 @@ class StuffImporter(object):
         days = round(seconds // 86400)
         hours = round((seconds % 86400) // 3600)
         minutes = round(((seconds % 86400) % 3600) // 60)
-        rem_seconds = round(((seconds % 86400) % 3600) % 60, 2)
+        rem_seconds = round(((seconds % 86400) % 3600) % 60)
 
         result = []
         if days:
