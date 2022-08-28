@@ -207,7 +207,10 @@ def verify_broadcast(func):
         stats["broadcasts"]["characters_sent"] += len(new_post["content"])
     
     # Select another broadcaster
-    stats["broadcast"]["author"] = random.choice(stuffimporter.pot_brods(stats["broadcast"]["author"]))
+    if stats["broadcast"]["futur"]["broadcaster"]:
+        stats["broadcast"]["author"] = stats["broadcast"]["futur"]["broadcaster"].pop(0)
+    else:
+        stats["broadcast"]["author"] = random.choice(stuffimporter.pot_brods(stats["broadcast"]["author"]))
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
     stats["broadcast"]["date"] = ""
@@ -685,12 +688,10 @@ def broadcast():
         stats["broadcast"]["date"] = str(datetime.datetime.today().date())
     
         test = translator.translate_text(form.message.data, target_lang="EN-US")
-        stats["broadcast"]["lang"] = test.detected_source_lang.lower()
+        stats["broadcast"]["lang"] = test.detected_source_lang.split("-")[0].lower()
     
         for language in translator.get_target_languages():
-            lang_code = language.code
-            if len(lang_code) != 2:
-                lang_code = lang_code.split("-")[0]
+            lang_code = language.code.split("-")[0]
             stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(form.message.data, target_lang=language.code).text
         
         stats["time"]["last_broadcast"] = time.time()
