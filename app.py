@@ -171,6 +171,8 @@ def verify_broadcast(func):
 
                 app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion{end_msg}.")
                 return func
+            else:
+                skip_save = True
         elif stats["time"]["last_broadcast"] + 86400 > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
             return func
@@ -916,7 +918,7 @@ def terms_of_service():
 
 @app.route("/sitemap/")
 def sitemap():
-    render_template("sitemap.html")
+    return render_template("sitemap.html")
 
 # Crawling control
 @app.route("/robots.txt")
