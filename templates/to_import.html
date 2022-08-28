@@ -69,6 +69,17 @@
                 <i class="fa fa-close w3-display-topright w3-hover-red w3-xxxlarge" style="padding: 0 9px;" onclick="document.getElementById('reportForm').style.display = 'none';"></i>
             </div>
         </div>
+        <script>
+            // Get the modal
+            var modal = document.getElementById("reportForm");
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function (event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+        </script>
         {% else %}
         </small>
         {% endif %}
