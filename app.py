@@ -207,8 +207,8 @@ def verify_broadcast(func):
         stats["broadcasts"]["characters_sent"] += len(new_post["content"])
     
     # Select another broadcaster
-    if stats["broadcast"]["futur"]["broadcaster"]:
-        stats["broadcast"]["author"] = stats["broadcast"]["futur"]["broadcaster"].pop(0)
+    if stats["broadcast"]["futur"]["broadcasters"]:
+        stats["broadcast"]["author"] = stats["broadcast"]["futur"]["broadcasters"].pop(0)
     else:
         stats["broadcast"]["author"] = random.choice(stuffimporter.pot_brods(stats["broadcast"]["author"]))
     stats["broadcast"]["author_name"] = ""
