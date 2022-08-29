@@ -1,5 +1,5 @@
 {% macro post(post, live=False) -%}
-<div class="w3-padding-16" style="display:flex;justify-content:center;">
+<div class="w3-padding-16 flex-center">
     <div class="w3-container w3-cell w3-center">
         {% if live and current_user.is_authenticated: %}
         <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" value="▲"><br>
