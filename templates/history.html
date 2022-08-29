@@ -15,7 +15,7 @@
 <h3>{{ _("These posts don't exist yet.") }}</h3>
 {% endif %}
 
-<div class="w3-bar" style="display:flex;justify-content:center;">
+<div class="w3-bar flex-center">
     <a href="/history/{{ hist_page - 1 }}" class="w3-bar-item w3-button">◄</a>
     {% for nav_page in range(hist_page - 3, hist_page + 4): %}
     {% if nav_page == hist_page: %}

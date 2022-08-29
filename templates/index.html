@@ -10,11 +10,11 @@
 {% if stats["broadcast"]["content"]: %}
 <br>
 {{ to_import.post(stats["broadcast"], live=True) }}
-<small class="w3-center">{{ _("Next broadcaster in %(rem_time)s", rem_time=rem_time) }}</small>
+<small class="flex-center">{{ _("Next broadcaster in %(rem_time)s", rem_time=rem_time) }}</small>
 {% else: %}
 <h4 class="w3-center">
     {{ _("The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has %(rem_time)s to respond.", rem_time=rem_time) }}<br>
-    {{ _("Meanwhile, you can check out every other posts that ever existed") }} <a href="/history/1">{{ _("here") }}</a>{{ _(", or make a") }} <a href="/donate">{{ _("donation") }}</a> {{ _("to keep this website running.") }}
+    {{ _("Meanwhile, you can check out every other posts that ever existed") }} <a href="/history/">{{ _("here") }}</a>{{ _(", or make a") }} <a href="/donate">{{ _("donation") }}</a> {{ _("to keep this website running.") }}
 </h4>
 {% endif %}
 <hr>
