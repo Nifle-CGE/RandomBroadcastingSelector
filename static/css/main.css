@@ -1,5 +1,7 @@
 body {
-    background-color: white;
+    background-color: #c1c1c1;
+    opacity: 0.9;
+
     height: 100vh;
     display: flex;
     flex-direction: column;
@@ -20,4 +22,11 @@ footer {
 .flex-center {
     display: flex;
     justify-content: center;
+}
+
+.spot-background {
+    background-image: url('/static/img/spotlights.jpg');
+    background-position-y: 25%;
+    background-repeat: no-repeat;
+    background-size: cover;
 }
