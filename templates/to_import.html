@@ -41,7 +41,7 @@
                 <input type="button" value="{{ _('I have read the text above.') }}" id="activatorButton" onclick="enableSubmitButton('submitButton', 'activatorButton')">
                 <h4>{{ _("What is the reason of your report?") }}</h4>
                 {{ _("Here is the broadcast so you can copy and paste easily:") }} "{{ post["content"] }}"<br>
-                <form class="w3-light-grey" method="post">
+                <form class="w3-flat-clouds" method="post">
                     {{ form.csrf_token }}
                     {% if form.csrf_token.errors: %}
                     {{ _("There was an error with the csrf token:") }} {{ form.csrf_token.errors }}<br>
