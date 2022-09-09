@@ -1,31 +1,23 @@
 {% macro post(post, live=False) -%}
 <div class="w3-padding-16 flex-center">
-    <div class="w3-container w3-cell w3-center">
-        {% if live and current_user.is_authenticated: %}
-        <input type="button" id="upvoteButton" onclick="liveVote('upvote')" class="w3-button w3-round-large w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" value="▲"><br>
-        {% else: %}
-        <input type="button" class="w3-button w3-round-large w3-hover-light-green" value="▲"><br>
-        {% endif %}
+    <div class="w3-container w3-cell w3-center" style="padding:16px">
+        <input type="button" {% if live and current_user.is_authenticated %}id="upvoteButton" onclick="liveVote('upvote')" {% elif live and not current_user.is_authenticated %}onclick="alert('{{ _('You have to login to be able to vote.') }}')" {% else %}onclick="alert('{{ _('This post has been archived so voting is no longer active.') }}')" {% endif %}class="w3-button w3-round-xlarge hover-zoom w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" style="padding: 0 4px;" value="▲"><br>
 
         <span class="w3-text-green" id="upvote_num">{{ post["upvotes"] }}</span><br>
         <span class="w3-text-red" id="downvote_num">{{ post["downvotes"] }}</span><br>
 
-        {% if live and current_user.is_authenticated: %}
-        <input type="button" id="downvoteButton" onclick="liveVote('downvote')" class="w3-button w3-round-large w3-hover-orange{% if current_user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}" value="▼"><br>
-        {% else: %}
-        <input type="button" class="w3-button w3-round-large w3-hover-orange" value="▼">
-        {% endif %}
+        <input type="button" {% if live and current_user.is_authenticated %}id="downvoteButton" onclick="liveVote('downvote')" {% elif live and not current_user.is_authenticated %}onclick="alert('{{ _('You have to login to be able to vote.') }}')" {% else %}onclick="alert('{{ _('This post has been archived so voting is no longer active.') }}')" {% endif %}class="w3-button w3-round-xlarge hover-zoom w3-hover-orange{% if current_user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %}" style="padding: 0 4px;" value="▼"><br>
     </div>
     <div class="w3-container w3-cell w3-round-large {{ random.choice(['w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow']) }}" style="padding:0 16px 16px 16px;">
         <h3>❝{{ post["content"] }}❞</h3>
         <h6 class="w3-right" style="margin:0;">{{ _("by") }} {{ post["author_name"] }}</h6><br>
-        {% if live and lang != post["lang"]: %}
+        {% if live and lang != post["lang"] %}
         <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
         {% endif %}
         <small>{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["date"] }}
             <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report (testing)</a>
             TODO : enlever quand form terminée -->
-            {% if live and current_user.is_authenticated: %}
+            {% if live and current_user.is_authenticated %}
             | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">{{ _("Report") }}</a>
         </small>
         <div class="w3-modal" id="reportForm">
@@ -43,14 +35,14 @@
                 {{ _("Here is the broadcast so you can copy and paste easily:") }} "{{ post["content"] }}"<br>
                 <form class="w3-flat-clouds" method="post">
                     {{ form.csrf_token }}
-                    {% if form.csrf_token.errors: %}
+                    {% if form.csrf_token.errors %}
                     {{ _("There was an error with the csrf token:") }} {{ form.csrf_token.errors }}<br>
                     {% endif %}
 
-                    {% for subfield in form.reason: %}
+                    {% for subfield in form.reason %}
                     {{ subfield(onclick="changeReportFormBottomInputLabel(this)") }} {{ subfield.label }}<br>
                     {% endfor %}
-                    {% if form.reason.errors: %}
+                    {% if form.reason.errors %}
                     {{ _("This was not supposed to happen:") }} {{ form.reason.errors }}<br>
                     {% endif %}<br>
 
@@ -60,7 +52,7 @@
                     <label for="quote_input" id="quote_label_link" hidden>{{ _("You have to quote the link.") }}</label>
                     <label for="quote_input" id="quote_label_offensive_name" hidden>{{ _("You can leave this input empty.") }}</label><br>
                     {{ form.message_quote(id="quote_input") }}<br>
-                    {% if form.message_quote.errors: %}
+                    {% if form.message_quote.errors %}
                     {{ _("The field above had an error:") }} {{ form.message_quote.errors }}<br>
                     {% endif %}
 

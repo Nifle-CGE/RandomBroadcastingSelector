@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-08-31 18:58+0200\n"
+"POT-Creation-Date: 2022-09-09 22:12+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -204,18 +204,18 @@ msgid "RandomBroadcastingSelector : Your ban appeal was refused."
 msgstr "RandomBroadcastingSelector : Ta demande de débannissement a été refusée."
 
 #: templates/banned.html:9 templates/broadcast.html:29
-#: templates/to_import.html:47
+#: templates/to_import.html:39
 msgid "There was an error with the csrf token:"
 msgstr "Il y a eut une erreur avec le token csrf :"
 
 #: templates/banned.html:14 templates/broadcast.html:34
-#: templates/to_import.html:54
+#: templates/to_import.html:46
 msgid "This was not supposed to happen:"
 msgstr "C'était pas sensé arriver :"
 
 #: templates/banned.html:20 templates/broadcast.html:40
 #: templates/broadcast.html:46 templates/broadcast.html:52
-#: templates/to_import.html:64
+#: templates/to_import.html:56
 msgid "The field above had an error:"
 msgstr "Le champ au dessus a eut une erreur :"
 
@@ -279,7 +279,7 @@ msgstr "Conditions d'utilisation"
 msgid "This website is still in beta, so if you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above."
 msgstr "Ce site web est toujours en beta, donc si tu remarque une erreur d'orthographe ou si tu rencontre des bogues tu peux me contacter en cliquant sur mon nom au dessus."
 
-#: templates/broadcast.html:9 templates/to_import.html:33
+#: templates/broadcast.html:9 templates/to_import.html:25
 msgid "Before doing anything, read the text below."
 msgstr "Avant de faire quoi que ce soit, lis le texte en dessous."
 
@@ -319,7 +319,7 @@ msgstr "Est-ce que ta diffusion contient des liens (comme \"http://example.com\"
 msgid "Could the name you chose offend anyone in any way?"
 msgstr "Est-ce que le nom que tu as choisi pourrais offenser quelqu'un ?"
 
-#: templates/broadcast.html:25 templates/to_import.html:41
+#: templates/broadcast.html:25 templates/to_import.html:33
 msgid "I have read the text above."
 msgstr "J'ai lu le texte au dessus."
 
@@ -595,71 +595,79 @@ msgstr "Clique"
 msgid "to get the raw stats file."
 msgstr "pour avoir le fichier de statistique."
 
-#: templates/to_import.html:21
+#: templates/to_import.html:4 templates/to_import.html:9
+msgid "You have to login to be able to vote."
+msgstr "Tu doit te connecter pour pouvoir voter."
+
+#: templates/to_import.html:4 templates/to_import.html:9
+msgid "This post has been archived so voting is no longer active."
+msgstr "Ce post a été archivé donc les votes sont désactivés."
+
+#: templates/to_import.html:13
 msgid "by"
 msgstr "par"
 
-#: templates/to_import.html:23
+#: templates/to_import.html:15
 msgid "Translation:"
 msgstr "Traduction :"
 
-#: templates/to_import.html:25
+#: templates/to_import.html:17
 msgid "Id:"
 msgstr "Id :"
 
-#: templates/to_import.html:25
+#: templates/to_import.html:17
 msgid "Date:"
 msgstr "Date :"
 
-#: templates/to_import.html:29
+#: templates/to_import.html:21
 msgid "Report"
 msgstr "Signaler"
 
-#: templates/to_import.html:35
+#: templates/to_import.html:27
 msgid "The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a translation error) you can contact me by clicking on my name in the footer at the bottom of the page."
 msgstr "Le but d'un signalement est de bannir un diffuseur qui a enfreint les règles, donc si tu as des questions ou des remarques a faire concernant cette diffusion qui n'ont pas pour but de bannir le diffuseur (par exemple une erreur de traduction) tu peux me contacter en cliquant sur mon nom en pied de page."
 
-#: templates/to_import.html:36
+#: templates/to_import.html:28
 msgid "Do not report for no reason because you will have to quote the part of the broadcast where the offense was made in the input at the end of the form."
 msgstr "Ne fait pas de signalement pour aucune raison parce que tu va devoir citer la partie de la diffusion ou l'enfreinte des règles a été faite dans le champ a la fin du formulaire."
 
-#: templates/to_import.html:37
+#: templates/to_import.html:29
 msgid "For the input at the end of the form, you have to quote at least 2 words."
 msgstr "Concernant le champ a la fin du formulaire, tu dois citer un minimum de 2 mots."
 
-#: templates/to_import.html:38
+#: templates/to_import.html:30
 msgid "Another thing about the input at the end, you can only quote the original message and not the translation that has been made, because I can't risk banning people because of bad translations."
 msgstr "Une autre chose concernant le champ a la fin, tu peux seulement citer le message original et non ses traductions parce que je ne peux pas risquer de bannir quelqu'un a cause d'une mauvaise traduction."
 
-#: templates/to_import.html:39
+#: templates/to_import.html:31
 msgid "Be careful to fill this form correctly as you will not be able to modify or delete it."
 msgstr "Fait attention a bien remplir ce formulaire correctement parce que tu ne pourra pas supprimer ou modifier ton signalement."
 
-#: templates/to_import.html:42
+#: templates/to_import.html:34
 msgid "What is the reason of your report?"
 msgstr "Quelle est la raison de votre signalement ?"
 
-#: templates/to_import.html:43
+#: templates/to_import.html:35
 msgid "Here is the broadcast so you can copy and paste easily:"
 msgstr "Voici la diffusion pour que tu puisse copier et coller ta citation :"
 
-#: templates/to_import.html:57
+#: templates/to_import.html:49
 msgid "This is where you have quote the part of the message where the offense was made. This label is going to change as you select different options."
 msgstr "Ce champ est fait pour la citation du message ou les règles ont été bafouées. Ce texte va changer quand tu sélectionnera différentes options."
 
-#: templates/to_import.html:58
+#: templates/to_import.html:50
 msgid "You have to quote the part of the message that is concerned."
 msgstr "Tu dois citer la partie du message qui est concernée."
 
-#: templates/to_import.html:59
+#: templates/to_import.html:51
 msgid "You have to quote the part of the message that isn't family friendly."
 msgstr "Tu dois citer la partie du message qui n'est pas tout publique."
 
-#: templates/to_import.html:60
+#: templates/to_import.html:52
 msgid "You have to quote the link."
 msgstr "Tu dois citer le lien."
 
-#: templates/to_import.html:61
+#: templates/to_import.html:53
 msgid "You can leave this input empty."
 msgstr "Tu peux laisser ce champ vide."
 
