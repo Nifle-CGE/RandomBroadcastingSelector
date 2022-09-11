@@ -1,5 +1,4 @@
 import json
-import copy
 
 class StuffImporter(object):
     def __init__(self, u_cont, _, ngettext) -> None:
@@ -7,22 +6,16 @@ class StuffImporter(object):
         self._ = _
         self.ngettext = ngettext
         
-    def get_stats(self) -> dict:
-        self.stats = self.u_cont.read_item("stats.json", "stats.json")
-        return copy.deepcopy(self.stats)
-
     @staticmethod
     def get_config() -> dict:
         with open(f"./config.json", "r", encoding="utf-8") as json_file:
             return json.load(json_file)
+            
+    def get_stats(self) -> dict:
+        return self.u_cont.read_item("stats.json", "stats.json")
 
     def set_stats(self, stats:dict):
-        if stats != self.stats:
-            self.u_cont.replace_item("stats.json", stats)
-            self.stats = copy.deepcopy(stats)
-
-    def rollback_stats(self) -> dict:
-        return copy.deepcopy(self.stats)
+        self.u_cont.replace_item("stats.json", stats)
 
     def pot_brods(self, last_brod:str) -> list:
         brods_query = self.u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}' AND u.id <> 'stats.json'", enable_cross_partition_query=True)
