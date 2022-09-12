@@ -44,7 +44,7 @@ class StuffImporter(object):
         if rem_seconds:
             result.append(self.ngettext("%(num)s second", "%(num)s seconds", rem_seconds))
 
-        return ", ".join(result[:-1]) + " " + self._("and") + " " + result[-1]
+        return ", ".join(result[:-1]) + " " + self._("and") + " " + result[-1] if len(result) > 1 else result[0]
 
     def itempaged_to_list(self, itempaged) -> list:
         result = []
