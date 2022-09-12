@@ -84,3 +84,15 @@ function showDropdown(dropdownId) {
         dropdown.className = dropdown.className.replace(" w3-show", "");
     }
 }
+
+function updateCharCounter(inputId, counterId) {
+    counter = document.getElementById(counterId)
+    max = counter.innerHTML.split("/")[1]
+    current = document.getElementById(inputId).value.length
+    counter.innerHTML = current + "/" + max
+    if (max == current) {
+        counter.style.color = "green"
+    } else {
+        counter.style.color = "black"
+    }
+}
