@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-09-09 22:12+0200\n"
+"POT-Creation-Date: 2022-09-14 12:46+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -18,35 +18,35 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
 
-#: _stuffimporter.py:46
+#: _stuffimporter.py:39
 #, python-format
 msgid "%(num)s day"
 msgid_plural "%(num)s days"
 msgstr[0] "%(num)s jour"
 msgstr[1] "%(num)s jours"
 
-#: _stuffimporter.py:48
+#: _stuffimporter.py:41
 #, python-format
 msgid "%(num)s hour"
 msgid_plural "%(num)s hours"
 msgstr[0] "%(num)s heure"
 msgstr[1] "%(num)s heures"
 
-#: _stuffimporter.py:50
+#: _stuffimporter.py:43
 #, python-format
 msgid "%(num)s minute"
 msgid_plural "%(num)s minutes"
 msgstr[0] "%(num)s minute"
 msgstr[1] "%(num)s minutes"
 
-#: _stuffimporter.py:52
+#: _stuffimporter.py:45
 #, python-format
 msgid "%(num)s second"
 msgid_plural "%(num)s seconds"
 msgstr[0] "%(num)s seconde"
 msgstr[1] "%(num)s secondes"
 
-#: _stuffimporter.py:54 templates/login.html:29
+#: _stuffimporter.py:47 templates/login.html:29
 msgid "and"
 msgstr "et"
 
@@ -203,18 +203,18 @@ msgstr "RandomBroadcastingSelector : Tu a été débanni.e."
 msgid "RandomBroadcastingSelector : Your ban appeal was refused."
 msgstr "RandomBroadcastingSelector : Ta demande de débannissement a été refusée."
 
-#: templates/banned.html:9 templates/broadcast.html:29
+#: templates/banned.html:9 templates/broadcast.html:28
 #: templates/to_import.html:39
 msgid "There was an error with the csrf token:"
 msgstr "Il y a eut une erreur avec le token csrf :"
 
-#: templates/banned.html:14 templates/broadcast.html:34
+#: templates/banned.html:14 templates/broadcast.html:33
 #: templates/to_import.html:46
 msgid "This was not supposed to happen:"
 msgstr "C'était pas sensé arriver :"
 
-#: templates/banned.html:20 templates/broadcast.html:40
-#: templates/broadcast.html:46 templates/broadcast.html:52
+#: templates/banned.html:20 templates/broadcast.html:39
+#: templates/broadcast.html:45 templates/broadcast.html:51
 #: templates/to_import.html:56
 msgid "The field above had an error:"
 msgstr "Le champ au dessus a eut une erreur :"
@@ -296,34 +296,31 @@ msgid "And remember that your message will be saved in the history tab forever, 
 msgstr "Et souviens toi que que ton message sera enregistré dans l'historique pour toujours, donc dit quelque chose de significatif."
 
 #: templates/broadcast.html:14
-msgid "I imagine you already have what you are going to say sorted out so before writing your wonderful message to the"
-msgstr "J'imagine que tu sais déjâ ce que tu va dire donc avant d'écrir ton magnifique message aux"
+#, python-format
+msgid "I imagine you already have what you are going to say sorted out so before writing your wonderful message to the %(users)s people that signed in to website, make sure the answers to the following questions are all no."
+msgstr "J'imagine que tu sais déjâ ce que tu va dire donc avant d'écrir ton magnifique message aux %(users)s gens qui se sont inscrit sur ce site web, soit certain que les réponses aux questions suivantes sont toutes non."
 
-#: templates/broadcast.html:15
-msgid "people that signed in to website, make sure the answers to the following questions are all no."
-msgstr "gens qui se sont inscrit sur ce site web, soit certain que les réponses aux questions suivantes sont toutes non."
-
-#: templates/broadcast.html:19
+#: templates/broadcast.html:18
 msgid "Is your message harassing, insulting or encouraging hate against anyone?"
 msgstr "Est-ce que ta diffusion harcèle, insulte ou encourage de la haine envers quelqu'un ?"
 
-#: templates/broadcast.html:20
+#: templates/broadcast.html:19
 msgid "Is your message using too much mild language for a family friendly website?"
 msgstr "Est-ce que ta diffusion utilise un language trop explicite et trop cru pour un site web tout publique ?"
 
-#: templates/broadcast.html:21
+#: templates/broadcast.html:20
 msgid "Does your message contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\")?"
 msgstr "Est-ce que ta diffusion contient des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
 
-#: templates/broadcast.html:22
+#: templates/broadcast.html:21
 msgid "Could the name you chose offend anyone in any way?"
 msgstr "Est-ce que le nom que tu as choisi pourrais offenser quelqu'un ?"
 
-#: templates/broadcast.html:25 templates/to_import.html:33
+#: templates/broadcast.html:24 templates/to_import.html:33
 msgid "I have read the text above."
 msgstr "J'ai lu le texte au dessus."
 
-#: templates/broadcast.html:50
+#: templates/broadcast.html:49
 msgid "For example:"
 msgstr "Par exemple :"
 
@@ -707,7 +704,7 @@ msgstr "Si tu vois des erreurs d'orthographe tu peux répondre a cet email et je
 
 #: templates/mails/broadcaster.html:4
 msgid "You remember that weird website you signed in to, thinking you'll never get selected?"
-msgstr "Tu te souviens du site bizarre auquel tu t'est inscrit pensant que tu serait jamais sélectionné ?"
+msgstr "Tu te souviens du site bizarre auquel tu t'es inscrit pensant que tu serait jamais sélectionné ?"
 
 #: templates/mails/broadcaster.html:5
 msgid "Well, you actually got selected."
