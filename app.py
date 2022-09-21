@@ -143,7 +143,7 @@ def verify_broadcast(func):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=brod.email,
-                            subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
+                            subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
                             html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
                         )
                     sg_client.send(message)
@@ -159,7 +159,7 @@ def verify_broadcast(func):
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=brod.email,
-                            subject=_("RandomBroadcastingSelector : Just a reminder that you are the one."),
+                            subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
                             html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
                         )
                     sg_client.send(message)
@@ -232,7 +232,7 @@ def verify_broadcast(func):
         message = Mail(
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=brod.email,
-            subject=_("RandomBroadcastingSelector : You are the one."),
+            subject=_("RandomBroadcastingSelector: You are the one."),
             html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
         )
     sg_client.send(message)
@@ -345,7 +345,7 @@ def index():
                 message = Mail(
                     from_email="random.broadcasting.selector@gmail.com",
                     to_emails=brod.email,
-                    subject=_("RandomBroadcastingSelector : You were banned."),
+                    subject=_("RandomBroadcastingSelector: You were banned."),
                     html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
                 )
             sg_client.send(message)
@@ -361,12 +361,12 @@ def index():
 
         stuffimporter.set_stats(stats)
 
-        return render_template("message.html", message=_("Your report as been saved."))
+        return render_template("message.html", message=_("Your report has been saved."))
 
-    if not stats["broadcast"]["content"]:
-        rem_secs = stats["time"]["last_broadcaster"] + 86400 - time.time()
-    else:
+    if stats["broadcast"]["content"]:
         rem_secs = stats["time"]["last_broadcast"] + 86400 - time.time()
+    else:
+        rem_secs = stats["time"]["last_broadcaster"] + 86400 - time.time()
     rem_time = stuffimporter.seconds_to_str(rem_secs)
 
     return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time, random=random)
@@ -400,7 +400,7 @@ def google_login_callback():
     response_json = token["userinfo"]
 
     if not response_json.get("email_verified"):
-        return _("User email not available or not verified by Google."), 400
+        return _("User email not available or not verified by %(service)s.", service="Google"), 400
     
     unique_id = "ggl_" + response_json["sub"]
     users_name = response_json["name"]
@@ -430,7 +430,7 @@ def twitter_login():
 def twitter_login_callback():
     if request.args.get("denied"):
         lang = get_lang()
-        return render_template("message.html", message=_("You cancelled the Continue with Twitter action."))
+        return render_template("message.html", message=_("You cancelled the Continue with %(service)s action.", service="Twitter"))
 
     token = oauth.twitter.authorize_access_token()
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
@@ -440,7 +440,7 @@ def twitter_login_callback():
     users_name = response_json["name"]
     users_email = response_json.get("email")
     if not users_email:
-        return _("User email not available or not verified by Twitter."), 400
+        return _("User email not available or not verified by %(service)s.", service="Twitter"), 400
 
     settings_response = oauth.twitter.get("account/settings.json")
     settings_response_json = settings_response.json()
@@ -507,14 +507,14 @@ def discord_login():
 def discord_login_callback():
     if request.args.get("error") == "access_denied":
         lang = get_lang()
-        return render_template("message.html", message=_("You cancelled the Continue with Discord action."))
+        return render_template("message.html", message=_("You cancelled the Continue with %(service)s action.", service="Discord"))
 
     token = oauth.discord.authorize_access_token()
     response = oauth.discord.get("users/@me")
     response_json = response.json()
 
     if not response_json.get("verified"):
-        return _("User email not available or not verified by Discord."), 400
+        return _("User email not available or not verified by %(service)s.", service="Discord"), 400
     
     unique_id = "dscrd_" + response_json["id"]
     users_name = response_json["username"]
@@ -547,7 +547,7 @@ def twitch_login():
 def twitch_login_callback():
     if request.args.get("denied"):
         lang = get_lang()
-        return render_template("message.html", message=_("You cancelled the Continue with Twitch action."))
+        return render_template("message.html", message=_("You cancelled the Continue with %(service)s action.", service="Twitch"))
 
     token = oauth.twitch.authorize_access_token()
     response = oauth.twitch.get("users")
@@ -558,7 +558,7 @@ def twitch_login_callback():
     users_name = response_json["display_name"]
     users_email = response_json.get("email")
     if not users_email:
-        return _("User email not available or not verified by Twitch."), 400
+        return _("User email not available or not verified by %(service)s.", service="Twitch"), 400
 
     lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
@@ -604,22 +604,21 @@ def history_redirect():
 @app.route("/history/<int:page>")
 @verify_broadcast
 def history(page):
-    post_list = []
-    qlist = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
-    qstr = " OR ".join(qlist)
+    q_list = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
+    q_str = " OR ".join(q_list)
 
     try:
-        post_list = stuffimporter.itempaged_to_list(p_cont.query_items(f"SELECT * FROM Posts p WHERE {qstr}", enable_cross_partition_query=True))
+        q_result = p_cont.query_items(f"SELECT * FROM Posts p WHERE {q_str}", enable_cross_partition_query=True)
+        post_list = stuffimporter.itempaged_to_list(q_result)
     except StopIteration:
-        pass
+        post_list = []
     
     return render_template("history.html", post_list=post_list, hist_page=int(page), random=random)
 
 @app.route("/post/")
 @verify_broadcast
 def specific_post_search():
-    max_id = int(stats["broadcast"]["id"]) - 1
-        
+    max_id = int(stats["broadcast"]["id"]) - int(bool(stats["broadcast"]["content"]))
     return render_template("post_search.html", max_post_id=max_id)
 
 @app.route("/post/<int:id>")
@@ -978,7 +977,7 @@ def admin_panel():
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
-                            subject=_("RandomBroadcastingSelector : You were banned."),
+                            subject=_("RandomBroadcastingSelector: You were banned."),
                             html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], user=user)
                         )
                     sg_client.send(message)
@@ -996,7 +995,7 @@ def admin_panel():
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
-                            subject=_("RandomBroadcastingSelector : You are no longer banned."),
+                            subject=_("RandomBroadcastingSelector: You are no longer banned."),
                             html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
@@ -1023,7 +1022,7 @@ def admin_panel():
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
-                            subject=_("RandomBroadcastingSelector : You are no longer banned."),
+                            subject=_("RandomBroadcastingSelector: You are no longer banned."),
                             html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)
@@ -1042,7 +1041,7 @@ def admin_panel():
                         message = Mail(
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
-                            subject=_("RandomBroadcastingSelector : Your ban appeal was refused."),
+                            subject=_("RandomBroadcastingSelector: Your ban appeal was refused."),
                             html_content=render_template("mails/refused.html", server_name=app.config["SERVER_NAME"])
                         )
                     sg_client.send(message)

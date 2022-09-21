@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-09-14 12:46+0200\n"
+"POT-Creation-Date: 2022-09-21 12:04+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -51,11 +51,11 @@ msgid "and"
 msgstr "et"
 
 #: app.py:146 app.py:162
-msgid "RandomBroadcastingSelector : Just a reminder that you are the one."
+msgid "RandomBroadcastingSelector: Just a reminder that you are the one."
 msgstr "RandomBroadcastingSelector : Juste un rappel que tu est l'élu.e."
 
 #: app.py:235
-msgid "RandomBroadcastingSelector : You are the one."
+msgid "RandomBroadcastingSelector: You are the one."
 msgstr "RandomBroadcastingSelector : Tu est l'élu.e."
 
 #: app.py:257
@@ -70,137 +70,127 @@ msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler.
 msgid "You have already reported this post so you can't report it again."
 msgstr "Tu as déja signalé ce post, tu ne pouvez pas le signaler une deuxième fois."
 
-#: app.py:348 app.py:981
-msgid "RandomBroadcastingSelector : You were banned."
+#: app.py:348 app.py:980
+msgid "RandomBroadcastingSelector: You were banned."
 msgstr "RandomBroadcastingSelector : Tu as été banni.e."
 
 #: app.py:364
-msgid "Your report as been saved."
+msgid "Your report has been saved."
 msgstr "Votre signalement a été enregistré."
 
-#: app.py:403
-msgid "User email not available or not verified by Google."
-msgstr "Email de l'utilisateur non disponible ou non vérifié par Google."
+#: app.py:403 app.py:443 app.py:517
+#, python-format
+msgid "User email not available or not verified by %(service)s."
+msgstr "Email de l'utilisateur non disponible ou non vérifié par %(service)s."
 
-#: app.py:433
-msgid "You cancelled the Continue with Twitter action."
-msgstr "Tu as annulé l'action Continuer avec Twitter."
+#: app.py:433 app.py:510
+#, python-format
+msgid "You cancelled the Continue with %(service)s action."
+msgstr "Tu as annulé l'action Continuer avec %(service)s."
 
-#: app.py:443
-msgid "User email not available or not verified by Twitter."
-msgstr "Email de l'utilisateur non disponible ou non vérifié par Twitter."
-
-#: app.py:510
-msgid "You cancelled the Continue with Discord action."
-msgstr "Tu as annulé l'action Continuer avec Discord."
-
-#: app.py:517
-msgid "User email not available or not verified by Discord."
-msgstr "Email de l'utilisateur non disponible ou non vérifié par Discord."
-
-#: app.py:681
+#: app.py:680
 msgid "You have to be broadcaster to have access to this page."
 msgstr "Tu dois être diffuseur pour accéder a cette page."
 
-#: app.py:683
+#: app.py:682
 msgid "You have already made your broadcast."
 msgstr "Tu as déja fait ta diffusion."
 
-#: app.py:707
+#: app.py:706
 msgid "Your broadcast has been saved."
 msgstr "Votre diffusion a été enregistrée."
 
-#: app.py:714
+#: app.py:713
 msgid "You have to be banned to have access to this page."
 msgstr "Seul les bannis ont accès a cette page."
 
-#: app.py:717
+#: app.py:716
 msgid "Hey smartass, quit trying."
 msgstr "Hé petit.e malin.e, arrête d'essayer."
 
-#: app.py:725
+#: app.py:724
 msgid "You have already made a ban appeal."
 msgstr "Tu as déja fait une demande de débannissement."
 
-#: app.py:735
+#: app.py:734
 msgid "Your ban appeal has been saved, it will be reviewed shortly."
 msgstr "Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais."
 
-#: app.py:749
+#: app.py:748
 msgid "No post is live right now so you can't vote."
 msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas voter."
 
-#: app.py:794
+#: app.py:793
 #, python-format
 msgid "Field must be included in \"%(string)s\"."
 msgstr "Ce champ doit être inclus dans \"%(string)s\"."
 
-#: app.py:818
+#: app.py:817
 msgid "Enter the message you want to send to this websites users."
 msgstr "Entrez le message que tu veux faire passer aux utilisateurs de ce site web."
 
-#: app.py:821
+#: app.py:820
 msgid "I'm sorry but you are going to have to write more than one word."
 msgstr "Je suis désolé mais tu va devoir écrire plus qu'un seul mot."
 
-#: app.py:824
+#: app.py:823
 msgid "Author of this message (name that you want to be designated as that everyone will see.):"
 msgstr "Auteur de ce message (nom par lequel tu sera désigné et que tout le monde verra) :"
 
-#: app.py:829
+#: app.py:828
 msgid "Verification code from the email you received:"
 msgstr "Code de vérification provenant de l'email que tu as reçu :"
 
-#: app.py:832
+#: app.py:831
 msgid "You have to input the code you received in the mail we sent to you."
 msgstr "Tu dois entrer le code présent dans l'email que je t'ai envoyé."
 
-#: app.py:835 app.py:849 app.py:868 templates/post_search.html:10
+#: app.py:834 app.py:848 app.py:867 templates/post_search.html:10
 msgid "Submit"
 msgstr "Soumettre"
 
-#: app.py:840
+#: app.py:839
 msgid "You have to be banned to submit this form."
 msgstr "Seul les bannis peuvent soumettre ce formulaire."
 
-#: app.py:846
+#: app.py:845
 msgid "If you really want to get unbanned you should write a bit more than that (more than one word)."
 msgstr "Si tu veux vraiment être débanni.e tu devrais écrire un peu plus que ça (plus d'un seul mot)."
 
-#: app.py:853
+#: app.py:852
 msgid "Is this broadcast harassing, insulting or encouraging hate against anyone ?"
-msgstr "Est-ce que cette diffusion harcèle, insulte ou encourage de la haine envers quelqu'un ?"
+msgstr "Cette diffusion harcèle, insulte ou encourage-t-elle de la haine envers quelqu'un ?"
+
+#: app.py:853
+msgid "Is this broadcast using too much mild language for a family friendly website ?"
+msgstr "Cette diffusion utilise-t-elle un language trop explicite et trop cru pour un site web tout publique ?"
 
 #: app.py:854
-msgid "Is this broadcast using too much mild language for a family friendly website ?"
-msgstr "Est-ce que cette diffusion utilise un language trop explicite et trop cru pour un site web tout publique ?"
+msgid "Does this broadcast contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\") ?"
+msgstr "Cette diffusion contient-t-elle des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
 
 #: app.py:855
-msgid "Does this broadcast contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\") ?"
-msgstr "Est-ce que cette diffusion contient des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
-
-#: app.py:856
 msgid "Has this broadcasts author chosen an offending name ?"
-msgstr "Est-ce que le diffuseur a choisi un nom offensant ?"
+msgstr "Le diffuseur a-t-il choisi un nom offensant ?"
 
-#: app.py:864
+#: app.py:863
 msgid "The quote you supplied isn't in the broadcast."
 msgstr "La citation que tu as donné n'est pas dans la diffusion."
 
-#: app.py:865
+#: app.py:864
 msgid "The quote you supplied has only got one word when it has to have at least two."
 msgstr "La citation que tu as donné comprends seulement un seul mot alors qu'elle doit au moins en avoir deux."
 
-#: app.py:937
+#: app.py:936
 msgid "App online"
 msgstr "App en ligne"
 
-#: app.py:999 app.py:1026
-msgid "RandomBroadcastingSelector : You are no longer banned."
+#: app.py:998 app.py:1025
+msgid "RandomBroadcastingSelector: You are no longer banned."
 msgstr "RandomBroadcastingSelector : Tu a été débanni.e."
 
-#: app.py:1045
-msgid "RandomBroadcastingSelector : Your ban appeal was refused."
+#: app.py:1044
+msgid "RandomBroadcastingSelector: Your ban appeal was refused."
 msgstr "RandomBroadcastingSelector : Ta demande de débannissement a été refusée."
 
 #: templates/banned.html:9 templates/broadcast.html:28
@@ -225,7 +215,7 @@ msgstr "Important"
 
 #: templates/banned.html:27
 msgid ": If after submitting, you get any other message than \"Your ban appeal has been saved.\", you will have to go back to the login page and try to login again to be able to correct you ban appeal."
-msgstr ": Si après avoir soumis ce formulaire, tu reçois une autre information que \"Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais.\", tu dois retourner a la page de connexion et réessayer de te connecter pour pouvoir corriger ta demande de débannissement."
+msgstr " : Si après avoir soumis ce formulaire, tu reçois une autre information que \"Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais.\", tu dois retourner a la page de connexion et réessayer de te connecter pour pouvoir corriger ta demande de débannissement."
 
 #: templates/base.html:21
 msgid "Stats"
@@ -293,28 +283,28 @@ msgstr "Mais comme ils disent toujours dans les films \"Avec de grands pouvoirs 
 
 #: templates/broadcast.html:13
 msgid "And remember that your message will be saved in the history tab forever, so say something meaningful."
-msgstr "Et souviens toi que que ton message sera enregistré dans l'historique pour toujours, donc dit quelque chose de significatif."
+msgstr "Et souviens toi que que ton message sera enregistré dans l'historique pour toujours, donc dis quelque chose de significatif."
 
 #: templates/broadcast.html:14
 #, python-format
 msgid "I imagine you already have what you are going to say sorted out so before writing your wonderful message to the %(users)s people that signed in to website, make sure the answers to the following questions are all no."
-msgstr "J'imagine que tu sais déjâ ce que tu va dire donc avant d'écrir ton magnifique message aux %(users)s gens qui se sont inscrit sur ce site web, soit certain que les réponses aux questions suivantes sont toutes non."
+msgstr "J'imagine que tu sais déjâ ce que tu va dire donc avant d'écrir ton magnifique message aux %(users)s gens qui se sont inscrit sur ce site web, soit certain.e que les réponses aux questions suivantes sont toutes non."
 
 #: templates/broadcast.html:18
 msgid "Is your message harassing, insulting or encouraging hate against anyone?"
-msgstr "Est-ce que ta diffusion harcèle, insulte ou encourage de la haine envers quelqu'un ?"
+msgstr "Ta diffusion harcèle, insulte ou encourage-t-elle de la haine envers quelqu'un ?"
 
 #: templates/broadcast.html:19
 msgid "Is your message using too much mild language for a family friendly website?"
-msgstr "Est-ce que ta diffusion utilise un language trop explicite et trop cru pour un site web tout publique ?"
+msgstr "Ta diffusion utilise-t-elle un language trop explicite et trop cru pour un site web tout publique ?"
 
 #: templates/broadcast.html:20
 msgid "Does your message contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\")?"
-msgstr "Est-ce que ta diffusion contient des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
+msgstr "Ta diffusion contient-t-elle des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
 
 #: templates/broadcast.html:21
 msgid "Could the name you chose offend anyone in any way?"
-msgstr "Est-ce que le nom que tu as choisi pourrais offenser quelqu'un ?"
+msgstr "Le nom que tu as choisi pourrais-t-il offenser quelqu'un ?"
 
 #: templates/broadcast.html:24 templates/to_import.html:33
 msgid "I have read the text above."
@@ -347,7 +337,7 @@ msgstr "Identifiant de portefeuille Coinbase :"
 #: templates/history.html:5
 #, python-format
 msgid "History page %(page)s"
-msgstr "Page numéro %(page)s de l'historique"
+msgstr "Page %(page)s de l'historique"
 
 #: templates/history.html:15
 msgid "These posts don't exist yet."
@@ -406,29 +396,11 @@ msgstr "Une fois par jour (24h), un des utilisateurs (sont considérés utilisat
 msgid "Continue with Social Media"
 msgstr "Continuer avec des réseaux sociaux."
 
-#: templates/login.html:12
-msgid "Continue with Google"
-msgstr "Continuer avec Google"
-
-#: templates/login.html:15
-msgid "Continue with Twitter"
-msgstr "Continuer avec Twitter"
-
-#: templates/login.html:18
-msgid "Continue with Discord"
-msgstr "Continuer avec Discord"
-
-#: templates/login.html:21
-msgid "Continue with Twitch"
-msgstr "Continuer avec Twitch"
-
-#: templates/login.html:24
-msgid "Continue with Github"
-msgstr "Continuer avec Github"
-
-#: templates/login.html:27
-msgid "Continue with Facebook"
-msgstr "Continuer avec Facebook"
+#: templates/login.html:12 templates/login.html:15 templates/login.html:18
+#: templates/login.html:21 templates/login.html:24 templates/login.html:27
+#, python-format
+msgid "Continue with %(service)s"
+msgstr "Continuer avec %(service)s"
 
 #: templates/login.html:29
 msgid "By pressing \"Continue\" you agree to the"
