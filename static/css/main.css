@@ -45,3 +45,10 @@ footer {
         display: none;
     }
 }
+
+/* Quand res <= 1400px, désarrondir les angles */
+@media (max-width: 1400px) {
+    .full-page-unround {
+        border-radius: 0;
+    }
+}

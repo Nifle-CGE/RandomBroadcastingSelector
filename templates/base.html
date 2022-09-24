@@ -15,13 +15,13 @@
     <title>{% block title required %}{% endblock %} - RandomBroadcastingSelector</title>
 </head>
 
-<nav class="w3-bar w3-border-bottom w3-flat-clouds" style="overflow: visible;border-radius:0 0 10px 10px;">
+<nav class="w3-bar w3-border-bottom w3-flat-clouds full-page-unround" style="overflow: visible;border-radius:0 0 10px 10px;">
     <a href="/"><img class="hover-zoom w3-bar-item" style="padding: 0;height: 54.5px;" src="/static/img/logo RBSm.png" alt="RBS logo"></a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block home_main %}{% endblock %}" href="/"><span class="full-rbs"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</span><span class="short-rbs"><b>RBS</b></span></a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block home_main %}{% endblock %}" href="/"><span class="full-rbs"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</span><span class="short-rbs"><b>RBS</b></span></a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
     {% if current_user.is_broadcaster: %}
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right{% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
     {% endif %}
 
     {% if current_user.is_authenticated: %}
@@ -32,7 +32,7 @@
         </div>
     </div>
     {% else: %}
-    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left{% block login_main %}{% endblock %}" href="/login/" style="border-radius:0 0 10px 0;">{{ _("Login") }}</a>
+    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left {% block login_main %}{% endblock %} full-page-unround" href="/login/" style="border-radius:0 0 10px 0;">{{ _("Login") }}</a>
     {% endif %}
     <div class="w3-dropdown-click w3-right">
         <button onclick="showDropdown('lang_dropdown')" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
@@ -51,7 +51,7 @@
         {% block content required %}{% endblock %}
     </div>
     <br>
-    <footer class="w3-container w3-flat-clouds w3-padding-16" style="border-radius:10px 10px 0 0;">
+    <footer class="w3-container w3-flat-clouds w3-padding-16 full-page-unround" style="border-radius:10px 10px 0 0;">
         <i>{{ _("Created by") }} <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a></i> | <a href="/donate/">{{ _("Donate") }}</a> | <a href="/post/">{{ _("Lookup an individual post") }}</a> | <a href="/sitemap/">{{ _("Sitemap") }}</a> | <a href="/privacy-policy/">{{ _("Privacy Policy") }}</a> | <a href="/terms-of-service/">{{ _("Terms of Service") }}</a>
         <br>
         <small>{{ _("This website is still in beta, so if you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above.") }}</small>
