@@ -85,14 +85,16 @@ function showDropdown(dropdownId) {
     }
 }
 
-function updateCharCounter(inputId, counterId) {
+function updateCharCounter(inputId, counterId, colorbase = "black", colormax = "black") {
     counter = document.getElementById(counterId)
-    max = counter.innerHTML.split("/")[1]
+    max = Number(counter.innerHTML.split("/")[1])
     current = document.getElementById(inputId).value.length
     counter.innerHTML = current + "/" + max
-    if (max == current) {
-        counter.style.color = "green"
+    if (current < max) {
+        counter.style.color = colorbase
+    } else if (max === current) {
+        counter.style.color = colormax
     } else {
-        counter.style.color = "black"
+        counter.style.color = "red"
     }
 }

@@ -15,7 +15,7 @@
     {% endif %}
 
     {{ form.reason.label }}<br>
-    {{ form.reason(id="reason_input", oninput="updateCharCounter('reason_input', 'reason_counter')", rows="4", cols="128") }} <span id="reason_counter">0/512</span><br>
+    {{ form.reason(id="reason_input", oninput="updateCharCounter('reason_input', 'reason_counter')", rows="4", cols="126", style="font-family:monospace;") }} <span id="reason_counter">0/512</span><br>
     {% if form.reason.errors: %}
     {{ _("The field above had an error:") }} {{ form.reason.errors }}<br>
     {% endif %}

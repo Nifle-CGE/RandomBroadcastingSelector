@@ -2,7 +2,7 @@
 
 {% block title %}{{ _("Broadcast") }}{% endblock %}
 
-{% block broadcast_main %} w3-teal w3-hover-blue-gray{% endblock %}
+{% block broadcast_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
 <h1>{{ _("Broadcast") }}</h1>
@@ -34,7 +34,7 @@
     {% endif %}
 
     {{ form.message.label }}<br>
-    {{ form.message(id="message_input", oninput="updateCharCounter('message_input', 'message_counter')", rows="4", cols="128") }} <span id="message_counter">0/512</span><br>
+    {{ form.message(id="message_input", oninput="updateCharCounter('message_input', 'message_counter')", rows="4", cols="126", style="font-family:monospace;") }} <span id="message_counter">0/512</span><br>
     {% if form.message.errors: %}
     {{ _("The field above had an error:") }} {{ form.message.errors }}<br>
     {% endif %}
@@ -46,7 +46,7 @@
     {% endif %}
 
     {{ form.brod_code.label }}<br>
-    {{ form.brod_code(id="code_input", oninput="updateCharCounter('code_input', 'code_counter')", placeholder=_("For example:") + " Drmhze6E...", size="43") }} <span id="code_counter">0/43</span><br>
+    {{ form.brod_code(id="code_input", oninput="updateCharCounter('code_input', 'code_counter', 'red', 'green')", placeholder=_("For example:") + " Drmhze6E...", size="43") }} <span id="code_counter">0/43</span><br>
     {% if form.brod_code.errors: %}
     {{ _("The field above had an error:") }} {{ form.brod_code.errors }}<br>
     {% endif %}
