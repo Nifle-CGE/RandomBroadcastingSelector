@@ -60,6 +60,7 @@ def anon_user_getter():
     anon_user.is_authenticated = False
     anon_user.is_anonymous = True
     return anon_user
+
 login_manager.anonymous_user = anon_user_getter
 
 # Config setup
@@ -95,6 +96,11 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
+# testing
+#app.config["SERVER_NAME"] = "192.168.180.27:5000"
+testing = False
+brod_change_threshold = 86400
+
 app.logger.info("Je suis prêt.")
 
 # Flask-Login helper to retrieve a user from our db
@@ -128,13 +134,20 @@ def get_lang():
     return request.accept_languages.best_match(SUPPORTED_LANGUAGES)
 
 # Useful defs
-def verify_broadcast(func):
+def send_mail(mail):
+    if not testing:
+        sg_client.send(mail)
+    else:
+        print("Sent", mail.subject)
+
+@app.before_request
+def verify_broadcast():
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
     else:
         if not stats["broadcast"]["content"]:
-            if stats["time"]["last_broadcaster"] + 86400 > time.time():
+            if stats["time"]["last_broadcaster"] + brod_change_threshold > time.time():
                 end_msg = ""
                 if not stats["broadcast"]["warning"]["12h"] and stats["time"]["last_broadcaster"] + 43200 < time.time():
                     brod = load_user(stats["broadcast"]["author"], active=False)
@@ -146,7 +159,7 @@ def verify_broadcast(func):
                             subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
                             html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
                     stats["broadcast"]["warning"]["12h"] = 1
                     stuffimporter.set_stats(stats)
@@ -162,7 +175,7 @@ def verify_broadcast(func):
                             subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
                             html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
                     stats["broadcast"]["warning"]["1h"] = 1
                     stuffimporter.set_stats(stats)
@@ -170,12 +183,12 @@ def verify_broadcast(func):
                     end_msg = ", rappel des 1h envoyé"
 
                 app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion{end_msg}.")
-                return func
+                return
             else:
                 skip_save = True
-        elif stats["time"]["last_broadcast"] + 86400 > time.time():
+        elif stats["time"]["last_broadcast"] + brod_change_threshold > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
-            return func
+            return
 
     if not skip_save:
         # Save current post
@@ -203,8 +216,8 @@ def verify_broadcast(func):
         except KeyError:
             stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
 
-        stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"]))
-        stats["broadcasts"]["characters_sent"] += len(new_post["content"])
+        stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"])) # add number of words
+        stats["broadcasts"]["characters_sent"] += len(new_post["content"]) # add number of chars
     
     # Select another broadcaster
     if stats["broadcast"]["futur"]["broadcasters"]:
@@ -235,12 +248,12 @@ def verify_broadcast(func):
             subject=_("RandomBroadcastingSelector: You are the one."),
             html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
         )
-    sg_client.send(message)
+    send_mail(message)
 
     stuffimporter.set_stats(stats)
 
     app.logger.info(f"Nouveau diffuseur {brod.id_} a été sélectionné.")
-    return func
+    return
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
     if lang not in LANGUAGE_CODES:
@@ -284,7 +297,6 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
 
 # Routing
 @app.route("/", methods=["GET", "POST"])
-@verify_broadcast
 def index():
     form = ReportForm()
     
@@ -348,7 +360,7 @@ def index():
                     subject=_("RandomBroadcastingSelector: You were banned."),
                     html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
                 )
-            sg_client.send(message)
+            send_mail(message)
 
             stats["users"]["num"] -= 1
             stats["users"]["banned"] += 1
@@ -364,16 +376,15 @@ def index():
         return render_template("message.html", message=_("Your report has been saved."))
 
     if stats["broadcast"]["content"]:
-        rem_secs = stats["time"]["last_broadcast"] + 86400 - time.time()
+        rem_secs = stats["time"]["last_broadcast"] + brod_change_threshold - time.time()
     else:
-        rem_secs = stats["time"]["last_broadcaster"] + 86400 - time.time()
+        rem_secs = stats["time"]["last_broadcaster"] + brod_change_threshold - time.time()
     rem_time = stuffimporter.seconds_to_str(rem_secs)
 
     return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time, random=random)
 
 # All the login stuff
 @app.route("/login/")
-@verify_broadcast
 def login():
     return render_template("login.html")
 
@@ -602,7 +613,6 @@ def history_redirect():
     return redirect(url_for("history", page=num))
 
 @app.route("/history/<int:page>")
-@verify_broadcast
 def history(page):
     q_list = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
     q_str = " OR ".join(q_list)
@@ -613,16 +623,14 @@ def history(page):
     except StopIteration:
         post_list = []
     
-    return render_template("history.html", post_list=post_list, hist_page=int(page), random=random)
+    return render_template("history.html", post_list=reversed(post_list), hist_page=int(page), random=random)
 
 @app.route("/post/")
-@verify_broadcast
 def specific_post_search():
     max_id = int(stats["broadcast"]["id"]) - int(bool(stats["broadcast"]["content"]))
     return render_template("post_search.html", max_post_id=max_id)
 
 @app.route("/post/<int:id>")
-@verify_broadcast
 def specific_post(id):
     try:
         post = p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
@@ -632,7 +640,6 @@ def specific_post(id):
     return render_template("post.html", post=post, random=random)
 
 @app.route("/statistics/")
-@verify_broadcast
 def statistics():
     if stats["time"]["stats_last_edited"] + 600 < time.time():
         start_time = time.time()
@@ -652,11 +659,11 @@ def statistics():
 
         app.logger.debug("Les stats ont étés mis a jour")
 
-    stats["time"]["uptime_str"] = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
-
     stuffimporter.set_stats(stats)
 
-    return render_template("stats.html", stats=stats, lang=get_lang(), random=random)
+    uptime_str = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
+
+    return render_template("stats.html", stats=stats, uptime_str=uptime_str, lang=get_lang(), random=random)
 
 @app.route("/stats.json")
 def stats_file():
@@ -736,7 +743,6 @@ def ban_appeal():
     return render_template("banned.html", form=form, user_id=request.args.get("user_id"))
 
 @app.route("/donate/")
-@verify_broadcast
 def donate():
     return render_template("donate.html")
 
@@ -980,7 +986,7 @@ def admin_panel():
                             subject=_("RandomBroadcastingSelector: You were banned."),
                             html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], user=user)
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
                 stats["users"]["num"] -= 1
                 stats["users"]["banned"] += 1
@@ -998,7 +1004,7 @@ def admin_panel():
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
                             html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
                 stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
@@ -1025,7 +1031,7 @@ def admin_panel():
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
                             html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
                 stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
@@ -1044,7 +1050,7 @@ def admin_panel():
                             subject=_("RandomBroadcastingSelector: Your ban appeal was refused."),
                             html_content=render_template("mails/refused.html", server_name=app.config["SERVER_NAME"])
                         )
-                    sg_client.send(message)
+                    send_mail(message)
 
             user.uexport()
 
@@ -1098,4 +1104,4 @@ def internal_server_error(e):
                             err_msg=e), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0")
+    app.run(host="0.0.0.0", debug=testing)
