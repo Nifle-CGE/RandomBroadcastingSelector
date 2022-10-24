@@ -26,6 +26,6 @@
     <a href="/login/facebook" class="w3-hide w3-button w3-block w3-section w3-round-large w3-indigo w3-hover-blue">
         <i class="fa-brands fa-facebook fa-fw"></i> {{ _("Continue with %(service)s", service="Facebook") }}
     </a>
-    <small style="text-align:center;">{{ _('By pressing "Continue" you agree to the') }} <a href="/privacy-policy/">{{ _("Privacy Policy") }}</a> {{ _("and") }} <a href="/terms-of-service/">{{ _("Terms of Service") }}</a> {{ _("of this site.") }}</small>
+    <small style="text-align:center;">{% trans %}By pressing "Continue" you agree to the <a href="/privacy-policy/">Privacy Policy</a> and <a href="/terms-of-service/">Terms of Service</a> of this website.{% endtrans %}</small>
 </div>
 {% endblock %}

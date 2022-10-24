@@ -37,7 +37,10 @@
 {{ _("Users who were active in the last week:") }} {{ stats["users"]["last_active"]["week"] }}<br>
 
 <h2>{{ _("Time info") }}</h2>
-{{ _("Uptime:") }} {{ uptime_str }}<br>
+{{ _("Uptime:") }} <span id="rem_time_counter">{{ uptime_str }}</span><br>
+<script>
+    setInterval(countUp, 1000, "rem_time_counter")
+</script>
 {{ _("Time to get stats:") }} {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 
 <h2>{{ _("Top broadcasts in different categories") }}</h2>
@@ -58,7 +61,7 @@
 {{ to_import.post(post) }}
 {% endfor %}
 <small>
-    {{ _("These stats are updated every 10 minutes.") }}<br>
-    {{ _("Click") }} <a href="/stats.json">{{ _("here") }}</a> {{ _("to get the raw stats file.") }}
+    {% trans %}These stats are updated every 10 minutes.<br>
+    Click <a href="/stats.json">here</a> to get the raw stats file.{% endtrans %}
 </small>
 {% endblock %}

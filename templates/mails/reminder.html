@@ -3,7 +3,7 @@
     <h3>
         {{ _("Hey, this is just a friendly reminder that you have been selected on RBS and you still haven't made your broadcast.") }}<br>
         {{ ngettext("You currently have %(num)s hour left to make your broadcast.", "You currently have %(num)s hours left to make your broadcast.", rem_hours) }}<br>
-        {{ _("You can click") }} <a href="https://{{ server_name }}/login">{{ _("here") }}</a> {{ _("to login and then click on the Broadcast tab on the navigation bar and make your broadcast.") }}<br>
+        {% trans server_name=server_name %}You can click <a href="https://{{ server_name }}/login">here</a> to login and then click on the Broadcast tab on the navigation bar and make your broadcast.{% endtrans %}<br>
         {{ _("You are going to need this code to make the broadcast:") }} "<strong>{{ brod_code }}</strong>"
     </h3>
     <p>{{ _("If you think this is a scam, then all right, don't click on the link, just go on the website by searching for it on the web and you'll see.") }}</p>

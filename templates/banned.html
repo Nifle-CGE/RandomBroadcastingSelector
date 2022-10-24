@@ -15,7 +15,7 @@
     {% endif %}
 
     {{ form.reason.label }}<br>
-    {{ form.reason(id="reason_input", oninput="updateCharCounter('reason_input', 'reason_counter')", rows="4", cols="126", style="font-family:monospace;") }} <span id="reason_counter">0/512</span><br>
+    {{ form.reason(id="reason_input", oninput="updateCharCounter('reason_input', 'reason_counter')", rows="4", cols="127", style="font-family:monospace;") }} <span id="reason_counter">0/512</span><br>
     {% if form.reason.errors: %}
     {{ _("The field above had an error:") }} {{ form.reason.errors }}<br>
     {% endif %}
@@ -24,6 +24,6 @@
 </form>
 <br>
 <p>
-    <span class="w3-text-red">{{ _("Important") }}</span>{{ _(': If after submitting, you get any other message than "Your ban appeal has been saved.", you will have to go back to the login page and try to login again to be able to correct you ban appeal.') }}
+    {% trans %}<span class="w3-text-red">Important</span>: If after submitting, you get any other message than "Your ban appeal has been saved.", you will have to go back to the login page and try to login again to be able to correct you ban appeal.{% endtrans %}
 </p>
 {% endblock %}

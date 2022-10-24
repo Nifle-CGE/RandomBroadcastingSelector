@@ -10,7 +10,7 @@
     </div>
     <div class="w3-container w3-cell w3-round-large {{ random.choice(['w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow']) }}" style="padding:0 16px 16px 16px;">
         <h3>❝{{ post["content"] }}❞</h3>
-        <h6 class="w3-right" style="margin:0;">{{ _("by") }} {{ post["author_name"] }}</h6><br>
+        <h6 class="w3-right" style="margin:0;">{% trans auth=post["author_name"] %}by {{ auth }}{% endtrans %}</h6><br>
         {% if live and lang != post["lang"] %}
         <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
         {% endif %}
@@ -24,11 +24,11 @@
             <div class="w3-container w3-card-4 w3-modal-content w3-animate-zoom">
                 <h3>{{ _("Before doing anything, read the text below.") }}</h3>
                 <h5>
-                    {{ _("The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a translation error) you can contact me by clicking on my name in the footer at the bottom of the page.") }}<br>
-                    {{ _("Do not report for no reason because you will have to quote the part of the broadcast where the offense was made in the input at the end of the form.") }}<br>
-                    {{ _("For the input at the end of the form, you have to quote at least 2 words.") }}<br>
-                    {{ _("Another thing about the input at the end, you can only quote the original message and not the translation that has been made, because I can't risk banning people because of bad translations.") }}<br>
-                    {{ _("Be careful to fill this form correctly as you will not be able to modify or delete it.") }}
+                    {% trans %}The purpose of reporting is to ultimately ban any broadcaster that breaks the rules so if you have any queries regarding the broadcast that do not imply that the broadcaster should be banned (for example a translation error) you can contact me by clicking on my name in the footer at the bottom of the page.<br>
+                    Do not report for no reason because you will have to quote the part of the broadcast where the offense was made in the input at the end of the form.<br>
+                    For the input at the end of the form, you have to quote at least 2 words.<br>
+                    Another thing about the input at the end, you can only quote the original message and not the translation that has been made, because I can't risk banning people because of bad translations.<br>
+                    Be careful to fill this form correctly as you will not be able to modify or delete it.{% endtrans %}
                 </h5>
                 <input type="button" value="{{ _('I have read the text above.') }}" id="activatorButton" onclick="enableSubmitButton('submitButton', 'activatorButton')">
                 <h4>{{ _("What is the reason of your report?") }}</h4>

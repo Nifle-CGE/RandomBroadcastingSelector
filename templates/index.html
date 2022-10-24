@@ -10,20 +10,23 @@
 {% if stats["broadcast"]["content"]: %}
 <br>
 {{ to_import.post(stats["broadcast"], live=True) }}
-<small class="flex-center">{{ _("Next broadcaster in %(rem_time)s", rem_time=rem_time) }}</small>
+<small class="flex-center">{% trans rem_time=rem_time %}Next broadcaster in <span id="rem_time_counter">{{ rem_time }}</span>{% endtrans %}</small>
 {% else: %}
 <h4 class="w3-center">
-    {{ _("The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has %(rem_time)s to respond.", rem_time=rem_time) }}<br>
-    {{ _("Meanwhile, you can check out every other posts that ever existed") }} <a href="/history/">{{ _("here") }}</a>{{ _(", or make a") }} <a href="/donate">{{ _("donation") }}</a> {{ _("to keep this website running.") }}
+    {% trans rem_time=rem_time %}The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has <span id="rem_time_counter">{{ rem_time }}</span> to respond.<br>
+    Meanwhile, you can check out every other posts that ever existed <a href="/history/">here</a>, or make a <a href="/donate">donation</a> to keep this website running.{% endtrans %}
 </h4>
 {% endif %}
+<script>
+    setInterval(countDown, 1000, "rem_time_counter")
+</script>
 <hr>
 <div style="display:flex;flex-direction:column;align-items:center;">
     <div class="w3-container w3-cell w3-center w3-round-xlarge w3-flat-clouds">
         <h3>{{ _("The concept") }}</h3>
         <h5>
-            {{ _("of this website is simple and its name is pretty self-explanatory.") }}<br>
-            {{ _("Once a day (24h), someone from this website's users (users are people who logged in to this website at least once) is randomly selected and gets to display a message on this here front page for everyone else to see.") }}
+            {% trans %}of this website is simple and its name is pretty self-explanatory.<br>
+            Once a day (24h), someone from this website's users (users are people who logged in to this website at least once) is randomly selected and gets to display a message on this here front page for everyone else to see.{% endtrans %}
         </h5>
     </div>
 </div>
