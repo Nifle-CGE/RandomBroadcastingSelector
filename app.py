@@ -96,7 +96,7 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 oauth = OAuth(app)
 
 # testing
-testing = True
+testing = False
 brod_change_threshold = 86400
 if testing:
     app.config["SERVER_NAME"] = "192.168.1.18:5000"
