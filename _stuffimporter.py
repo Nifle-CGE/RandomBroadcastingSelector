@@ -37,11 +37,11 @@ class StuffImporter(object):
         result = []
         if days:
             result.append(self.ngettext("%(num)s day", "%(num)s days", days))
-        if hours:
+        if days or hours:
             result.append(self.ngettext("%(num)s hour", "%(num)s hours", hours))
-        if minutes:
+        if days or hours or minutes:
             result.append(self.ngettext("%(num)s minute", "%(num)s minutes", minutes))
-        if rem_seconds:
+        if days or hours or minutes or rem_seconds:
             result.append(self.ngettext("%(num)s second", "%(num)s seconds", rem_seconds))
 
         return ", ".join(result[:-1]) + " " + self._("and") + " " + result[-1] if len(result) > 1 else result[0]

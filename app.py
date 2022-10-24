@@ -93,13 +93,15 @@ stuffimporter.set_stats(stats)
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 
 # OAuth setup
-app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 oauth = OAuth(app)
 
 # testing
-#app.config["SERVER_NAME"] = "192.168.180.27:5000"
-testing = False
+testing = True
 brod_change_threshold = 86400
+if testing:
+    app.config["SERVER_NAME"] = "192.168.1.18:5000"
+else:
+    app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 
 app.logger.info("Je suis prêt.")
 
