@@ -102,10 +102,11 @@ csp = {} # TODO : setup scp donc enlever tout le css inline et tout mettre dans 
 talisman = Talisman(app, content_security_policy=[])
 
 # testing
-testing = True
+testing = os.path.isdir("tests")
 brod_change_threshold = 86400
 if testing:
     app.config["SERVER_NAME"] = "192.168.1.18:5000"
+    app.logger.info("Test mode activated")
 else:
     app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 
