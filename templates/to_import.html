@@ -1,6 +1,6 @@
 {% macro post(post, live=False) -%}
-<div class="w3-padding-16 flex-center">
-    <div class="w3-container w3-cell w3-center" style="padding:16px">
+<div class="w3-padding-16 flex-center" style="align-items: center;">
+    <div class="w3-container w3-cell w3-center" style="padding:16px;">
         <input type="button" {% if live and current_user.is_authenticated %}id="upvoteButton" onclick="liveVote('upvote')" {% elif live and not current_user.is_authenticated %}onclick="alert('{{ _('You have to login to be able to vote.') }}')" {% else %}onclick="alert('{{ _('This post has been archived so voting is no longer active.') }}')" {% endif %}class="w3-button w3-round-xlarge hover-zoom w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %}" style="padding: 0 4px;" value="▲"><br>
 
         <span class="w3-text-green" id="upvote_num">{{ post["upvotes"] }}</span><br>
@@ -14,7 +14,7 @@
         {% if live and lang != post["lang"] %}
         <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
         {% endif %}
-        <small>{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["date"] }}
+        <small class="w3-left">{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["date"] }}
             <!-- | <a class="w3-hover-red" onclick="document.getElementById('reportForm').style.display = 'block'">Report (testing)</a>
             TODO : enlever quand form terminée -->
             {% if live and current_user.is_authenticated %}

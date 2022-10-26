@@ -7,22 +7,21 @@
 {% block home_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
-{% if stats["broadcast"]["content"]: %}
-<br>
-{{ to_import.post(stats["broadcast"], live=True) }}
-<small class="flex-center">{% trans rem_time=rem_time %}Next broadcaster in <span id="rem_time_counter">{{ rem_time }}</span>{% endtrans %}</small>
-{% else: %}
-<h4 class="w3-center">
-    {% trans rem_time=rem_time %}The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has <span id="rem_time_counter">{{ rem_time }}</span> to respond.<br>
-    Meanwhile, you can check out every other posts that ever existed <a href="/history/">here</a>, or make a <a href="/donate">donation</a> to keep this website running.{% endtrans %}
-</h4>
-{% endif %}
-<script>
-    setInterval(countDown, 1000, "rem_time_counter")
-</script>
-<hr>
-<div style="display:flex;flex-direction:column;align-items:center;">
-    <div class="w3-container w3-cell w3-center w3-round-xlarge w3-flat-clouds">
+<div class="w3-center">
+    {% if stats["broadcast"]["content"]: %}
+    {{ to_import.post(stats["broadcast"], live=True) }}
+    <small>{% trans rem_time=rem_time %}Next broadcaster in <span id="rem_time_counter">{{ rem_time }}</span>{% endtrans %}</small>
+    {% else: %}
+    <h4 class="w3-center">
+        {% trans rem_time=rem_time %}The new broadcaster hasn't responded yet so the post isn't here. The chosen one still has <span id="rem_time_counter">{{ rem_time }}</span> to respond.<br>
+        Meanwhile, you can check out every other posts that ever existed <a href="/history/">here</a>, or make a <a href="/donate">donation</a> to keep this website running.{% endtrans %}
+    </h4>
+    {% endif %}
+    <script>
+        setInterval(countDown, 1000, "rem_time_counter")
+    </script>
+    <hr>
+    <div class="w3-container w3-cell w3-round-xlarge w3-flat-clouds">
         <h3>{{ _("The concept") }}</h3>
         <h5>
             {% trans %}of this website is simple and its name is pretty self-explanatory.<br>
