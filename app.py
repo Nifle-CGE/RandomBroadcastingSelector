@@ -21,6 +21,8 @@ from wtforms import validators
 
 from flask_babel import Babel, format_date, format_number, _, ngettext, lazy_gettext, lazy_ngettext, force_locale as babel_force_locale
 
+from flask_talisman import Talisman
+
 from authlib.integrations.flask_client import OAuth
 
 from azure.cosmos import CosmosClient
@@ -95,8 +97,12 @@ sg_client = SendGridAPIClient(config["sendgrid_api_key"])
 # OAuth setup
 oauth = OAuth(app)
 
+# Talisman (safe stuff)
+csp = {} # TODO : setup scp donc enlever tout le css inline et tout mettre dans une feuille de style
+talisman = Talisman(app, content_security_policy=[])
+
 # testing
-testing = False
+testing = True
 brod_change_threshold = 86400
 if testing:
     app.config["SERVER_NAME"] = "192.168.1.18:5000"
@@ -744,9 +750,9 @@ def ban_appeal():
 
     return render_template("banned.html", form=form, user_id=request.args.get("user_id"))
 
-@app.route("/donate/")
-def donate():
-    return render_template("donate.html")
+@app.route("/about/")
+def about():
+    return render_template("about.html")
 
 # Callbacks
 @app.route("/vote/", methods=["POST"])
