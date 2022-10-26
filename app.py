@@ -106,7 +106,7 @@ testing = os.path.isdir("tests")
 brod_change_threshold = 86400
 if testing:
     app.config["SERVER_NAME"] = "192.168.1.18:5000"
-    app.logger.info("Test mode activated")
+    app.logger.info("Mode test activé.")
 else:
     app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 

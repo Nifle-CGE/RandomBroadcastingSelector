@@ -2,6 +2,7 @@ flask
 flask_login
 flask_wtf
 flask_babel
+flask_talisman
 wtforms
 authlib
 pyopenssl
