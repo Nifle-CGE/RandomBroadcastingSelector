@@ -187,6 +187,7 @@ def send_mail(mail):
 @app.before_request
 def verify_broadcast():
     if testing: return
+
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
@@ -307,8 +308,8 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     # Test to see if the user exists in the db
     user = load_user(id_)
 
-    # Doesn't exist? Add it to the database.
-    if not user:
+    return_val = redirect(url_for("index"))
+    if not user: # Doesn't exist? Add it to the database.
         try:
             fraud_id = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
             app.logger.info(f"Double compte de {fraud_id} empéché.")
@@ -326,6 +327,9 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
         user = new_user
 
         app.logger.info(f"L'utilisateur {user.id_} a été créé.")
+
+        return_val = render_template("message.html", message=_("You have successfully created your account, if you are selected, you will receive an email on %(mail)s so check your emails regularly.", mail=user.email))
+
     if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
         stats["codes"]["ban_appeal"][user.id_] = code
@@ -338,7 +342,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     login_user(user)
 
     # Send user back to homepage
-    return redirect(url_for("index"))
+    return return_val
 
 # Routing
 @app.route("/", methods=["GET", "POST"])
@@ -755,7 +759,7 @@ def broadcast():
         stuffimporter.set_stats(stats)
     
         app.logger.info("La diffusion a été enregistrée.")
-        return render_template("message.html", message=_("Your broadcast has been saved."))
+        return render_template("message.html", message=_("Your broadcast has been saved, you can now share this website to everyone you know so that everyone sees your message."))
 
     return render_template("broadcast.html", form=form, stats=stats)
 
@@ -1162,7 +1166,7 @@ def report():
         html_content=json.dumps(content, indent=4, sort_keys=True)
     )
     send_mail(message)
-    return 204
+    return "", 204
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=testing)
