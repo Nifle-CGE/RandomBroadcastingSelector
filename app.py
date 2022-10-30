@@ -50,7 +50,20 @@ app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 app.logger.addHandler(fh)
 app.logger.level = logging.INFO
 
-app.logger.info("Je suis prêt à être prêt.")
+app.logger.info("Lancement de l'application.")
+
+# testing
+testing = os.path.isdir("tests")
+brod_change_threshold = 86400
+if testing:
+    from tests.ip_getter import get_ip
+    app.config["SERVER_NAME"] = get_ip() + ":5000"
+    
+    app.logger.level = logging.DEBUG
+    app.logger.debug("Mode test activé.")
+else:
+    app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
+
 
 # User session management setup
 login_manager = LoginManager(app)
@@ -73,6 +86,7 @@ translator = deepl.Translator(config["deepl_auth_key"])
 
 LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
 SUPPORTED_LANGUAGES = ["en", "fr"]
+app.logger.debug("Traducteur mis en place.")
 
 # Internationalization setup
 babel = Babel(app)
@@ -82,6 +96,7 @@ cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
 u_cont = db.get_container_client("Web RBS Users")
 p_cont = db.get_container_client("Web RBS Posts")
+app.logger.debug("Base de donnée mise en place.")
 
 stuffimporter = _stuffimporter.StuffImporter(u_cont, _, ngettext)
 
@@ -90,27 +105,44 @@ global stats
 stats = stuffimporter.get_stats()
 stats["time"]["start_time"] = time.time()
 stuffimporter.set_stats(stats)
+app.logger.debug("Stats récupérés.")
 
 # Mail client setup
 sg_client = SendGridAPIClient(config["sendgrid_api_key"])
+app.logger.debug("Client mail mis en place.")
 
 # OAuth setup
 oauth = OAuth(app)
 
 # Talisman (safe stuff)
-csp = {} # TODO : setup scp donc enlever tout le css inline et tout mettre dans une feuille de style
-talisman = Talisman(app, content_security_policy=[])
+csp = {
+    "default-src": "none",
+    "object-src": "none",
+    "script-src": "'self'",
+    "style-src": "'self'",
+    "media-src": "'self'",
+    "frame-src": "'self'",
+    "base-uri": "'self'",
+    "connect-src": "'self'",
+    "font-src": [
+        "'self'",
+        "data:"
+    ],
+    "img-src": [
+        "'self'",
+        "img.shields.io"
+    ]
+} # TODO : mettre report-uri
+talisman = Talisman(
+    app,
+    content_security_policy=csp,
+    content_security_policy_nonce_in=[
+        'script-src',
+        "style-src"
+    ]
+)
 
-# testing
-testing = os.path.isdir("tests")
-brod_change_threshold = 86400
-if testing:
-    app.config["SERVER_NAME"] = "192.168.1.18:5000"
-    app.logger.info("Mode test activé.")
-else:
-    app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
-
-app.logger.info("Je suis prêt.")
+app.logger.info("Application lancée.")
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
@@ -147,10 +179,11 @@ def send_mail(mail):
     if not testing:
         sg_client.send(mail)
     else:
-        print("Sent", mail.subject)
+        print(f"Mail envoyé avec le sujet \"{mail.subject}\"")
 
 @app.before_request
 def verify_broadcast():
+    if testing: return
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
         skip_save = True
@@ -888,7 +921,7 @@ class BanUnbanForm(FlaskForm):
         validators.InputRequired()
     ])
 
-    whatodo = RadioField(choices=[
+    banunban = RadioField(choices=[
         ("ban", "Bannir"),
         ("déban", "Débannir")
     ], validators=[
@@ -943,7 +976,7 @@ def sitemap():
 # Crawling control
 @app.route("/robots.txt")
 def robots():
-    return render_template("robots.html")
+    return "User-agent: *<br>Disallow:<br>Allow: /<br>Sitemap: /sitemap"
 
 # Health check
 @app.route("/ping/")
@@ -976,7 +1009,7 @@ def admin_panel():
                 abort(404)
 
             user = load_user(banunban.user_id.data, active=False)
-            if banunban.whatodo.data == "ban":
+            if banunban.banunban.data == "ban":
                 if user.is_broadcaster:
                     # Delete the banned user's message
                     stats["broadcast"]["author_name"] = "[deleted]"
