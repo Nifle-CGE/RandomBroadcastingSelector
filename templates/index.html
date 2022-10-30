@@ -17,7 +17,7 @@
         Meanwhile, you can check out every other posts that ever existed <a href="/history/">here</a>, or make a <a href="/about/">donation</a> to keep this website running.{% endtrans %}
     </h4>
     {% endif %}
-    <script>
+    <script nonce="{{ csp_nonce() }}">
         setInterval(countDown, 1000, "rem_time_counter")
     </script>
     <hr>

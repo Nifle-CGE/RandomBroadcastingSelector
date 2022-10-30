@@ -4,19 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
-    <link rel="stylesheet" href="/static/css/main.css">
-    <link rel="stylesheet" href="/static/css/w3.css">
+    <link rel="stylesheet" href="/static/fontawesome6/css/all.min.css" nonce="{{ csp_nonce() }}">
+    <link rel="stylesheet" href="/static/css/w3.css" nonce="{{ csp_nonce() }}">
+    <link rel="stylesheet" href="/static/css/main.css" nonce="{{ csp_nonce() }}">
 
     <link rel="icon" type="image/x-icon" href="/static/img/favicon.ico">
 
-    <script src="https://kit.fontawesome.com/280bdb224c.js" crossorigin="anonymous"></script>
-    <script src="/static/js/script.js"></script>
+    <script src="/static/js/script.js" nonce="{{ csp_nonce() }}"></script>
+    <script nonce="{{ csp_nonce() }}">
+        // when page loaded add every eventlistener like onclick or oninput
+        document.addEventListener("DOMContentLoaded", function () {
+            document.getElementById("lang_dropdown_button").onclick = function () { showDropdown('lang_dropdown') }
+
+            {% block extra_events %} {% endblock %}
+        });
+    </script>
 
     <title>{% block title required %}{% endblock %} - RandomBroadcastingSelector</title>
 </head>
 
-<nav class="w3-bar w3-border-bottom w3-flat-clouds full-page-unround" style="overflow: visible;border-radius:0 0 10px 10px;">
-    <a href="/"><img class="hover-zoom w3-bar-item" style="padding: 0;height: 54.5px;" src="/static/img/logo RBSm.png" alt="RBS logo"></a>
+<nav class="w3-bar w3-border-bottom w3-flat-clouds bottom-round-10">
+    <a href="/"><img class="w3-bar-item hover-zoom rbs-logo" src="/static/img/logo RBSm.png" alt="RBS logo"></a>
     <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block home_main %}{% endblock %}" href="/"><span class="full-rbs"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</span><span class="short-rbs"><b>RBS</b></span></a>
     <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
     <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
@@ -32,11 +40,11 @@
         </div>
     </div>
     {% else: %}
-    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left {% block login_main %}{% endblock %} full-page-unround" href="/login/" style="border-radius:0 0 10px 0;">{{ _("Login") }}</a>
+    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left {% block login_main %}{% endblock %} bottom-left-round-10" href="/login/">{{ _("Login") }}</a>
     {% endif %}
     <div class="w3-dropdown-click w3-right">
-        <button onclick="showDropdown('lang_dropdown')" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
-        <div id="lang_dropdown" style="min-width:66.91px;" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity">
+        <button id="lang_dropdown_button" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
+        <div id="lang_dropdown" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity lang-dropdown-content">
             {% for element in ["en", "fr"]: %}
             {% if _("en") != element: %}
             <a href="/?lang={{ element }}" class="w3-bar-item w3-button">{{ element|upper }}</a>
@@ -46,12 +54,12 @@
     </div>
 </nav>
 
-<body style="max-width: 1400px;margin: auto;">
+<body class="rbs-body">
     <div class="w3-container">
         {% block content required %}{% endblock %}
     </div>
     <br>
-    <footer class="w3-container w3-flat-clouds w3-padding-16 full-page-unround" style="border-radius:10px 10px 0 0;">
+    <footer class="w3-container w3-flat-clouds w3-padding-16 top-round-10">
         {% trans %}<i>Created by <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a></i> | <a href="/about/">About</a> | <a href="/post/">Lookup an individual post</a> | <a href="/sitemap/">Sitemap</a> | <a href="/privacy-policy/">Privacy Policy</a> | <a href="/terms-of-service/">Terms of Service</a>{% endtrans %}
         <br>
         <small>{{ _("This website is still in beta, so if you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above.") }}</small>

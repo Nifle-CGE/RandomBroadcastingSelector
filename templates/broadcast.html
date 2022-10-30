@@ -1,5 +1,13 @@
 {% extends "base.html" %}
 
+{% block extra_events %}
+document.getElementById("activatorButton").onclick = function () { enableSubmitButton('submitButton', 'activatorButton') };
+
+document.getElementById("message_input").oninput = function () { updateCharCounter('message_input', 'message_counter') };
+document.getElementById("name_input").oninput = function () { updateCharCounter('name_input', 'name_counter') };
+document.getElementById("code_input").oninput = function () { updateCharCounter('code_input', 'code_counter', 'red', 'green') };
+{% endblock %}
+
 {% block title %}{{ _("Broadcast") }}{% endblock %}
 
 {% block broadcast_main %}w3-teal w3-hover-blue-gray{% endblock %}
@@ -21,7 +29,7 @@
         <li>{{ _("Could the name you chose offend anyone in any way?") }}</li>
     </ul>
 </h4>
-<input type="button" value="{{ _('I have read the text above.') }}" id="activatorButton" onclick="enableSubmitButton('submitButton', 'activatorButton')">
+<input type="button" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black" value="{{ _('I have read the text above.') }}" id="activatorButton">
 <form method="post">
     {{ form.csrf_token }}
     {% if form.csrf_token.errors: %}
@@ -34,23 +42,23 @@
     {% endif %}
 
     {{ form.message.label }}<br>
-    {{ form.message(id="message_input", oninput="updateCharCounter('message_input', 'message_counter')", rows="4", cols="127", style="font-family:monospace;") }} <span id="message_counter">0/512</span><br>
+    {{ form.message(id="message_input", rows="4", cols="127", class="w3-monospace") }} <span id="message_counter">0/512</span><br>
     {% if form.message.errors: %}
     {{ _("The field above had an error:") }} {{ form.message.errors }}<br>
     {% endif %}
 
     {{ form.display_name.label }}<br>
-    {{ form.display_name(id="name_input", oninput="updateCharCounter('name_input', 'name_counter')", size="63", style="font-family:monospace;") }} <span id="name_counter">0/64</span><br>
+    {{ form.display_name(id="name_input", size="63", class="w3-monospace") }} <span id="name_counter">0/64</span><br>
     {% if form.display_name.errors: %}
     {{ _("The field above had an error:") }} {{ form.display_name.errors }}<br>
     {% endif %}
 
     {{ form.brod_code.label }}<br>
-    {{ form.brod_code(id="code_input", oninput="updateCharCounter('code_input', 'code_counter', 'red', 'green')", placeholder=_("For example:") + " Drmhze6E...", size="42", style="font-family:monospace;") }} <span id="code_counter">0/43</span><br>
+    {{ form.brod_code(id="code_input", placeholder=_("For example:") + " Drmhze6E...", size="42", class="w3-monospace") }} <span id="code_counter">0/43</span><br>
     {% if form.brod_code.errors: %}
     {{ _("The field above had an error:") }} {{ form.brod_code.errors }}<br>
     {% endif %}
 
-    {{ form.submit(id="submitButton", style="cursor: not-allowed;", disabled=True) }}
+    {{ form.submit(id="submitButton", class="w3-button w3-light-grey w3-padding-small w3-margin-top w3-round w3-border w3-border-black", disabled=True) }}
 </form>
 {% endblock %}

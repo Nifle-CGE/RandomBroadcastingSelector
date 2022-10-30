@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extra_events %}
+document.getElementById("ban_unban_checkbutton1").onclick = function () { document.getElementById('ban_inputs').hidden = false };
+document.getElementById("ban_unban_checkbutton2").onclick = function () { document.getElementById('ban_inputs').hidden = true };
+{% endblock %}
+
 {% block title %}Admin Panel{% endblock %}
 
 {% block content %}
@@ -23,12 +28,12 @@
     The field above had an error : {{ banunban.user_id.errors }}<br>
     {% endif %}
 
-    {% for subfield in banunban.whatodo: %}
-    {{ subfield(onclick="document.getElementById('ban_inputs').hidden = (this.value !== 'ban');") }}
+    {% for subfield in banunban.banunban: %}
+    {{ subfield(id="ban_unban_checkbutton%s" % loop.index) }}
     {{ subfield.label }}
     {% endfor %}<br>
-    {% if banunban.whatodo.errors: %}
-    The field above had an error : {{ banunban.whatodo.errors }}<br>
+    {% if banunban.banunban.errors: %}
+    The field above had an error : {{ banunban.banunban.errors }}<br>
     {% endif %}
 
     <div id="ban_inputs" hidden>
@@ -45,7 +50,7 @@
     {{ banunban.silenced }}
     {{ banunban.silenced.label }}<br>
 
-    {{ banunban.submit }}
+    {{ banunban.submit(class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black") }}
 </form>
 
 <h3>Pour reviewer une demande de déban et accepter ou refuser</h3>
@@ -84,9 +89,9 @@
     {{ appealview.silenced.label }}<br>
 
     {% if banned_user.id_ != "no_ban_appeal": %}
-    {{ appealview.submit }}
+    {{ appealview.submit(class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black") }}
     {% else %}
-    {{ appealview.submit(style="cursor: not-allowed;", disabled=True) }}
+    {{ appealview.submit(class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black", disabled=(banned_user.id_ == "no_ban_appeal")) }}
     {% endif %}
 </form>
 
@@ -99,12 +104,12 @@
     </label><br>
     <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="import_stats">
-    <input type="submit" value="Submit">
+    <input type="submit" value="Submit" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 <form method="post">
     <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="export_stats">
-    <input type="submit" value="Export">
+    <input type="submit" value="Export" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 
 <h3>Logs</h3>
@@ -115,11 +120,11 @@
     </label><br>
     <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="import_logs">
-    <input type="submit" value="Submit">
+    <input type="submit" value="Submit" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 <form method="post">
     <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="export_logs">
-    <input type="submit" value="Export">
+    <input type="submit" value="Export" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 {% endblock %}

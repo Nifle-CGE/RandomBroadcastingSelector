@@ -38,7 +38,7 @@
 
 <h2>{{ _("Time info") }}</h2>
 {{ _("Uptime:") }} <span id="rem_time_counter">{{ uptime_str }}</span><br>
-<script>
+<script nonce="{{ csp_nonce() }}">
     setInterval(countUp, 1000, "rem_time_counter")
 </script>
 {{ _("Time to get stats:") }} {{ stats["time"]["stats_getting"] * 1000 }} ms<br>

@@ -60,7 +60,7 @@ function enableSubmitButton(submitId, activatorId) {
     button.style.cursor = "default";
     button.disabled = false;
 
-    document.getElementById(activatorId).hidden = true;
+    document.getElementById(activatorId).className += " w3-hide";
 }
 
 function changeReportFormBottomInputLabel(target_label) {
@@ -196,4 +196,13 @@ function countUp(counterId) {
     }
 
     document.getElementById(counterId).innerText = splitted.join(" ")
+}
+
+function toggleModal(modalId) {
+    let modal = document.getElementById(modalId)
+    if (modal.style.display === 'none') {
+        modal.style.display = 'block'
+    } else {
+        modal.style.display = 'none'
+    }
 }

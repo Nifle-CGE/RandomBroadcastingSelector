@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_events %}
+document.getElementById("post_search_submit_btn").onclick = function () { redirectToPost() };
+{% endblock %}
+
 {% block title %}{{ _("Post search") }}{% endblock %}
 
 {% block content %}
@@ -7,5 +11,5 @@
     {{ _("Input the number of the post you want to view.") }}<br>
     <input type="number" id="postIdInput" name="post_id" placeholder="0-{{ max_post_id }}" min="0" max="{{ max_post_id }}">
 </label><br><br>
-<input type="button" value="{{ _('Submit') }}" onclick="redirectToPost()">
+<input id="post_search_submit_btn" type="button" value="{{ _('Submit') }}">
 {% endblock %}

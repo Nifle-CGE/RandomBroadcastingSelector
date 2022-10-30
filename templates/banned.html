@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_events %}
+document.getElementById("reason_input").oninput = function () { updateCharCounter('reason_input', 'reason_counter') };
+{% endblock %}
+
 {% block title %}Ban appeal{% endblock %}
 
 {% block content %}
@@ -15,12 +19,12 @@
     {% endif %}
 
     {{ form.reason.label }}<br>
-    {{ form.reason(id="reason_input", oninput="updateCharCounter('reason_input', 'reason_counter')", rows="4", cols="127", style="font-family:monospace;") }} <span id="reason_counter">0/512</span><br>
+    {{ form.reason(id="reason_input", rows="4", cols="127", class="w3-monospace") }} <span id="reason_counter">0/512</span><br>
     {% if form.reason.errors: %}
     {{ _("The field above had an error:") }} {{ form.reason.errors }}<br>
     {% endif %}
 
-    {{ form.submit }}
+    {{ form.submit(class="w3-button w3-light-grey w3-padding-small w3-margin-top w3-round w3-border w3-border-black") }}
 </form>
 <br>
 <p>
