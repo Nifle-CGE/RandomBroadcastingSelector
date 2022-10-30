@@ -6,26 +6,27 @@
 
 {% block content %}
 <br>
-<div class="w3-container w3-cell w3-round-xlarge w3-flat-clouds w3-center" style="padding: 20px 50px 30px;">
-    <h1 style="text-align:center;">{{ _("Continue with Social Media") }}</h1>
-    <a href="/login/google" class="w3-button w3-block w3-section w3-round-large w3-red w3-hover-orange">
+<div class="w3-container w3-cell w3-round-xlarge w3-flat-clouds w3-center login-div">
+    <h1>{{ _("Continue with Social Media") }}</h1>
+    <a href="/login/google/" class="w3-button w3-block w3-section w3-round-large w3-red w3-hover-orange">
         <i class="fa-brands fa-google fa-fw"></i> {{ _("Continue with %(service)s", service="Google") }}
     </a>
-    <a href="/login/twitter" class="w3-button w3-block w3-section w3-round-large w3-blue w3-hover-cyan">
+    <a href="/login/twitter/" class="w3-button w3-block w3-section w3-round-large w3-blue w3-hover-cyan">
         <i class="fa-brands fa-twitter fa-fw"></i> {{ _("Continue with %(service)s", service="Twitter") }}
     </a>
-    <a href="/login/discord" class="w3-button w3-block w3-section w3-round-large w3-hover-deep-purple w3-text-white w3-hover-text-black" style="background-color:#5865F2;">
+    <a href="/login/discord/" class="w3-button w3-block w3-section w3-round-large discord-blurple w3-hover-deep-purple w3-hover-text-black">
         <i class="fa-brands fa-discord fa-fw"></i> {{ _("Continue with %(service)s", service="Discord") }}
     </a>
-    <a href="/login/twitch" class="w3-hide w3-button w3-block w3-section w3-round-large w3-hover-purple w3-text-white w3-hover-text-black" style="background-color:#a970ff;">
-        <i class="fa-brands fa-twitch fa-fw"></i> {{ _("Continue with %(service)s", service="Twitch") }}
-    </a>
-    <a href="/login/github" class="w3-button w3-block w3-section w3-round-large w3-black w3-hover-grey">
+    <a href="/login/github/" class="w3-button w3-block w3-section w3-round-large w3-black w3-hover-grey">
         <i class="fa-brands fa-github fa-fw"></i> {{ _("Continue with %(service)s", service="Github") }}
     </a>
-    <a href="/login/facebook" class="w3-hide w3-button w3-block w3-section w3-round-large w3-indigo w3-hover-blue">
+
+    <a href="/login/twitch/" class="w3-hide w3-button w3-block w3-section w3-round-large twitch-purple w3-hover-purple w3-hover-text-black">
+        <i class="fa-brands fa-twitch fa-fw"></i> {{ _("Continue with %(service)s", service="Twitch") }}
+    </a>
+    <a href="/login/facebook/" class="w3-hide w3-button w3-block w3-section w3-round-large w3-indigo w3-hover-blue">
         <i class="fa-brands fa-facebook fa-fw"></i> {{ _("Continue with %(service)s", service="Facebook") }}
     </a>
-    <small style="text-align:center;">{% trans %}By pressing "Continue" you agree to the <a href="/privacy-policy/">Privacy Policy</a> and <a href="/terms-of-service/">Terms of Service</a> of this website.{% endtrans %}</small>
+    <small>{% trans %}By pressing "Continue" you agree to the <a href="/privacy-policy/">Privacy Policy</a> and <a href="/terms-of-service/">Terms of Service</a> of this website.{% endtrans %}</small>
 </div>
 {% endblock %}

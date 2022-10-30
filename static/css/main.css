@@ -22,21 +22,15 @@ footer {
 .flex-center {
     display: flex;
     justify-content: center;
+    align-items: center;
 }
 
-.spot-background {
-    background-image: url('/static/img/spotlights.jpg');
-    background-position-y: 25%;
-    background-repeat: no-repeat;
-    background-size: cover;
-}
-
+/* When resolution <= 800px, hide full text and show short text */
 .short-rbs {
     display: none;
 }
 
-/* When resolution <= 1000px, hide full text and show short text */
-@media (max-width: 1000px) {
+@media (max-width: 800px) {
     .short-rbs {
         display: inline-block;
     }
@@ -47,8 +41,65 @@ footer {
 }
 
 /* Quand res <= 1400px, désarrondir les angles */
+.bottom-round-10 {
+    overflow: visible;
+    border-radius: 0 0 10px 10px;
+}
+
+.bottom-left-round-10 {
+    border-radius: 0 0 10px 0;
+}
+
+.top-round-10 {
+    border-radius: 10px 10px 0 0;
+}
+
 @media (max-width: 1400px) {
-    .full-page-unround {
+
+    .bottom-round-10,
+    .bottom-left-round-10,
+    .top-round-10 {
         border-radius: 0;
     }
+}
+
+/* :not(#fakeId) to override w3-bar and w3-bar-item */
+.rbs-logo:not(#fakeId) {
+    padding: 0;
+    height: 54.5px;
+}
+
+.lang-dropdown-content {
+    min-width: 66.91px;
+}
+
+.rbs-body {
+    max-width: 1400px;
+    margin: auto;
+}
+
+.login-div {
+    padding: 20px 50px 30px;
+}
+
+.twitch-purple {
+    background-color: #a970ff;
+    color: white;
+}
+
+.discord-blurple {
+    background-color: #5865F2;
+    color: white;
+}
+
+.vote-arrow {
+    padding: 0 4px;
+}
+
+.rbs-message {
+    padding: 0 16px 16px 16px;
+}
+
+.close-logo {
+    padding: 0 9px;
 }
