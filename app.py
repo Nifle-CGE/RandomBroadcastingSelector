@@ -116,14 +116,17 @@ oauth = OAuth(app)
 
 # Talisman (safe stuff)
 csp = {
-    "default-src": "none",
-    "object-src": "none",
+    "default-src": "'none'",
+    "object-src": "'none'",
+    "frame-ancestors": "'none'",
     "script-src": "'self'",
     "style-src": "'self'",
+    "form-action": "'self'",
     "media-src": "'self'",
     "frame-src": "'self'",
     "base-uri": "'self'",
     "connect-src": "'self'",
+    "report-uri": "https://rbs.azurewebsites.net/report-csp-violations",
     "font-src": [
         "'self'",
         "data:"
@@ -132,7 +135,7 @@ csp = {
         "'self'",
         "img.shields.io"
     ]
-} # TODO : mettre report-uri
+}
 talisman = Talisman(
     app,
     content_security_policy=csp,
@@ -1144,6 +1147,22 @@ def internal_server_error(e):
                             err_img_src="/static/img/this is fine.gif",
                             err_img_alt="This is fine dog GIF",
                             err_msg=e), 500
+
+# CSP reports handling
+@app.route('/report-csp-violations', methods=['POST'])
+def report():
+    content = request.get_json(force=True)
+    app.logger.warning("CSP violation occurred")
+    requests.get(config["telegram_send_url"] + "csp+violation+occured")
+
+    message = Mail(
+        from_email="random.broadcasting.selector@gmail.com",
+        to_emails="pub@elfin.fr",
+        subject="RandomBroadcastingSelector : CSP violation.",
+        html_content=json.dumps(content, indent=4, sort_keys=True)
+    )
+    send_mail(message)
+    return 204
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=testing)
