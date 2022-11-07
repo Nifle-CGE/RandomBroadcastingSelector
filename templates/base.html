@@ -14,7 +14,7 @@
     <script nonce="{{ csp_nonce() }}">
         // when page loaded add every eventlistener like onclick or oninput
         document.addEventListener("DOMContentLoaded", function () {
-            document.getElementById("lang_dropdown_button").onclick = function () { showDropdown('lang_dropdown') }
+            document.getElementById("lang_dropdown_button").onclick = function () { showDropdown('lang_dropdown') };
 
             {% block extra_events %} {% endblock %}
         });
@@ -30,6 +30,11 @@
     <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
     {% if current_user.is_broadcaster: %}
     <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
+    {% elif current_user.is_preselected: %}
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block reselect_main %}{% endblock %}" href="/reselect/">{{ _("Get Reselected") }}</a>
+    {% endif %}
+    {% if current_user.is_admin: %}
+    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block admin_panel_main %}{% endblock %}" href="/super-secret-admin-panel/">{{ _("Admin Panel") }}</a>
     {% endif %}
 
     {% if current_user.is_authenticated: %}

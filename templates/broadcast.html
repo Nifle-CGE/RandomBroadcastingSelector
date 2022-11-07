@@ -5,7 +5,6 @@ document.getElementById("activatorButton").onclick = function () { enableSubmitB
 
 document.getElementById("message_input").oninput = function () { updateCharCounter('message_input', 'message_counter') };
 document.getElementById("name_input").oninput = function () { updateCharCounter('name_input', 'name_counter') };
-document.getElementById("code_input").oninput = function () { updateCharCounter('code_input', 'code_counter', 'red', 'green') };
 {% endblock %}
 
 {% block title %}{{ _("Broadcast") }}{% endblock %}
@@ -51,12 +50,6 @@ document.getElementById("code_input").oninput = function () { updateCharCounter(
     {{ form.display_name(id="name_input", size="63", class="w3-monospace") }} <span id="name_counter">0/64</span><br>
     {% if form.display_name.errors: %}
     {{ _("The field above had an error:") }} {{ form.display_name.errors }}<br>
-    {% endif %}
-
-    {{ form.brod_code.label }}<br>
-    {{ form.brod_code(id="code_input", placeholder=_("For example:") + " Drmhze6E...", size="42", class="w3-monospace") }} <span id="code_counter">0/43</span><br>
-    {% if form.brod_code.errors: %}
-    {{ _("The field above had an error:") }} {{ form.brod_code.errors }}<br>
     {% endif %}
 
     {{ form.submit(id="submitButton", class="w3-button w3-light-grey w3-padding-small w3-margin-top w3-round w3-border w3-border-black", disabled=True) }}

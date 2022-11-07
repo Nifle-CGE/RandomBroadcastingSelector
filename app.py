@@ -4,11 +4,10 @@ import secrets
 import json
 import os
 import time
-import random
-import copy
 import math
 import re
 import logging
+import functools
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
@@ -19,7 +18,7 @@ from flask_wtf import FlaskForm
 from wtforms.fields import StringField, TextAreaField, HiddenField, RadioField, SubmitField, BooleanField
 from wtforms import validators
 
-from flask_babel import Babel, format_date, format_number, _, ngettext, lazy_gettext, lazy_ngettext, force_locale as babel_force_locale
+from flask_babel import Babel, _, ngettext, lazy_gettext, lazy_ngettext, format_date, force_locale as babel_force_locale
 
 from flask_talisman import Talisman
 
@@ -54,16 +53,20 @@ app.logger.info("Lancement de l'application.")
 
 # testing
 testing = os.path.isdir("tests")
-brod_change_threshold = 86400
+brod_change_threshold = 24 * 60 * 60
 if testing:
-    from tests.ip_getter import get_ip
-    app.config["SERVER_NAME"] = get_ip() + ":5000"
-    
     app.logger.level = logging.DEBUG
     app.logger.debug("Mode test activé.")
+    
+    from tests.ip_getter import get_ip
+    app.config["SERVER_NAME"] = get_ip() + ":5000"
+
+    with open(f"./tests/config.json", "r", encoding="utf-8") as json_file: # Config setup
+        config = json.load(json_file)
 else:
     app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 
+    config = _stuffimporter.StuffImporter.get_config() # Config setup
 
 # User session management setup
 login_manager = LoginManager(app)
@@ -77,9 +80,6 @@ def anon_user_getter():
     return anon_user
 
 login_manager.anonymous_user = anon_user_getter
-
-# Config setup
-config = _stuffimporter.StuffImporter.get_config()
 
 # Deepl translation setup
 translator = deepl.Translator(config["deepl_auth_key"])
@@ -96,9 +96,11 @@ cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
 u_cont = db.get_container_client("Web RBS Users")
 p_cont = db.get_container_client("Web RBS Posts")
+stats_cont = db.get_container_client("Web RBS Stats")
+
 app.logger.debug("Base de donnée mise en place.")
 
-stuffimporter = _stuffimporter.StuffImporter(u_cont, _, ngettext)
+stuffimporter = _stuffimporter.StuffImporter(stats_cont, _, ngettext)
 
 # Stats setup
 global stats
@@ -154,9 +156,18 @@ def load_user(user_id, active=True):
     if not user.uimport(u_cont, user_id):
         return None
 
-    if user.id_ == stats["broadcast"]["author"]:
+    # Check special roles
+    if user_id in stats["roles"]["broadcaster"]:
         user.is_broadcaster = True
+    elif user_id in stats["roles"]["preselecteds"]:
+        user.is_preselected = True
 
+    if user_id in stats["roles"]["admin"]:
+        user.is_admin = True
+    elif user_id in stats["roles"]["moderators"]:
+        user.is_moderator = True
+
+    # Used for stats
     if active:
         user.last_active = time.time()
         user.uexport(u_cont)
@@ -179,10 +190,37 @@ def get_lang():
 
 # Useful defs
 def send_mail(mail):
-    if not testing:
-        sg_client.send(mail)
-    else:
+    if testing:
         print(f"Mail envoyé avec le sujet \"{mail.subject}\"")
+    else:
+        sg_client.send(mail)
+
+def role_required(role): # custom view decorator
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if not request or app.config.get("LOGIN_DISABLED"):
+                pass
+            elif current_user.get_id() not in stats["roles"][role]:
+                if role == "admin":
+                    app.logger.warning(f"{current_user.get_id()} a trouvé le lien du panneau admin.")
+                return abort(403)
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+def get_rem_secs():
+    if stats["broadcast"]["content"]:
+        rem_secs = stats["broadcast"]["_ts"] + brod_change_threshold - time.time()
+    else:
+        rem_secs = stats["time"]["last_broadcaster"] + brod_change_threshold - time.time()
+
+    return rem_secs
+
+# Custom template filters
+@app.template_filter("format_date")
+def template_format_date(ts, format=None):
+    return format_date(datetime.datetime.utcfromtimestamp(ts), format=format)
 
 @app.before_request
 def verify_broadcast():
@@ -194,50 +232,35 @@ def verify_broadcast():
     else:
         if not stats["broadcast"]["content"]:
             if stats["time"]["last_broadcaster"] + brod_change_threshold > time.time():
-                end_msg = ""
-                if not stats["broadcast"]["warning"]["12h"] and stats["time"]["last_broadcaster"] + 43200 < time.time():
-                    brod = load_user(stats["broadcast"]["author"], active=False)
-                
-                    with app.app_context(), babel_force_locale(brod.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=brod.email,
-                            subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
-                            html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=12)
-                        )
-                    send_mail(message)
-
-                    stats["broadcast"]["warning"]["12h"] = 1
-                    stuffimporter.set_stats(stats)
-
-                    end_msg = ", rappel des 12h envoyé"
-                elif not stats["broadcast"]["warning"]["1h"] and stats["time"]["last_broadcaster"] + 82800 < time.time():
-                    brod = load_user(stats["broadcast"]["author"], active=False)
-                
-                    with app.app_context(), babel_force_locale(brod.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=brod.email,
-                            subject=_("RandomBroadcastingSelector: Just a reminder that you are the one."),
-                            html_content=render_template("mails/reminder.html", server_name=app.config["SERVER_NAME"], brod_code=stats["codes"]["broadcast"], rem_hours=1)
-                        )
-                    send_mail(message)
-
-                    stats["broadcast"]["warning"]["1h"] = 1
-                    stuffimporter.set_stats(stats)
-                    
-                    end_msg = ", rappel des 1h envoyé"
-
-                app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion{end_msg}.")
+                app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion.")
                 return
-            else:
+            else: # broadcaster didn't make his broadcast in time
                 skip_save = True
-        elif stats["time"]["last_broadcast"] + brod_change_threshold > time.time():
+
+                f_brod = load_user(stats["roles"]["broadcaster"][0], active=False)
+
+                stats["roles"]["preselecteds"][f_brod.get_id()] = time.time()
+
+                # Send former broadcaster the missed mail and setup the reselection proposal
+                with app.app_context(), babel_force_locale(f_brod.lang):
+                    message = Mail(
+                        from_email="random.broadcasting.selector@gmail.com",
+                        to_emails=f_brod.email,
+                        subject=_("RandomBroadcastingSelector: You missed your opportunity but don't worry."),
+                        html_content=render_template("mails/missed.html", server_name=app.config["SERVER_NAME"])
+                    )
+                send_mail(message)
+
+                # check if some of the preselecteds have timed out
+                for key, val in stats["roles"]["preselecteds"].items():
+                    if val + 2592000 < time.time(): # if its been a month remove them
+                        stats["roles"]["preseleteds"].pop(key)
+
+        elif stats["broadcast"]["_ts"] + brod_change_threshold > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
             return
 
-    if not skip_save:
-        # Save current post
+    if not skip_save: # Save current post
         with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
             new_post = json.load(sample_file)
 
@@ -245,7 +268,6 @@ def verify_broadcast():
         new_post["content"] = stats["broadcast"]["content"]
         new_post["author"] = stats["broadcast"]["author"]
         new_post["author_name"] = stats["broadcast"]["author_name"]
-        new_post["date"] = stats["broadcast"]["date"]
         new_post["lang"] = stats["broadcast"]["lang"]
         new_post["upvotes"] = stats["broadcast"]["upvotes"]
         new_post["downvotes"] = stats["broadcast"]["downvotes"]
@@ -256,35 +278,31 @@ def verify_broadcast():
         p_cont.create_item(new_post)
 
         # Update stats in relation of the current post
-        stats["broadcasts"]["msgs_sent"] += 1
+        stats["broadcasts"]["msgs_sent"]["total"] += 1
         try:
-            stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] += 1
+            stats["broadcasts"]["msgs_sent"][new_post["lang"]] += 1
         except KeyError:
-            stats["broadcasts"]["langs_msgs_sent"][new_post["lang"]] = 1
+            stats["broadcasts"]["msgs_sent"][new_post["lang"]] = 1
 
         stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"])) # add number of words
         stats["broadcasts"]["characters_sent"] += len(new_post["content"]) # add number of chars
     
     # Select another broadcaster
-    if stats["broadcast"]["futur"]["broadcasters"]:
-        stats["broadcast"]["author"] = stats["broadcast"]["futur"]["broadcasters"].pop(0)
+    if stats["roles"]["futur_broadcasters"]:
+        stats["roles"]["broadcaster"] = [stats["roles"]["futur_broadcasters"].pop(0)]
     else:
-        stats["broadcast"]["author"] = random.choice(stuffimporter.pot_brods(stats["broadcast"]["author"]))
+        stats["roles"]["broadcaster"] = [stuffimporter.select_random_broadcaster(u_cont, stats["roles"]["broadcaster"][0])]
+    stats["broadcast"]["author"] = ""
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
-    stats["broadcast"]["date"] = ""
+    stats["broadcast"]["trads"] = {}
     stats["broadcast"]["upvotes"] = 0
     stats["broadcast"]["downvotes"] = 0
     stats["broadcast"]["reports"] = 0
-    stats["broadcast"]["warning"]["12h"] = 0
-    stats["broadcast"]["warning"]["1h"] = 0
 
     stats["time"]["last_broadcaster"] = time.time()
 
-    code = secrets.token_urlsafe(32)
-    stats["codes"]["broadcast"] = code
-
-    brod = load_user(stats["broadcast"]["author"], active=False)
+    brod = load_user(stats["roles"]["broadcaster"][0], active=False)
     
     # Send mail to the new broadcaster
     with app.app_context(), babel_force_locale(brod.lang):
@@ -292,18 +310,18 @@ def verify_broadcast():
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=brod.email,
             subject=_("RandomBroadcastingSelector: You are the one."),
-            html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"], brod_code=code)
+            html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"])
         )
     send_mail(message)
 
     stuffimporter.set_stats(stats)
 
-    app.logger.info(f"Nouveau diffuseur {brod.id_} a été sélectionné.")
+    app.logger.info(f"Nouveau diffuseur {brod.get_id()} a été sélectionné.")
     return
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
     if lang not in LANGUAGE_CODES:
-        lang = "en"
+        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     # Test to see if the user exists in the db
     user = load_user(id_)
@@ -326,16 +344,16 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
 
         user = new_user
 
-        app.logger.info(f"L'utilisateur {user.id_} a été créé.")
+        app.logger.info(f"L'utilisateur {user.get_id()} a été créé.")
 
         return_val = render_template("message.html", message=_("You have successfully created your account, if you are selected, you will receive an email on %(mail)s so check your emails regularly.", mail=user.email))
 
     if user.banned: # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
-        stats["codes"]["ban_appeal"][user.id_] = code
+        stats["roles"]["ban_appealers"][user.get_id()] = code
         stuffimporter.set_stats(stats)
 
-        return redirect(url_for("ban_appeal", user_id=user.id_, appeal_code=code))
+        return redirect(url_for("ban_appeal", user_id=user.get_id(), appeal_code=code))
 
     # Begin user session by logging the user in
     user.is_authenticated = True
@@ -351,10 +369,10 @@ def index():
     
     if form.validate_on_submit(): # Report callback
         if not stats["broadcast"]["content"]:
-            app.logger.warning(f"{current_user.id_} a essayé de signaler un post alors qu'il n'y en a pas.")
+            app.logger.warning(f"{current_user.get_id()} a essayé de signaler un post alors qu'il n'y en a pas.")
             return render_template("message.html", message=_("No post is live right now so you can't report one."))
         elif current_user.report_post_id == stats["broadcast"]["id"]:
-            app.logger.debug(f"{current_user.id_} a essayé de resignaler le post.")
+            app.logger.debug(f"{current_user.get_id()} a essayé de resignaler le post.")
             return render_template("message.html", message=_("You have already reported this post so you can't report it again."))
 
         current_user.report_post_id = stats["broadcast"]["id"]
@@ -365,7 +383,7 @@ def index():
 
         stats["broadcast"]["reports"] += 1
 
-        if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2):
+        if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2): # ban condition
             brod = load_user(stats["broadcast"]["author"], active=False)
 
             brod.banned = 1
@@ -418,19 +436,15 @@ def index():
             stats["broadcast"]["author_name"] = "[deleted]"
             stats["broadcast"]["content"] = "[deleted]"
 
-            app.logger.info(f"Le diffuseur {brod.id_} a été banni.")
+            app.logger.info(f"Le diffuseur {brod.get_id()} a été banni.")
 
         stuffimporter.set_stats(stats)
 
         return render_template("message.html", message=_("Your report has been saved."))
 
-    if stats["broadcast"]["content"]:
-        rem_secs = stats["time"]["last_broadcast"] + brod_change_threshold - time.time()
-    else:
-        rem_secs = stats["time"]["last_broadcaster"] + brod_change_threshold - time.time()
-    rem_time = stuffimporter.seconds_to_str(rem_secs)
+    rem_time = stuffimporter.seconds_to_str(get_rem_secs())
 
-    return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time, random=random)
+    return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time)
 
 # All the login stuff
 @app.route("/login/")
@@ -466,8 +480,6 @@ def google_login_callback():
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = response_json["locale"]
-    if lang not in LANGUAGE_CODES:
-        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -505,8 +517,6 @@ def twitter_login_callback():
     settings_response = oauth.twitter.get("account/settings.json")
     settings_response_json = settings_response.json()
     lang = settings_response_json.get("language")
-    if lang not in LANGUAGE_CODES:
-        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -540,7 +550,7 @@ def github_login_callback():
     unique_id = "gthb_" + str(response_json["id"])
     users_name = response_json["name"]
     users_email = response_json["email"]
-    lang = request.accept_languages.best_match(LANGUAGE_CODES)
+    lang = ""
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -580,8 +590,6 @@ def discord_login_callback():
     users_name = response_json["username"]
     users_email = response_json["email"]
     lang = response_json["locale"]
-    if lang not in LANGUAGE_CODES:
-        lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -620,7 +628,7 @@ def twitch_login_callback():
     if not users_email:
         return _("User email not available or not verified by %(service)s.", service="Twitch"), 400
 
-    lang = request.accept_languages.best_match(LANGUAGE_CODES)
+    lang = ""
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -672,7 +680,7 @@ def history(page):
     except StopIteration:
         post_list = []
     
-    return render_template("history.html", post_list=reversed(post_list), hist_page=int(page), random=random)
+    return render_template("history.html", post_list=reversed(post_list), hist_page=int(page))
 
 @app.route("/post/")
 def specific_post_search():
@@ -686,14 +694,12 @@ def specific_post(id):
     except StopIteration:
         abort(404)
 
-    return render_template("post.html", post=post, random=random)
+    return render_template("post.html", post=post)
 
 @app.route("/statistics/")
 def statistics():
     if stats["time"]["stats_last_edited"] + 600 < time.time():
-        start_time = time.time()
-
-        stats["users"]["seen_msg"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['time']['last_broadcast']}", enable_cross_partition_query=True).next()
+        stats["users"]["seen_msg"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['broadcast']['_ts']}", enable_cross_partition_query=True).next()
         stats["users"]["last_active"]["1h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
         stats["users"]["last_active"]["24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
         stats["users"]["last_active"]["week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
@@ -704,48 +710,31 @@ def statistics():
         stats["top_posts"]["5_most_unpop"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
         stats["time"]["stats_last_edited"] = time.time()
-        stats["time"]["stats_getting"] = time.time() - start_time
+
+        stuffimporter.set_stats(stats)
 
         app.logger.debug("Les stats ont étés mis a jour")
 
-    stuffimporter.set_stats(stats)
-
     uptime_str = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
+    rem_time = stuffimporter.seconds_to_str(get_rem_secs())
 
-    return render_template("stats.html", stats=stats, uptime_str=uptime_str, lang=get_lang(), random=random)
-
-@app.route("/stats.json")
-def stats_file():
-    stats_file = copy.deepcopy(stats)
-    stats_file.pop("codes")
-    stats_file["broadcast"].pop("author")
-
-    for i in stats["top_posts"]:
-        for j in range(len(stats["top_posts"][i])):
-            for k in stats["top_posts"][i][j]:
-                if k.startswith("_") or k == "author":
-                    stats_file["top_posts"][i][j].pop(k)
-
-    app.logger.debug("Fichier stats exporté.")
-    return stats_file
+    return render_template("stats.html", stats=stats, uptime_str=uptime_str, rem_time=rem_time, lang=get_lang())
 
 @app.route("/broadcast/", methods=["GET", "POST"])
 @login_required
+@role_required("broadcaster")
 def broadcast():
-    if current_user.id_ != stats["broadcast"]["author"]:
-        return render_template("message.html", message=_("You have to be broadcaster to have access to this page."))
-    elif stats["broadcast"]["content"]:
+    if stats["broadcast"]["content"]:
         return render_template("message.html", message=_("You have already made your broadcast."))
 
     form = BroadcastForm()
     
     if form.validate_on_submit():
-        stats["codes"]["broadcast"] = ""
-
         stats["broadcast"]["id"] = str(int(stats["broadcast"]["id"]) + 1)
         stats["broadcast"]["content"] = form.message.data
+        stats["broadcast"]["author"] = stats["roles"]["broadcaster"][0]
         stats["broadcast"]["author_name"] = form.display_name.data
-        stats["broadcast"]["date"] = str(datetime.datetime.today().date())
+        stats["broadcast"]["_ts"] = time.time()
     
         test = translator.translate_text(form.message.data, target_lang="EN-US")
         stats["broadcast"]["lang"] = test.detected_source_lang.split("-")[0].lower()
@@ -754,7 +743,7 @@ def broadcast():
             lang_code = language.code.split("-")[0]
             stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(form.message.data, target_lang=language.code).text
         
-        stats["time"]["last_broadcast"] = time.time()
+        stats["broadcast"]["_ts"] = time.time()
     
         stuffimporter.set_stats(stats)
     
@@ -765,9 +754,10 @@ def broadcast():
 
 @app.route("/ban-appeal/", methods=["GET", "POST"])
 def ban_appeal():
-    if request.args.get("user_id") not in stats["codes"]["ban_appeal"].keys():
+    banned_id = request.args.get("user_id")
+    if banned_id not in stats["roles"]["ban_appealers"].keys():
         return render_template("message.html", message=_("You have to be banned to have access to this page."))
-    elif stats["codes"]["ban_appeal"][request.args.get("user_id")] != request.args.get("appeal_code"):
+    elif stats["roles"]["ban_appealers"][banned_id] != request.args.get("appeal_code"):
         app.logger.info(f"{request.args.get['user_id']} a essayé de faire la malin en changeant le html des hidden inputs sur la page de demande de débannissement.")
         return render_template("message.html", message=_("Hey smartass, quit trying."))
 
@@ -782,18 +772,40 @@ def ban_appeal():
         user.ban_appeal = form.reason.data
         user.uexport(u_cont)
 
-        stats["codes"]["ban_appeal"].pop(request.args.get("user_id"))
+        stats["roles"]["ban_appealers"].pop(banned_id)
         stuffimporter.set_stats(stats)
 
         requests.get(config["telegram_send_url"] + "ban+appeal+received")
         app.logger.info("Une demande de débannissment a été enregistrée.")
         return render_template("message.html", message=_("Your ban appeal has been saved, it will be reviewed shortly."))
 
-    return render_template("banned.html", form=form, user_id=request.args.get("user_id"))
+    return render_template("banned.html", form=form, user_id=banned_id)
 
 @app.route("/about/")
 def about():
     return render_template("about.html")
+
+@app.route("/reselect/", methods=["GET", "POST"])
+@login_required
+@role_required("preselecteds")
+def reselect():
+    opti_next_sel = (brod_change_threshold * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
+    pessi_next_sel = (brod_change_threshold * 1.99 * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
+
+    opti_date_str = format_date(datetime.datetime.utcfromtimestamp(opti_next_sel), format="full")
+    pessi_date_str = format_date(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="full")
+
+    if request.method == "POST":
+        user_id = current_user.get_id()
+        if request.form.get("yes"):
+            stats["roles"]["futur_broadcasters"].append(user_id)
+            
+        stats["roles"]["preselecteds"].pop(user_id)
+        stuffimporter.set_stats(stats)
+
+        return render_template("message.html", message=_("You have been reselected successfully.<br>Watch your inbox between %(opti)s and %(pessi)s.", opti=opti_date_str, pessi=pessi_date_str))
+
+    return render_template("reselect.html", opti_date=opti_date_str, pessi_date=pessi_date_str)
 
 # Callbacks
 @app.route("/vote/", methods=["POST"])
@@ -866,7 +878,7 @@ class StopIfBlah(object):
 class BroadcastForm(FlaskForm):
     user_id = HiddenField(validators=[
         validators.InputRequired(),
-        validators.AnyOf([stats["broadcast"]["author"]])
+        validators.AnyOf([stats["roles"]["broadcaster"][0]])
     ])
 
     message = TextAreaField(lazy_gettext("Enter the message you want to send to this websites users."), validators=[
@@ -880,18 +892,12 @@ class BroadcastForm(FlaskForm):
         validators.Length(0, 64)
     ])
 
-    brod_code = StringField(lazy_gettext("Verification code from the email you received:"), validators=[
-        validators.InputRequired(),
-        validators.Length(43, 43),
-        validators.AnyOf([stats["codes"]["broadcast"]], message=lazy_gettext("You have to input the code you received in the mail we sent to you."))
-    ])
-
     submit = SubmitField(lazy_gettext("Submit"))
 
 class BanAppealForm(FlaskForm):
     user_id = HiddenField(validators=[
         validators.InputRequired(),
-        validators.AnyOf(stats["codes"]["ban_appeal"].keys(), message=lazy_gettext("You have to be banned to submit this form."))
+        validators.AnyOf(stats["roles"]["ban_appealers"].keys(), message=lazy_gettext("You have to be banned to submit this form."))
     ])
 
     reason = TextAreaField("Enter why you should be unbanned.", validators=[
@@ -922,8 +928,6 @@ class ReportForm(FlaskForm):
     submit = SubmitField(lazy_gettext("Submit"))
 
 class BanUnbanForm(FlaskForm):
-    verif_code = HiddenField()
-
     user_id = StringField("Id de la personne concernée : ", validators=[
         validators.InputRequired()
     ])
@@ -952,8 +956,6 @@ class BanUnbanForm(FlaskForm):
     submit = SubmitField()
 
 class AppealViewForm(FlaskForm):
-    verif_code = HiddenField()
-
     user_id = HiddenField()
 
     whatodo = RadioField(choices=[
@@ -992,13 +994,11 @@ def ping():
 
 # Admin
 @app.route("/super-secret-admin-panel/", methods=["GET", "POST"])
+@login_required
+@role_required("admin")
 def admin_panel():
     global stats
-    identifier = current_user.id_ if current_user.is_authenticated else request.remote_addr
-
-    if request.args.get("touma") != "toumatoumatoutoumatoumateo" or request.args.get("pouma") != "poumapoumatoupoumapoumateo" :
-        app.logger.warning(f"{identifier} est arrivé sur l'admin panel.")
-        abort(404)
+    identifier = current_user.get_id() if current_user.is_authenticated else request.remote_addr
 
     try:
         banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
@@ -1011,10 +1011,6 @@ def admin_panel():
 
     if request.method == "POST":
         if banunban.submit.data and banunban.verify():
-            if banunban.verif_code.data != stats["codes"]["admin_action"]:
-                app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
-                abort(404)
-
             user = load_user(banunban.user_id.data, active=False)
             if banunban.banunban.data == "ban":
                 if user.is_broadcaster:
@@ -1040,7 +1036,7 @@ def admin_panel():
                 stats["users"]["num"] -= 1
                 stats["users"]["banned"] += 1
 
-                app.logger.info(f"{identifier} a banni {user.id_} avec succès.")
+                app.logger.info(f"{identifier} a banni {user.get_id()} avec succès.")
             else:
                 user = load_user(banunban.user_id.data, active=False)
                 user.banned = 0
@@ -1058,16 +1054,12 @@ def admin_panel():
                 stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
 
-                app.logger.info(f"{identifier} a débanni {user.id_} avec succès.")
+                app.logger.info(f"{identifier} a débanni {user.get_id()} avec succès.")
 
             user.uexport(u_cont)
             stuffimporter.set_stats(stats)
             
         elif appealview.submit.data and appealview.verify():
-            if appealview.verif_code.data != stats["codes"]["admin_action"]:
-                app.logger.warning(f"{identifier} a essayé de faire une requête post sur l'admin panel.")
-                abort(404)
-
             user = load_user(appealview.user_id.data, active=False)
             if appealview.whatodo.data == "accepté":
                 user.banned = 0
@@ -1086,7 +1078,7 @@ def admin_panel():
                 stats["users"]["banned"] -= 1
 
                 stuffimporter.set_stats(stats)
-                app.logger.info(f"{identifier} a accepté la demande de débannissement de {user.id_} avec succès.")
+                app.logger.info(f"{identifier} a accepté la demande de débannissement de {user.get_id()} avec succès.")
             else:
                 user = load_user(appealview.user_id.data, active=False)
                 user.ban_appeal = ""
@@ -1107,7 +1099,6 @@ def admin_panel():
             filename = list(request.files.to_dict().keys())[0]
             stats = json.load(request.files[filename].stream)
             stuffimporter.set_stats(stats)
-            request.files[filename].stream.close()
         elif request.form["action"] == "export_stats":
             return stats
         elif request.form["action"] == "import_logs":
@@ -1120,37 +1111,51 @@ def admin_panel():
 
         return render_template("message.html", message="Succès de l'action " + request.form["action"])
 
-    code = secrets.token_urlsafe(32)
-    stats["codes"]["admin_action"] = secrets.token_urlsafe(32)
     stuffimporter.set_stats(stats)
 
     app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
-    return render_template("admin_panel.html", verif_code=code, banunban=banunban, appealview=appealview, banned_user=banned_user)
+    return render_template("admin_panel.html", banunban=banunban, appealview=appealview, banned_user=banned_user)
 
 # Error handling
 @app.errorhandler(401)
-def method_not_allowed(e):
-    return render_template("error.html",
-                            err_title="401 Unauthorized",
-                            err_img_src="/static/img/you shall not pass.gif",
-                            err_img_alt="Gandalf you shall not pass GIF",
-                            err_msg=e), 401
+def unauthorized(e):
+    return render_template(
+        "error.html",
+        err_title="401 Unauthorized",
+        err_img_src="/static/img/you shall not pass.gif",
+        err_img_alt="Gandalf you shall not pass GIF",
+        err_msg=e
+    ), 401
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template(
+        "error.html",
+        err_title="403 Forbidden",
+        err_img_src="/static/img/you shall not pass.gif",
+        err_img_alt="Gandalf you shall not pass GIF",
+        err_msg=e
+    ), 403
 
 @app.errorhandler(404)
 def not_found(e):
-    return render_template("error.html",
-                            err_title="404 Not Found",
-                            err_img_src="/static/img/confused travolta.gif",
-                            err_img_alt="Confused Travolta GIF",
-                            err_msg=e), 404
+    return render_template(
+        "error.html",
+        err_title="404 Not Found",
+        err_img_src="/static/img/confused travolta.gif",
+        err_img_alt="Confused Travolta GIF",
+        err_msg=e
+    ), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template("error.html",
-                            err_title="500 Internal Server Error",
-                            err_img_src="/static/img/this is fine.gif",
-                            err_img_alt="This is fine dog GIF",
-                            err_msg=e), 500
+    return render_template(
+        "error.html",
+        err_title="500 Internal Server Error",
+        err_img_src="/static/img/this is fine.gif",
+        err_img_alt="This is fine dog GIF",
+        err_msg=e
+    ), 500
 
 # CSP reports handling
 @app.route('/report-csp-violations', methods=['POST'])

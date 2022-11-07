@@ -1,0 +1,11 @@
+<body style="font-family: Verdana, sans-serif;">
+    <h1><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</h1>
+    <h3>
+        {{ _("Hey, if you receive this email it means that you were selected but took too long to see the previous mail.") }}<br>
+        {{ _("Don't be sad because if you saw this email within a month of receiving the previous email, you can be put in the waiting line for being broadcaster.") }}<br>
+        {% trans server_name=server_name %}You can click <a href="https://{{ server_name }}/login/">here</a> to login and then click on the Get Reselected tab on the navigation bar and select wether you want to be reselected or not.{% endtrans %}<br>
+        {{ _("You will also know when you will be reselected to put a reminder on the day.") }}
+    </h3>
+    <p>{{ _("If you think this is a scam, then all right, don't click on the link, just go on the website by searching for it on the web and you'll see.") }}</p>
+    <small>{{ _("If you spot any spelling mistakes, you can respond to this email and I'll correct them.") }}</small>
+</body>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("Get Reselected") }}{% endblock %}
+
+{% block reselect_main %}w3-teal w3-hover-blue-gray{% endblock %}
+
+{% block content %}
+<h1>{{ _("Get Reselected") }}</h1>
+<h3>
+    {% trans opti=opti_date, pessi=pessi_date %}If you are here, it means you received a mail and saw it too late.<br>
+    Don't despair, because if you click on the "Yes" button down there, you will be put in the waiting line for broadcasting.<br>
+    I am looking at the planning right now and I can make you the broadcaster <strong>between {{ opti }} and {{ pessi }}</strong>, does that suit you?<br>
+    (you don't really have a choice, you can either accept or refuse so these dates are just an estimated period of time for wich you have to watch your email inbox for the broadcast mail)<br>
+    So, final question, do you want to have a second chance at being a broadcaster?{% endtrans %}
+</h3>
+<form method="post">
+    <input type="submit" name="yes" value="{{ _('Yes') }}" class="w3-button w3-light-green w3-padding-small w3-round w3-border w3-border-black">
+    <input type="submit" name="no" value="{{ _('No') }}" class="w3-button w3-orange w3-padding-small w3-round w3-border w3-border-black">
+</form>
+{% endblock %}
