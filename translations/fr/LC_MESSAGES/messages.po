@@ -65,7 +65,7 @@ msgstr "Les doubles comptes ne sont pas autorisés."
 #: app.py:349
 #, python-format
 msgid "You have successfully created your account, if you are selected, you will receive an email on %(mail)s so check your emails regularly."
-msgstr "Tu as créé ton compte avec succès, si tu est sélectionné, tu recevras un email sur %(mail)s donc vérifie ta boite régulièrement."
+msgstr "Tu as créé ton compte avec succès, si tu es sélectionné, tu recevras un email sur %(mail)s donc vérifie ta boite régulièrement."
 
 #: app.py:373
 msgid "No post is live right now so you can't report one."
@@ -407,7 +407,7 @@ msgid ""
 "    (you don't really have a choice, you can either accept or refuse so these dates are just an estimated period of time for wich you have to watch your email inbox for the broadcast mail)<br>\n"
 "    So, final question, do you want to have a second chance at being a broadcaster?"
 msgstr ""
-"Si tu est ici c'est que tu as reçu un mail et tu l'a vu trop tard.<br>\n"
+"Si tu es ici c'est que tu as reçu un mail et tu l'a vu trop tard.<br>\n"
 "    Ne désespère pas, parce que si tu clique sur le bouton \"Oui\" juste dessous, tu sera mis sur la liste d'attente pour devenir diffuseur.<br>\n"
 "    Je suis en train de regarder mon planning et... je peux faire de toi le diffuseur <strong>entre le %(opti)s et le %(pessi)s</strong>, ça te va ?<br>\n"
 "    (tu n'as pas vraiment le choix, tu peux juste accepter ou refuser donc ces dates sont juste un intervalle de temps estimé pendant lequel tu va devoir surveiller ta boite mail tout les jours pour voir si tu as reçu le mail de diffusion)<br>\n"
