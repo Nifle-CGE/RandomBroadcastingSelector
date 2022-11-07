@@ -7,6 +7,8 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
 
 {% block title %}Admin Panel{% endblock %}
 
+{% block admin_panel_main %}w3-teal w3-hover-blue-gray{% endblock %}
+
 {% block content %}
 <h1>Admin Panel</h1>
 <h2>Tout ce qui est ban</h2>
@@ -15,11 +17,6 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
     {{ banunban.csrf_token }}
     {% if banunban.csrf_token.errors: %}
     There was an error with the csrf token : {{ banunban.csrf_token.errors }}<br>
-    {% endif %}
-
-    {{ banunban.verif_code(value=verif_code) }}
-    {% if banunban.verif_code.errors: %}
-    There was an error with the verification code : {{ banunban.verif_code.errors }}<br>
     {% endif %}
 
     {{ banunban.user_id.label }}
@@ -67,11 +64,6 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
     There was an error with the csrf token : {{ appealview.csrf_token.errors }}<br>
     {% endif %}
 
-    {{ appealview.verif_code(value=verif_code) }}
-    {% if appealview.verif_code.errors: %}
-    There was an error with the verification code : {{ appealview.verif_code.errors }}<br>
-    {% endif %}
-
     {{ appealview.user_id(value=banned_user.id_) }}
     {% if appealview.user_id.errors: %}
     The field above had an error : {{ appealview.user_id.errors }}<br>
@@ -102,12 +94,10 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
         Import
         <input type="file" name="stats_file">
     </label><br>
-    <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="import_stats">
     <input type="submit" value="Submit" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 <form method="post">
-    <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="export_stats">
     <input type="submit" value="Export" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
@@ -118,12 +108,10 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
         Import
         <input type="file" name="logs_file">
     </label><br>
-    <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="import_logs">
     <input type="submit" value="Submit" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
 <form method="post">
-    <input type="hidden" name="verif_code" value="{{ verif_code }}">
     <input type="hidden" name="action" value="export_logs">
     <input type="submit" value="Export" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>

@@ -8,28 +8,13 @@
 
         <input type="button" id="downvoteButton" class="w3-button w3-round-xlarge hover-zoom w3-hover-orange{% if current_user.downvote == post['id']: %} w3-text-red w3-hover-text-red{% endif %} vote-arrow" value="▼"><br>
     </div>
-    <script nonce="{{ csp_nonce() }}">
-        {% if live and current_user.is_authenticated %}
-        var upfunc = function () { liveVote('upvote') }
-        var downfunc = function () { liveVote('downvote') }
-        {% elif live and not current_user.is_authenticated %}
-        var upfunc = function () { alert("{{ _('You have to login to be able to vote.') }}") }
-        var downfunc = upfunc
-        {% else %}
-        var upfunc = function () { alert("{{ _('This post has been archived so voting is no longer active.') }}") }
-        var downfunc = upfunc
-        {% endif %}
-
-        document.getElementById("upvoteButton").onclick = upfunc
-        document.getElementById("downvoteButton").onclick = downfunc
-    </script>
-    <div class="w3-container w3-cell w3-round-large {{ random.choice(['w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow']) }} rbs-message">
-        <h3>❝{{ post["content"] }}❞</h3>
+    <div class="w3-container w3-cell w3-round-large {{ ['w3-pale-red', 'w3-pale-green', 'w3-pale-blue', 'w3-pale-yellow']|random }} rbs-message">
+        <h3>❝<span id="post_text">{{ post["content"] }}</span>❞</h3>
         <i class="w3-right">{% trans auth=post["author_name"] %}by {{ auth }}{% endtrans %}</i><br>
         {% if live and lang != post["lang"] %}
         <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
         {% endif %}
-        <small class="w3-left">{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["date"] }}
+        <small class="w3-left">{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["_ts"]|format_date(format="short") }}
             {% if live and current_user.is_authenticated %}
             | <a id="report_button" class="w3-hover-red">{{ _("Report") }}</a>
         </small>
@@ -93,5 +78,24 @@
         </small>
         {% endif %}
     </div>
+    <script nonce="{{ csp_nonce() }}">
+        // upvote and downvote onclicks
+        {% if live and current_user.is_authenticated %}
+        var upfunc = function () { liveVote('upvote') }
+        var downfunc = function () { liveVote('downvote') }
+        {% elif live and not current_user.is_authenticated %}
+        var upfunc = function () { alert("{{ _('You have to login to be able to vote.') }}") }
+        var downfunc = upfunc
+        {% else %}
+        var upfunc = function () { alert("{{ _('This post has been archived so voting is no longer active.') }}") }
+        var downfunc = upfunc
+        {% endif %}
+
+        document.getElementById("upvoteButton").onclick = upfunc
+        document.getElementById("downvoteButton").onclick = downfunc
+
+        // deal with \n in the post_text
+        document.getElementById("post_text").innerHTML = document.getElementById("post_text").innerHTML.trim("\n").replaceAll("\n", "<br>")
+    </script>
 </div>
 {%- endmacro %}

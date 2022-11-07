@@ -1,0 +1,55 @@
+{
+    "id": "stats.json",
+    "broadcast": {
+        "id": "",
+        "content": "",
+        "author": "",
+        "author_name": "",
+        "_ts": 0,
+        "lang": "",
+        "trads": {},
+        "upvotes": 0,
+        "downvotes": 0,
+        "reports": 0
+    },
+    "broadcasts": {
+        "msgs_sent": {
+            "total": 0,
+            "en": 0,
+            "fr": 0,
+            "es": 0,
+            "de": 0
+        },
+        "words_sent": 0,
+        "characters_sent": 0
+    },
+    "users": {
+        "num": 0,
+        "banned": 0,
+        "seen_msg": 0,
+        "last_active": {
+            "1h": 0,
+            "24h": 0,
+            "week": 0
+        }
+    },
+    "time": {
+        "start_time": 1667220501.957893,
+        "stats_last_edited": 1667206318.7014134,
+        "last_broadcaster": 1667233069.5999134
+    },
+    "roles": {
+        "broadcaster": [],
+        "admin": [],
+        "moderators": [],
+        "ban_appealers": {},
+        "preselecteds": {},
+        "futur_broadcasters": []
+    },
+    "top_posts": {
+        "5_most_upped": [],
+        "5_most_downed": [],
+        "5_most_pop": [],
+        "5_most_unpop": []
+    }
+}

@@ -1,24 +1,57 @@
-import json
+import random
+import os
 
 class StuffImporter(object):
-    def __init__(self, u_cont, _, ngettext) -> None:
-        self.u_cont = u_cont
+    def __init__(self, s_cont, _, ngettext) -> None:
+        self.s_cont = s_cont
         self._ = _
         self.ngettext = ngettext
         
     @staticmethod
     def get_config() -> dict:
-        with open(f"./config.json", "r", encoding="utf-8") as json_file:
-            return json.load(json_file)
+        return {
+            "telegram_send_url": os.getenv("TELEGRAM_SEND_URL"),
+            "db": {
+                "url": os.getenv("DB_URL"),
+                "key": os.getenv("DB_KEY")
+            },
+            "google": {
+                "oauth_id": os.getenv("GOOGLE_OAUTH_ID"),
+                "oauth_secret": os.getenv("GOOGLE_OAUTH_SECRET"),
+                "discovery_url": os.getenv("GOOGLE_DISCOVERY_URL")
+            },
+            "twitter": {
+                "apiv1_key": os.getenv("TWITTER_APIV1_KEY"),
+                "apiv1_secret": os.getenv("TWITTER_APIV1_SECRET")
+            },
+            "facebook": {
+                "client_id": os.getenv("FACEBOOK_CLIENT_ID"),
+                "client_secret": os.getenv("FACEBOOK_CLIENT_SECRET")
+            },
+            "github": {
+                "client_id": os.getenv("GITHUB_CLIENT_ID"),
+                "client_secret": os.getenv("GITHUB_CLIENT_SECRET")
+            },
+            "discord": {
+                "client_id": os.getenv("DISCORD_CLIENT_ID"),
+                "client_secret": os.getenv("DISCORD_CLIENT_SECRET")
+            },
+            "twitch": {
+                "client_id": os.getenv("TWITCH_CLIENT_ID"),
+                "client_secret": os.getenv("TWITCH_CLIENT_SECRET")
+            },
+            "sendgrid_api_key": os.getenv("SENDGRID_API_KEY"),
+            "deepl_auth_key": os.getenv("DEEPL_AUTH_KEY")
+        }
             
     def get_stats(self) -> dict:
-        return self.u_cont.read_item("stats.json", "stats.json")
+        return self.s_cont.read_item("stats.json", "stats.json")
 
     def set_stats(self, stats:dict):
-        self.u_cont.replace_item("stats.json", stats)
+        self.s_cont.replace_item("stats.json", stats)
 
-    def pot_brods(self, last_brod:str) -> list:
-        brods_query = self.u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}' AND u.id <> 'stats.json'", enable_cross_partition_query=True)
+    def select_random_broadcaster(self, u_cont, last_brod:str) -> str:
+        brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
         brods = []
         while True:
             try:
@@ -26,7 +59,7 @@ class StuffImporter(object):
             except StopIteration:
                 break
 
-        return brods
+        return random.choice(brods)
 
     def seconds_to_str(self, seconds:float) -> str:
         days = round(seconds // 86400)

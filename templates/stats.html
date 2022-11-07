@@ -21,9 +21,11 @@
 {{ _("Reports for this message:") }} {{ stats["broadcast"]["reports"] }}<br>
 
 <h2>{{ _("General Broadcasting info") }}</h2>
-{{ _("Broadcasts sent:") }} {{ stats["broadcasts"]["msgs_sent"] }}<br>
+{{ _("Broadcasts sent:") }} {{ stats["broadcasts"]["msgs_sent"]["total"] }}<br>
 {% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
+{% if not lang_code == "total": %}
 {{ _("Broadcasts in %(lang_code)s sent: %(number)s", lang_code=lang_code, number=number) }}<br>
+{% endif %}
 {% endfor %}
 {{ _("Total words sent:") }} {{ stats["broadcasts"]["words_sent"] }}<br>
 {{ _("Total characters sent:") }} {{ stats["broadcasts"]["characters_sent"] }}<br>
@@ -37,11 +39,12 @@
 {{ _("Users who were active in the last week:") }} {{ stats["users"]["last_active"]["week"] }}<br>
 
 <h2>{{ _("Time info") }}</h2>
-{{ _("Uptime:") }} <span id="rem_time_counter">{{ uptime_str }}</span><br>
+{{ _("Uptime:") }} <span id="uptime_counter">{{ uptime_str }}</span><br>
+{{ _("Time until new broadcaster is selected:") }} <span id="rem_time_counter">{{ rem_time }}</span><br>
 <script nonce="{{ csp_nonce() }}">
-    setInterval(countUp, 1000, "rem_time_counter")
+    setInterval(countUp, 1000, "uptime_counter")
+    setInterval(countDown, 1000, "rem_time_counter")
 </script>
-{{ _("Time to get stats:") }} {{ stats["time"]["stats_getting"] * 1000 }} ms<br>
 
 <h2>{{ _("Top broadcasts in different categories") }}</h2>
 <h3>{{ _("5 most upvoted") }}</h3>
@@ -60,8 +63,5 @@
 {% for post in stats["top_posts"]["5_most_unpop"]: %}
 {{ to_import.post(post) }}
 {% endfor %}
-<small>
-    {% trans %}These stats are updated every 10 minutes.<br>
-    Click <a href="/stats.json">here</a> to get the raw stats file.{% endtrans %}
-</small>
+<small>{{ _("These stats are updated every 10 minutes.") }}</small>
 {% endblock %}
