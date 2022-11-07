@@ -1,2 +1,3 @@
 # Removes files from language stats on github
 /static/css/w3.css linguist-vendored
+/static/fontawesome6 linguist-vendored
