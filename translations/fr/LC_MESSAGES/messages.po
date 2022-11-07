@@ -56,7 +56,7 @@ msgstr "RandomBroadcastingSelector: Tu as loupé ton opportunité mais tu peux t
 
 #: app.py:312
 msgid "RandomBroadcastingSelector: You are the one."
-msgstr "RandomBroadcastingSelector : Tu est l'élu.e."
+msgstr "RandomBroadcastingSelector : Tu es l'élu.e."
 
 #: app.py:334
 msgid "Double accounts aren't allowed."
@@ -65,7 +65,7 @@ msgstr "Les doubles comptes ne sont pas autorisés."
 #: app.py:349
 #, python-format
 msgid "You have successfully created your account, if you are selected, you will receive an email on %(mail)s so check your emails regularly."
-msgstr "Tu as créé ton compte avec succès, si tu es sélectionné, tu recevras un email sur %(mail)s donc vérifie ta boite régulièrement."
+msgstr "Tu as créé ton compte avec succès, si tu es sélectionné.e, tu recevras un email sur %(mail)s donc vérifie ta boite régulièrement."
 
 #: app.py:373
 msgid "No post is live right now so you can't report one."
