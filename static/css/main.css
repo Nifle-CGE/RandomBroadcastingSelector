@@ -103,3 +103,7 @@ footer {
 .close-logo {
     padding: 0 9px;
 }
+
+.dropdown-content-right {
+    right: 0;
+}
