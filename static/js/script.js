@@ -200,9 +200,9 @@ function countUp(counterId) {
 
 function toggleModal(modalId) {
     let modal = document.getElementById(modalId)
-    if (modal.style.display === 'none') {
-        modal.style.display = 'block'
-    } else {
+    if (modal.style.display === 'block') {
         modal.style.display = 'none'
+    } else {
+        modal.style.display = 'block'
     }
 }

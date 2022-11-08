@@ -15,7 +15,7 @@
         <h5>{{ _("Translation:") }} {{ post["trads"][lang] }}</h5>
         {% endif %}
         <small class="w3-left">{{ _("Id:") }} {{ post["id"] }} | {{ _("Date:") }} {{ post["_ts"]|format_date(format="short") }}
-            {% if live and current_user.is_authenticated %}
+            {% if live and current_user.is_authenticated: %}
             | <a id="report_button" class="w3-hover-red">{{ _("Report") }}</a>
         </small>
         <div class="w3-modal" id="reportForm">
@@ -38,7 +38,7 @@
                     {% endif %}
 
                     {% for subfield in form.reason %}
-                    {{ subfield(onclick="changeReportFormBottomInputLabel(this)") }} {{ subfield.label }}<br>
+                    {{ subfield(id="subfield_" + loop.index|string) }} {{ subfield.label }}<br>
                     {% endfor %}
                     {% if form.reason.errors %}
                     {{ _("This was not supposed to happen:") }} {{ form.reason.errors }}<br>
@@ -73,6 +73,10 @@
             document.getElementById("report_button").onclick = function () { toggleModal('reportForm') }
             document.getElementById("activatorButton").onclick = function () { enableSubmitButton('submitButton', 'activatorButton') }
             document.getElementById("modal_close_button").onclick = function () { toggleModal('reportForm') }
+
+            {% for subfield in form.reason %}
+            document.getElementById("subfield_" + {{ loop.index | string }}).onclick = function () { changeReportFormBottomInputLabel(document.getElementById("subfield_" + {{ loop.index | string }})) }
+            {% endfor %}
         </script>
         {% else %}
         </small>
