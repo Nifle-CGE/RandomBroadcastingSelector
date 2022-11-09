@@ -22,7 +22,7 @@
 
 <h2>{{ _("General Broadcasting info") }}</h2>
 {{ _("Broadcasts sent:") }} {{ stats["broadcasts"]["msgs_sent"]["total"] }}<br>
-{% for lang_code, number in stats["broadcasts"]["langs_msgs_sent"].items(): %}
+{% for lang_code, number in stats["broadcasts"]["msgs_sent"].items(): %}
 {% if not lang_code == "total": %}
 {{ _("Broadcasts in %(lang_code)s sent: %(number)s", lang_code=lang_code, number=number) }}<br>
 {% endif %}
