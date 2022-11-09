@@ -8,6 +8,7 @@ import math
 import re
 import logging
 import functools
+import pprint
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
@@ -1100,14 +1101,15 @@ def admin_panel():
             stats = json.load(request.files[filename].stream)
             stuffimporter.set_stats(stats)
         elif request.form["action"] == "export_stats":
-            return stats
+            return pprint.pformat(stats, indent=4).replace("\n", "<br>")
         elif request.form["action"] == "import_logs":
             filename = list(request.files.to_dict().keys())[0]
             with open("./logs.log", "wb") as logs_file:
                 logs_file.write(request.files[filename].stream.read())
             request.files[filename].stream.close()
         elif request.form["action"] == "export_logs":
-            return send_file("logs.log", as_attachment=True)
+            with open("./logs.log") as logs_f:
+                return logs_f.read().replace("\n", "<br>")
 
         return render_template("message.html", message="Succès de l'action " + request.form["action"])
 
