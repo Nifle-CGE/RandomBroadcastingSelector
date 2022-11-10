@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block extra_events %}
+document.getElementById("activatorButton1").onclick = function () { enableSubmitButton('activatorButton2', 'activatorButton1') };
+document.getElementById("activatorButton2").onclick = function () { enableSubmitButton('activatorButton3', 'activatorButton2') };
+document.getElementById("activatorButton3").onclick = function () { enableSubmitButton('del_acc_btn', 'activatorButton3') };
+{% endblock %}
+
+{% block title %}{{ _("Parameters") }}{% endblock %}
+
+{% block params_main %}w3-teal w3-hover-blue-gray{% endblock %}
+
+{% block content %}
+<h1>{{ _("Parameters") }}</h1>
+<small>{{ _("On this page, you can view your user information and some other things.") }}</small>
+
+<h2>{{ _("User information") }}</h2>
+<p>
+    {{ _("Id:") }} {{ current_user.get_id() }}<br>
+    {{ _("Display name:") }} {{ current_user.name }}<br>
+    {{ _("Email:") }} {{ current_user.email }}<br>
+    {{ _("Language:") }} {{ current_user.lang }}<br>
+</p>
+
+<h2 class="w3-text-red">{{ _("Danger Zone") }}</h2>
+<h3 class="w3-text-red">{{ _("Delete my account") }}</h3>
+<input type="button" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black" value="{{ _('I want to delete my account.') }}" id="activatorButton1"><br>
+<input type="button" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black" value="{{ _('I really want to delete my account.') }}" id="activatorButton2" disabled><br>
+<input type="button" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black" value="{{ _('Ok I actually want to delete my account stop messing with me.') }}" id="activatorButton3" disabled><br>
+<form method="post">
+    <input type="submit" id="del_acc_btn" name="del_acc" value="{{ _('Delete my account') }}" class="w3-button w3-red w3-padding-small w3-round w3-border w3-border-black" disabled>
+</form>
+{% endblock %}

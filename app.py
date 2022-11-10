@@ -815,6 +815,24 @@ def reselect():
 
     return render_template("reselect.html", time_interval=msg)
 
+@app.route("/parameters/", methods=["GET", "POST"])
+#@login_required
+def parameters():
+    if request.method == "POST":
+        if request.form.get("del_acc"):
+            u_id = current_user.get_id()
+            u_cont.delete_item(u_id, u_id)
+            logout_user()
+
+            stats["users"]["num"] -= 1
+            stuffimporter.set_stats(stats)
+
+            end_msg = _("Deleted account successfully.")
+
+        return render_template("message.html", message=end_msg)
+
+    return render_template("parameters.html")
+
 # Callbacks
 @app.route("/vote/", methods=["POST"])
 @login_required

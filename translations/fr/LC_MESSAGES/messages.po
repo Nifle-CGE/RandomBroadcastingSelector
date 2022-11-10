@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-10 17:25+0100\n"
+"POT-Creation-Date: 2022-11-10 21:36+0100\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -75,7 +75,7 @@ msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler.
 msgid "You have already reported this post so you can't report it again."
 msgstr "Tu as déja signalé ce post, tu ne pouvez pas le signaler une deuxième fois."
 
-#: app.py:428 app.py:1039
+#: app.py:428 app.py:1057
 msgid "RandomBroadcastingSelector: You were banned."
 msgstr "RandomBroadcastingSelector : Tu as été banni.e."
 
@@ -132,72 +132,76 @@ msgstr "entre le %(opti)s et le %(pessi)s"
 msgid "You have been reselected successfully.<br>Watch your inbox %(time_interval)s."
 msgstr "Tu as été resélectionné avec succès.<br>Surveille ta boite mail %(time_interval)s."
 
-#: app.py:823
+#: app.py:830
+msgid "Deleted account successfully."
+msgstr "Compte supprimé avec succès."
+
+#: app.py:841
 msgid "No post is live right now so you can't vote."
 msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas voter."
 
-#: app.py:868
+#: app.py:886
 #, python-format
 msgid "Field must be included in \"%(string)s\"."
 msgstr "Ce champ doit être inclus dans \"%(string)s\"."
 
-#: app.py:892
+#: app.py:910
 msgid "Enter the message you want to send to this websites users."
 msgstr "Entrez le message que tu veux faire passer aux utilisateurs de ce site web."
 
-#: app.py:895
+#: app.py:913
 msgid "I'm sorry but you are going to have to write more than one word."
 msgstr "Je suis désolé mais tu va devoir écrire plus qu'un seul mot."
 
-#: app.py:898
+#: app.py:916
 msgid "Author of this message (name that you want to be designated as that everyone will see.):"
 msgstr "Auteur de ce message (nom par lequel tu sera désigné et que tout le monde verra) :"
 
-#: app.py:903 app.py:917 app.py:936 templates/post_search.html:14
+#: app.py:921 app.py:935 app.py:954 templates/post_search.html:14
 msgid "Submit"
 msgstr "Soumettre"
 
-#: app.py:908
+#: app.py:926
 msgid "You have to be banned to submit this form."
 msgstr "Seul les bannis peuvent soumettre ce formulaire."
 
-#: app.py:914
+#: app.py:932
 msgid "If you really want to get unbanned you should write a bit more than that (more than one word)."
 msgstr "Si tu veux vraiment être débanni.e tu devrais écrire un peu plus que ça (plus d'un seul mot)."
 
-#: app.py:921
+#: app.py:939
 msgid "Is this broadcast harassing, insulting or encouraging hate against anyone ?"
 msgstr "Cette diffusion harcèle, insulte ou encourage-t-elle de la haine envers quelqu'un ?"
 
-#: app.py:922
+#: app.py:940
 msgid "Is this broadcast using too much mild language for a family friendly website ?"
 msgstr "Cette diffusion utilise-t-elle un language trop explicite et trop cru pour un site web tout publique ?"
 
-#: app.py:923
+#: app.py:941
 msgid "Does this broadcast contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\") ?"
 msgstr "Cette diffusion contient-t-elle des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
 
-#: app.py:924
+#: app.py:942
 msgid "Has this broadcasts author chosen an offending name ?"
 msgstr "Le diffuseur a-t-il choisi un nom offensant ?"
 
-#: app.py:932
+#: app.py:950
 msgid "The quote you supplied isn't in the broadcast."
 msgstr "La citation que tu as donné n'est pas dans la diffusion."
 
-#: app.py:933
+#: app.py:951
 msgid "The quote you supplied has only got one word when it has to have at least two."
 msgstr "La citation que tu as donné comprends seulement un seul mot alors qu'elle doit au moins en avoir deux."
 
-#: app.py:1001
+#: app.py:1019
 msgid "App online"
 msgstr "App en ligne"
 
-#: app.py:1057 app.py:1080
+#: app.py:1075 app.py:1098
 msgid "RandomBroadcastingSelector: You are no longer banned."
 msgstr "RandomBroadcastingSelector : Tu a été débanni.e."
 
-#: app.py:1099
+#: app.py:1117
 msgid "RandomBroadcastingSelector: Your ban appeal was refused."
 msgstr "RandomBroadcastingSelector : Ta demande de débannissement a été refusée."
 
@@ -281,23 +285,28 @@ msgstr "Être Resélectionné.e"
 msgid "Admin Panel"
 msgstr "Panneau d'Admin"
 
-#: templates/base.html:44
+#: templates/base.html:44 templates/parameters.html:9
+#: templates/parameters.html:14
+msgid "Parameters"
+msgstr "Paramètres"
+
+#: templates/base.html:45
 msgid "Logout"
 msgstr "Se déconnecter"
 
-#: templates/base.html:48 templates/login.html:3
+#: templates/base.html:49 templates/login.html:3
 msgid "Login"
 msgstr "Se connecter"
 
-#: templates/base.html:51 templates/base.html:54
+#: templates/base.html:52 templates/base.html:55
 msgid "en"
 msgstr "fr"
 
-#: templates/base.html:68
+#: templates/base.html:69
 msgid "<i>Created by <a href=\"mailto:random.broadcasting.selector@gmail.com\">Nifle CGE</a></i> | <a href=\"/about/\">About</a> | <a href=\"/post/\">Lookup an individual post</a> | <a href=\"/sitemap/\">Sitemap</a> | <a href=\"/privacy-policy/\">Privacy Policy</a> | <a href=\"/terms-of-service/\">Terms of Service</a>"
 msgstr "<i>Créé par <a href=\"mailto:random.broadcasting.selector@gmail.com\">Nifle CGE</a></i> | <a href=\"/about/\">À propos</a> | <a href=\"/post/\">Rechercher un post</a> | <a href=\"/sitemap/\">Sitemap</a> | <a href=\"/privacy-policy/\">Politique de confidentialité</a> | <a href=\"/terms-of-service/\">Conditions d'utilisation</a>"
 
-#: templates/base.html:70
+#: templates/base.html:71
 msgid "This website is still in beta, so if you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above."
 msgstr "Ce site web est toujours en beta, donc si tu remarques une erreur d'orthographe ou si tu rencontres des bogues tu peux me contacter en cliquant sur mon nom au dessus."
 
@@ -394,6 +403,50 @@ msgstr "En appuyant sur \"Continuer\" tu acceptes la <a href=\"/privacy-policy/\
 #: templates/message.html:3
 msgid "Message"
 msgstr "Message"
+
+#: templates/parameters.html:15
+msgid "On this page, you can view your user information and some other things."
+msgstr "Sur cette page, tu peux voir tes informations d'utilisateurs et d'autres choses."
+
+#: templates/parameters.html:17
+msgid "User information"
+msgstr "Informations d'utilisateur"
+
+#: templates/parameters.html:19 templates/to_import.html:17
+msgid "Id:"
+msgstr "Id :"
+
+#: templates/parameters.html:20
+msgid "Display name:"
+msgstr "Nom d'affichage :"
+
+#: templates/parameters.html:21
+msgid "Email:"
+msgstr "Email :"
+
+#: templates/parameters.html:22
+msgid "Language:"
+msgstr "Langage :"
+
+#: templates/parameters.html:25
+msgid "Danger Zone"
+msgstr "Zone de danger"
+
+#: templates/parameters.html:26 templates/parameters.html:31
+msgid "Delete my account"
+msgstr "Supprimer mon compte"
+
+#: templates/parameters.html:27
+msgid "I want to delete my account."
+msgstr "Je veux supprimer mon compte."
+
+#: templates/parameters.html:28
+msgid "I really want to delete my account."
+msgstr "Je veux vraiment supprimer mon compte."
+
+#: templates/parameters.html:29
+msgid "Ok I actually want to delete my account stop messing with me."
+msgstr "Ok je veux supprimer mon compte pour de vrai donc arrête de me saouler."
 
 #: templates/post.html:5
 #, python-format
@@ -572,10 +625,6 @@ msgstr "par %(auth)s"
 #: templates/to_import.html:15
 msgid "Translation:"
 msgstr "Traduction :"
-
-#: templates/to_import.html:17
-msgid "Id:"
-msgstr "Id :"
 
 #: templates/to_import.html:17
 msgid "Date:"
