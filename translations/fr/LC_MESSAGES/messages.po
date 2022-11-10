@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-10 09:46+0100\n"
+"POT-Creation-Date: 2022-11-10 17:25+0100\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -75,7 +75,7 @@ msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas le signaler.
 msgid "You have already reported this post so you can't report it again."
 msgstr "Tu as déja signalé ce post, tu ne pouvez pas le signaler une deuxième fois."
 
-#: app.py:428 app.py:1037
+#: app.py:428 app.py:1039
 msgid "RandomBroadcastingSelector: You were banned."
 msgstr "RandomBroadcastingSelector : Tu as été banni.e."
 
@@ -117,87 +117,87 @@ msgstr "Tu as déja fait une demande de débannissement."
 msgid "Your ban appeal has been saved, it will be reviewed shortly."
 msgstr "Votre demande de débannissement a été enregistrée, elle sera examinée dans les plus brefs délais."
 
-#: app.py:800
+#: app.py:802
 #, python-format
 msgid "the %(date)s"
 msgstr "le %(date)s"
 
-#: app.py:802
+#: app.py:804
 #, python-format
 msgid "between the %(opti)s and the %(pessi)s"
 msgstr "entre le %(opti)s et le %(pessi)s"
 
-#: app.py:812
+#: app.py:814
 #, python-format
 msgid "You have been reselected successfully.<br>Watch your inbox %(time_interval)s."
 msgstr "Tu as été resélectionné avec succès.<br>Surveille ta boite mail %(time_interval)s."
 
-#: app.py:821
+#: app.py:823
 msgid "No post is live right now so you can't vote."
 msgstr "Aucun post n'est en train d'être noté donc tu ne peux pas voter."
 
-#: app.py:866
+#: app.py:868
 #, python-format
 msgid "Field must be included in \"%(string)s\"."
 msgstr "Ce champ doit être inclus dans \"%(string)s\"."
 
-#: app.py:890
+#: app.py:892
 msgid "Enter the message you want to send to this websites users."
 msgstr "Entrez le message que tu veux faire passer aux utilisateurs de ce site web."
 
-#: app.py:893
+#: app.py:895
 msgid "I'm sorry but you are going to have to write more than one word."
 msgstr "Je suis désolé mais tu va devoir écrire plus qu'un seul mot."
 
-#: app.py:896
+#: app.py:898
 msgid "Author of this message (name that you want to be designated as that everyone will see.):"
 msgstr "Auteur de ce message (nom par lequel tu sera désigné et que tout le monde verra) :"
 
-#: app.py:901 app.py:915 app.py:934 templates/post_search.html:14
+#: app.py:903 app.py:917 app.py:936 templates/post_search.html:14
 msgid "Submit"
 msgstr "Soumettre"
 
-#: app.py:906
+#: app.py:908
 msgid "You have to be banned to submit this form."
 msgstr "Seul les bannis peuvent soumettre ce formulaire."
 
-#: app.py:912
+#: app.py:914
 msgid "If you really want to get unbanned you should write a bit more than that (more than one word)."
 msgstr "Si tu veux vraiment être débanni.e tu devrais écrire un peu plus que ça (plus d'un seul mot)."
 
-#: app.py:919
+#: app.py:921
 msgid "Is this broadcast harassing, insulting or encouraging hate against anyone ?"
 msgstr "Cette diffusion harcèle, insulte ou encourage-t-elle de la haine envers quelqu'un ?"
 
-#: app.py:920
+#: app.py:922
 msgid "Is this broadcast using too much mild language for a family friendly website ?"
 msgstr "Cette diffusion utilise-t-elle un language trop explicite et trop cru pour un site web tout publique ?"
 
-#: app.py:921
+#: app.py:923
 msgid "Does this broadcast contain any link (like \"http://example.com\") or pseudo link (like \"example.com\") or attempts at putting a link that doesn't look like one (like \"e x a m p l e . c o m\" or \"example dot com\") ?"
 msgstr "Cette diffusion contient-t-elle des liens (comme \"http://example.com\") ou alors des pseudo liens (comme \"example.com\") ou des tentatives de mettre un lien qui ne ressemble pas a un lien (comme \"e x a m p l e . c o m\" ou \"example point com\") ?"
 
-#: app.py:922
+#: app.py:924
 msgid "Has this broadcasts author chosen an offending name ?"
 msgstr "Le diffuseur a-t-il choisi un nom offensant ?"
 
-#: app.py:930
+#: app.py:932
 msgid "The quote you supplied isn't in the broadcast."
 msgstr "La citation que tu as donné n'est pas dans la diffusion."
 
-#: app.py:931
+#: app.py:933
 msgid "The quote you supplied has only got one word when it has to have at least two."
 msgstr "La citation que tu as donné comprends seulement un seul mot alors qu'elle doit au moins en avoir deux."
 
-#: app.py:999
+#: app.py:1001
 msgid "App online"
 msgstr "App en ligne"
 
-#: app.py:1055 app.py:1078
+#: app.py:1057 app.py:1080
 msgid "RandomBroadcastingSelector: You are no longer banned."
 msgstr "RandomBroadcastingSelector : Tu a été débanni.e."
 
-#: app.py:1097
+#: app.py:1099
 msgid "RandomBroadcastingSelector: Your ban appeal was refused."
 msgstr "RandomBroadcastingSelector : Ta demande de débannissement a été refusée."
 

@@ -787,11 +787,13 @@ def about():
     return render_template("about.html")
 
 @app.route("/reselect/", methods=["GET", "POST"])
-#@login_required
-#@role_required("preselecteds")
+@login_required
+@role_required("preselecteds")
 def reselect():
     opti_next_sel = time.time() + (brod_change_threshold * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
     pessi_next_sel = time.time() + (brod_change_threshold * 1.99 * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
+    if not stats["broadcast"]["content"]:
+        pessi_next_sel += brod_change_threshold
 
     opti_date_str = format_datetime(datetime.datetime.utcfromtimestamp(opti_next_sel), format="long")
     pessi_date_str = format_datetime(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="long")
