@@ -19,7 +19,7 @@ from flask_wtf import FlaskForm
 from wtforms.fields import StringField, TextAreaField, HiddenField, RadioField, SubmitField, BooleanField
 from wtforms import validators
 
-from flask_babel import Babel, _, ngettext, lazy_gettext, lazy_ngettext, format_date, force_locale as babel_force_locale
+from flask_babel import Babel, _, ngettext, lazy_gettext, lazy_ngettext, format_date, format_datetime, force_locale as babel_force_locale
 
 from flask_talisman import Talisman
 
@@ -790,11 +790,11 @@ def about():
 @login_required
 @role_required("preselecteds")
 def reselect():
-    opti_next_sel = (brod_change_threshold * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
-    pessi_next_sel = (brod_change_threshold * 1.99 * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
+    opti_next_sel = time.time() + (brod_change_threshold * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
+    pessi_next_sel = time.time() + (brod_change_threshold * 1.99 * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
 
-    opti_date_str = format_date(datetime.datetime.utcfromtimestamp(opti_next_sel), format="full")
-    pessi_date_str = format_date(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="full")
+    opti_date_str = format_datetime(datetime.datetime.utcfromtimestamp(opti_next_sel), format="full")
+    pessi_date_str = format_datetime(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="full")
 
     if request.method == "POST":
         user_id = current_user.get_id()
