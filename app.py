@@ -11,7 +11,7 @@ import functools
 import pprint
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, url_for, session, request, abort, send_file
+from flask import Flask, redirect, render_template, url_for, session, request, abort
 
 from flask_login import LoginManager, current_user, login_required, login_user, logout_user
 
@@ -787,14 +787,19 @@ def about():
     return render_template("about.html")
 
 @app.route("/reselect/", methods=["GET", "POST"])
-@login_required
-@role_required("preselecteds")
+#@login_required
+#@role_required("preselecteds")
 def reselect():
     opti_next_sel = time.time() + (brod_change_threshold * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
     pessi_next_sel = time.time() + (brod_change_threshold * 1.99 * len(stats["roles"]["futur_broadcasters"])) + get_rem_secs()
 
-    opti_date_str = format_datetime(datetime.datetime.utcfromtimestamp(opti_next_sel), format="full")
-    pessi_date_str = format_datetime(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="full")
+    opti_date_str = format_datetime(datetime.datetime.utcfromtimestamp(opti_next_sel), format="long")
+    pessi_date_str = format_datetime(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="long")
+
+    if opti_date_str == pessi_date_str:
+        msg = _("the %(date)s", date=opti_date_str)
+    else:
+        msg = _("between the %(opti)s and the %(pessi)s", opti=opti_date_str, pessi=pessi_date_str)
 
     if request.method == "POST":
         user_id = current_user.get_id()
@@ -804,9 +809,9 @@ def reselect():
         stats["roles"]["preselecteds"].pop(user_id)
         stuffimporter.set_stats(stats)
 
-        return render_template("message.html", message=_("You have been reselected successfully.<br>Watch your inbox between %(opti)s and %(pessi)s.", opti=opti_date_str, pessi=pessi_date_str))
+        return render_template("message.html", message=_("You have been reselected successfully.<br>Watch your inbox %(time_interval)s.", time_interval=msg))
 
-    return render_template("reselect.html", opti_date=opti_date_str, pessi_date=pessi_date_str)
+    return render_template("reselect.html", time_interval=msg)
 
 # Callbacks
 @app.route("/vote/", methods=["POST"])
