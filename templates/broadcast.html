@@ -35,11 +35,6 @@ document.getElementById("name_input").oninput = function () { updateCharCounter(
     {{ _("There was an error with the csrf token:") }} {{ form.csrf_token.errors }}<br>
     {% endif %}
 
-    {{ form.user_id(value=current_user.id_) }}
-    {% if form.user_id.errors: %}
-    {{ _("This was not supposed to happen:") }} {{ form.user_id.errors }}<br>
-    {% endif %}
-
     {{ form.message.label }}<br>
     {{ form.message(id="message_input", rows="4", cols="127", class="w3-monospace") }} <span id="message_counter">0/512</span><br>
     {% if form.message.errors: %}

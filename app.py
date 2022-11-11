@@ -816,7 +816,7 @@ def reselect():
     return render_template("reselect.html", time_interval=msg)
 
 @app.route("/parameters/", methods=["GET", "POST"])
-#@login_required
+@login_required
 def parameters():
     if request.method == "POST":
         if request.form.get("del_acc"):
@@ -902,11 +902,6 @@ class StopIfBlah(object):
 
 # WTForms
 class BroadcastForm(FlaskForm):
-    user_id = HiddenField(validators=[
-        validators.InputRequired(),
-        validators.AnyOf([stats["roles"]["broadcaster"][0]])
-    ])
-
     message = TextAreaField(lazy_gettext("Enter the message you want to send to this websites users."), validators=[
         validators.InputRequired(),
         validators.Length(0, 512),
