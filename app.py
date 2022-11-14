@@ -714,7 +714,7 @@ def statistics():
 
         stuffimporter.set_stats(stats)
 
-        app.logger.debug("Les stats ont étés mis a jour")
+        app.logger.debug("Les stats ont étés mis à jour")
 
     uptime_str = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
     rem_time = stuffimporter.seconds_to_str(get_rem_secs())
@@ -767,7 +767,7 @@ def ban_appeal():
     if form.validate_on_submit():
         user = load_user(form.user_id.data, active=False)
         if user.ban_appeal:
-            app.logger.info(f"{form.user_id.data} a essayé de faire une demande de débannissement alors qu'il en a déja fait une.")
+            app.logger.info(f"{form.user_id.data} a essayé de faire une demande de débannissement alors qu'il en a déjà fait une.")
             return render_template("message.html", message=_("You have already made a ban appeal."))
 
         user.ban_appeal = form.reason.data
@@ -902,7 +902,7 @@ class StopIfBlah(object):
 
 # WTForms
 class BroadcastForm(FlaskForm):
-    message = TextAreaField(lazy_gettext("Enter the message you want to send to this websites users."), validators=[
+    message = TextAreaField(lazy_gettext("Enter the message you want to send to this website's users."), validators=[
         validators.InputRequired(),
         validators.Length(0, 512),
         MinWords(2, message=lazy_gettext("I'm sorry but you are going to have to write more than one word."))
