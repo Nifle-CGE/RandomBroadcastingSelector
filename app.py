@@ -1121,7 +1121,7 @@ def admin_panel():
             stats = json.load(request.files[filename].stream)
             stuffimporter.set_stats(stats)
         elif request.form["action"] == "export_stats":
-            return pprint.pformat(stats, indent=4).replace("\n", "<br>")
+            return pprint.pformat(stats, indent=4, sort_dicts=False).replace("\n", "<br>").replace("    ", "&emsp;")
         elif request.form["action"] == "import_logs":
             filename = list(request.files.to_dict().keys())[0]
             with open("./logs.log", "wb") as logs_file:
