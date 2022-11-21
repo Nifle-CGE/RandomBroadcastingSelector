@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-11-14 16:31+0100\n"
+"POT-Creation-Date: 2022-11-21 09:19+0100\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: fr\n"
@@ -217,35 +217,39 @@ msgstr "De ce site web"
 msgid "Link to the Github repo:"
 msgstr "Lien du repo Github :"
 
-#: templates/about.html:14
+#: templates/about.html:10
+msgid "Link to the Uptime Robot status page:"
+msgstr "Lien de la page de status Uptime Robot :"
+
+#: templates/about.html:15
 msgid "The creator"
 msgstr "Du créateur"
 
-#: templates/about.html:20
+#: templates/about.html:21
 msgid "I am Nifle, a young developer."
 msgstr "Je suis Nifle, un jeune développeur."
 
-#: templates/about.html:22
+#: templates/about.html:23
 msgid "Donate"
 msgstr "Donner"
 
-#: templates/about.html:23
+#: templates/about.html:24
 msgid "General"
 msgstr "Général"
 
-#: templates/about.html:26
+#: templates/about.html:27
 msgid "Crypto"
 msgstr "Crypto"
 
-#: templates/about.html:27
+#: templates/about.html:28
 msgid "Banano address:"
 msgstr "Adresse Banano :"
 
-#: templates/about.html:28
+#: templates/about.html:29
 msgid "Ethereum address (also works with binance network):"
 msgstr "Adresse Ethereum (marche aussi avec le réseau binance) :"
 
-#: templates/about.html:29
+#: templates/about.html:30
 msgid "Coinbase wallet id:"
 msgstr "Identifiant de portefeuille Coinbase :"
 
