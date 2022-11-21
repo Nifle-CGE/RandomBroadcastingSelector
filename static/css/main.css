@@ -104,6 +104,12 @@ footer {
     padding: 0 9px;
 }
 
-.dropdown-content-right {
-    right: 0;
+.user-dropdown-content {
+    top: 54.5px;
+}
+
+.user-dropdown {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
 }
