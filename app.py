@@ -129,7 +129,7 @@ csp = {
     "frame-src": "'self'",
     "base-uri": "'self'",
     "connect-src": "'self'",
-    "report-uri": "https://rbs.azurewebsites.net/report-csp-violations",
+    "report-to": "https://rbs.azurewebsites.net/report-csp-violations",
     "font-src": [
         "'self'",
         "data:"
@@ -143,7 +143,7 @@ talisman = Talisman(
     app,
     content_security_policy=csp,
     content_security_policy_nonce_in=[
-        'script-src',
+        "script-src",
         "style-src"
     ]
 )
