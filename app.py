@@ -255,7 +255,7 @@ def verify_broadcast():
                 # check if some of the preselecteds have timed out
                 for key, val in stats["roles"]["preselecteds"].items():
                     if val + 2592000 < time.time(): # if its been a month remove them
-                        stats["roles"]["preseleteds"].pop(key)
+                        stats["roles"]["preselecteds"].pop(key)
 
         elif stats["broadcast"]["_ts"] + brod_change_threshold > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
