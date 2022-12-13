@@ -95,8 +95,8 @@ babel = Babel(app)
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
 db = cc.get_database_client("Main Database")
-u_cont = db.get_container_client("Web RBS Users")
-p_cont = db.get_container_client("Web RBS Posts")
+user_container = db.get_container_client("Web RBS Users")
+post_container = db.get_container_client("Web RBS Posts")
 stats_cont = db.get_container_client("Web RBS Stats")
 
 app.logger.debug("Base de donnée mise en place.")
@@ -154,7 +154,7 @@ app.logger.info("Application lancée.")
 @login_manager.user_loader
 def load_user(user_id, active=True):
     user = User()
-    if not user.uimport(u_cont, user_id):
+    if not user.uimport(user_container, user_id):
         return None
 
     # Check special roles
@@ -171,7 +171,7 @@ def load_user(user_id, active=True):
     # Used for stats
     if active:
         user.last_active = time.time()
-        user.uexport(u_cont)
+        user.uexport(user_container)
 
     return user
 
@@ -276,7 +276,7 @@ def verify_broadcast():
             new_post["ratio"] = new_post["upvotes"] / new_post["downvotes"]
         except ZeroDivisionError:
             new_post["ratio"] = new_post["upvotes"]
-        p_cont.create_item(new_post)
+        post_container.create_item(new_post)
 
         # Update stats in relation of the current post
         stats["broadcasts"]["msgs_sent"]["total"] += 1
@@ -292,7 +292,7 @@ def verify_broadcast():
     if stats["roles"]["futur_broadcasters"]:
         stats["roles"]["broadcaster"] = [stats["roles"]["futur_broadcasters"].pop(0)]
     else:
-        stats["roles"]["broadcaster"] = [stuffimporter.select_random_broadcaster(u_cont, stats["roles"]["broadcaster"][0])]
+        stats["roles"]["broadcaster"] = [stuffimporter.select_random_broadcaster(user_container, stats["roles"]["broadcaster"][0])]
     stats["broadcast"]["author"] = ""
     stats["broadcast"]["author_name"] = ""
     stats["broadcast"]["content"] = ""
@@ -303,13 +303,13 @@ def verify_broadcast():
 
     stats["time"]["last_broadcaster"] = time.time()
 
-    brod = load_user(stats["roles"]["broadcaster"][0], active=False)
+    broadcaster = load_user(stats["roles"]["broadcaster"][0], active=False)
     
     # Send mail to the new broadcaster
-    with app.app_context(), babel_force_locale(brod.lang):
+    with app.app_context(), babel_force_locale(broadcaster.lang):
         message = Mail(
             from_email="random.broadcasting.selector@gmail.com",
-            to_emails=brod.email,
+            to_emails=broadcaster.email,
             subject=_("RandomBroadcastingSelector: You are the one."),
             html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"])
         )
@@ -317,7 +317,7 @@ def verify_broadcast():
 
     stuffimporter.set_stats(stats)
 
-    app.logger.info(f"Nouveau diffuseur {brod.get_id()} a été sélectionné.")
+    app.logger.info(f"Nouveau diffuseur {broadcaster.get_id()} a été sélectionné.")
     return
 
 def login_or_create_user(id_:str, name:str, email:str, lang:str):
@@ -330,7 +330,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     return_val = redirect(url_for("index"))
     if not user: # Doesn't exist? Add it to the database.
         try:
-            fraud_id = u_cont.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
+            fraud_id = user_container.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
             app.logger.info(f"Double compte de {fraud_id} empéché.")
             return render_template("message.html", message=_("Double accounts aren't allowed."))
         except StopIteration:
@@ -338,7 +338,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
 
         new_user = User(id_=id_, name=name, email=email, lang=lang)
         new_user.last_active = time.time()
-        new_user.uexport(u_cont)
+        new_user.uexport(user_container)
 
         stats["users"]["num"] += 1
         stuffimporter.set_stats(stats)
@@ -380,17 +380,17 @@ def index():
         current_user.report_reason = form.reason.data
         current_user.report_quote = form.message_quote.data
 
-        current_user.uexport(u_cont)
+        current_user.uexport(user_container)
 
         stats["broadcast"]["reports"] += 1
 
         if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2): # ban condition
-            brod = load_user(stats["broadcast"]["author"], active=False)
+            broadcaster = load_user(stats["broadcast"]["author"], active=False)
 
-            brod.banned = 1
-            brod.ban_message = stats["broadcast"]["content"]
+            broadcaster.banned = 1
+            broadcaster.ban_message = stats["broadcast"]["content"]
 
-            reports = stuffimporter.itempaged_to_list(u_cont.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
+            reports = stuffimporter.itempaged_to_list(user_container.query_items("SELECT {'reason': u.report.reason, 'quote': u.report.quote} as user FROM Users u WHERE u.report.post_id = '" + stats['broadcast']['id'] + "'", enable_cross_partition_query=True))
             reason_effectives = {}
             for user_report in reports:
                 report = user_report["user"]
@@ -403,7 +403,7 @@ def index():
 
             reason_effectives = sorted(reason_effectives.items(), key=lambda x:x[1])
             most_reason = reason_effectives[0][0]
-            brod.ban_reason = most_reason
+            broadcaster.ban_reason = most_reason
 
             if most_reason != "offensive_name":
                 reason_quotes = [user["quote"] for user in reports if user["reason"] == most_reason]
@@ -415,18 +415,18 @@ def index():
                             results[quote] += 1
 
                 results = sorted(results.items(), key=lambda x:x[1])
-                brod.ban_most_quoted = results[0][0]
+                broadcaster.ban_most_quoted = results[0][0]
             else:
-                brod.ban_most_quoted = stats["broadcast"]["author_name"]
+                broadcaster.ban_most_quoted = stats["broadcast"]["author_name"]
 
-            brod.uexport(u_cont)
+            broadcaster.uexport(user_container)
 
-            with app.app_context(), babel_force_locale(brod.lang):
+            with app.app_context(), babel_force_locale(broadcaster.lang):
                 message = Mail(
                     from_email="random.broadcasting.selector@gmail.com",
-                    to_emails=brod.email,
+                    to_emails=broadcaster.email,
                     subject=_("RandomBroadcastingSelector: You were banned."),
-                    html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], brod=brod)
+                    html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], broadcaster=broadcaster)
                 )
             send_mail(message)
 
@@ -437,7 +437,7 @@ def index():
             stats["broadcast"]["author_name"] = "[deleted]"
             stats["broadcast"]["content"] = "[deleted]"
 
-            app.logger.info(f"Le diffuseur {brod.get_id()} a été banni.")
+            app.logger.info(f"Le diffuseur {broadcaster.get_id()} a été banni.")
 
         stuffimporter.set_stats(stats)
 
@@ -672,12 +672,12 @@ def history_redirect():
 
 @app.route("/history/<int:page>")
 def history(page):
-    q_list = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
-    q_str = " OR ".join(q_list)
+    query_list = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
+    query_str = " OR ".join(query_list)
 
     try:
-        q_result = p_cont.query_items(f"SELECT * FROM Posts p WHERE {q_str}", enable_cross_partition_query=True)
-        post_list = stuffimporter.itempaged_to_list(q_result)
+        query_result = post_container.query_items(f"SELECT * FROM Posts p WHERE {query_str}", enable_cross_partition_query=True)
+        post_list = stuffimporter.itempaged_to_list(query_result)
     except StopIteration:
         post_list = []
     
@@ -691,7 +691,7 @@ def specific_post_search():
 @app.route("/post/<int:id>")
 def specific_post(id):
     try:
-        post = p_cont.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
+        post = post_container.query_items(f"SELECT * FROM Posts p WHERE p.id = '{id}'", enable_cross_partition_query=True).next()
     except StopIteration:
         abort(404)
 
@@ -700,15 +700,15 @@ def specific_post(id):
 @app.route("/statistics/")
 def statistics():
     if stats["time"]["stats_last_edited"] + 600 < time.time():
-        stats["users"]["seen_msg"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['broadcast']['_ts']}", enable_cross_partition_query=True).next()
-        stats["users"]["last_active"]["1h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
-        stats["users"]["last_active"]["24h"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
-        stats["users"]["last_active"]["week"] = u_cont.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
+        stats["users"]["seen_msg"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {stats['broadcast']['_ts']}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["1h"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["24h"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
+        stats["users"]["last_active"]["week"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
         
-        stats["top_posts"]["5_most_upped"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_downed"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_pop"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        stats["top_posts"]["5_most_unpop"] = stuffimporter.itempaged_to_list(p_cont.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_upped"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_downed"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_pop"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
+        stats["top_posts"]["5_most_unpop"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         
         stats["time"]["stats_last_edited"] = time.time()
 
@@ -771,7 +771,7 @@ def ban_appeal():
             return render_template("message.html", message=_("You have already made a ban appeal."))
 
         user.ban_appeal = form.reason.data
-        user.uexport(u_cont)
+        user.uexport(user_container)
 
         stats["roles"]["ban_appealers"].pop(banned_id)
         stuffimporter.set_stats(stats)
@@ -799,21 +799,24 @@ def reselect():
     pessi_date_str = format_datetime(datetime.datetime.utcfromtimestamp(pessi_next_sel), format="long")
 
     if opti_date_str == pessi_date_str:
-        msg = _("the %(date)s", date=opti_date_str)
+        interval_to_watch_out = _("the %(date)s", date=opti_date_str)
     else:
-        msg = _("between the %(opti)s and the %(pessi)s", opti=opti_date_str, pessi=pessi_date_str)
+        interval_to_watch_out = _("between the %(opti)s and the %(pessi)s", opti=opti_date_str, pessi=pessi_date_str)
 
     if request.method == "POST":
         user_id = current_user.get_id()
         if request.form.get("yes"):
             stats["roles"]["futur_broadcasters"].append(user_id)
-            
+            done_message = _("You have been reselected successfully.\nWatch your inbox %(time_interval)s.", time_interval=interval_to_watch_out)
+        else:
+            done_message = _("You have been successfully removed from the preselected list.")
+
         stats["roles"]["preselecteds"].pop(user_id)
         stuffimporter.set_stats(stats)
 
-        return render_template("message.html", message=_("You have been reselected successfully.<br>Watch your inbox %(time_interval)s.", time_interval=msg))
+        return render_template("message.html", message=done_message)
 
-    return render_template("reselect.html", time_interval=msg)
+    return render_template("reselect.html", time_interval=interval_to_watch_out)
 
 @app.route("/parameters/", methods=["GET", "POST"])
 @login_required
@@ -821,7 +824,7 @@ def parameters():
     if request.method == "POST":
         if request.form.get("del_acc"):
             u_id = current_user.get_id()
-            u_cont.delete_item(u_id, u_id)
+            user_container.delete_item(u_id, u_id)
             logout_user()
 
             stats["users"]["num"] -= 1
@@ -861,7 +864,7 @@ def vote_callback():
                 current_user.upvote = ""
                 stats["broadcast"]["upvotes"] -= 1
 
-    current_user.uexport(u_cont)
+    current_user.uexport(user_container)
     stuffimporter.set_stats(stats)
 
     return request.form["action"]
@@ -1022,7 +1025,7 @@ def admin_panel():
     identifier = current_user.get_id() if current_user.is_authenticated else request.remote_addr
 
     try:
-        banned_user = u_cont.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
+        banned_user = user_container.query_items("SELECT * FROM Users u WHERE IS_DEFINED(u.ban) AND u.ban.appeal <> '' OFFSET 0 LIMIT 1", enable_cross_partition_query=True).next()
     except StopIteration:
         banned_user = anon_user_getter()
         banned_user.id_ = "no_ban_appeal"
@@ -1077,7 +1080,7 @@ def admin_panel():
 
                 app.logger.info(f"{identifier} a débanni {user.get_id()} avec succès.")
 
-            user.uexport(u_cont)
+            user.uexport(user_container)
             stuffimporter.set_stats(stats)
             
         elif appealview.submit.data and appealview.verify():

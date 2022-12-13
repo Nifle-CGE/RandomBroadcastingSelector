@@ -29,12 +29,12 @@ class User:
     def get_id(self) -> str:
         return self.id_
 
-    def uimport(self, u_cont, user_id:str) -> None:
+    def uimport(self, user_container, user_id:str) -> None:
         """
         Use this functions when sure the user is authenticated
         """
         try:
-            user = u_cont.read_item(user_id, partition_key=user_id)
+            user = user_container.read_item(user_id, partition_key=user_id)
         except CosmosResourceNotFoundError:
             return None
 
@@ -65,7 +65,7 @@ class User:
 
         return True
 
-    def uexport(self, u_cont):
+    def uexport(self, user_container):
         with open("samples/sample_user_part.json", "r", encoding="utf-8") as sample_user:
             user = json.load(sample_user)
 
@@ -90,6 +90,6 @@ class User:
             user["report"]["reason"] = self.report_reason
             user["report"]["quote"] = self.report_quote
 
-        u_cont.upsert_item(user)
+        user_container.upsert_item(user)
 
         return True

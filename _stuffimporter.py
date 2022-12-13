@@ -50,8 +50,8 @@ class StuffImporter(object):
     def set_stats(self, stats:dict):
         self.s_cont.replace_item("stats.json", stats)
 
-    def select_random_broadcaster(self, u_cont, last_brod:str) -> str:
-        brods_query = u_cont.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
+    def select_random_broadcaster(self, user_container, last_brod:str) -> str:
+        brods_query = user_container.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
         brods = []
         while True:
             try:
