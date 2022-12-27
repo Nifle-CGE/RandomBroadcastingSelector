@@ -129,7 +129,13 @@ csp = {
     "frame-src": "'self'",
     "base-uri": "'self'",
     "connect-src": "'self'",
-    "report-to": "https://rbs.azurewebsites.net/report-csp-violations",
+    "report-to": { 
+        "group": "csp-endpoint",
+        "max_age": 10886400,
+        "endpoints": [
+            {"url": "https://rbs.azurewebsites.net/report-csp-violations"}
+        ]
+    },
     "font-src": [
         "'self'",
         "data:"
