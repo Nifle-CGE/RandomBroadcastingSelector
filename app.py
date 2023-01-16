@@ -9,6 +9,7 @@ import re
 import logging
 import functools
 import pprint
+import copy
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
@@ -259,7 +260,7 @@ def verify_broadcast():
                 send_mail(message)
 
                 # check if some of the preselecteds have timed out
-                for key, val in stats["roles"]["preselecteds"].items():
+                for key, val in copy.deepcopy(stats["roles"]["preselecteds"]).items():
                     if val + 2592000 < time.time(): # if its been a month remove them
                         stats["roles"]["preselecteds"].pop(key)
 
