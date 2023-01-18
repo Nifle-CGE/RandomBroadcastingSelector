@@ -674,7 +674,7 @@ def logout():
 # General stuff
 @app.route("/history/")
 def history_redirect():
-    num = math.ceil((int(stats["broadcast"]["id"]) - 1) / 5)
+    num = math.ceil((int(stats["broadcast"]["id"])) / 5)
     return redirect(url_for("history", page=num))
 
 @app.route("/history/<int:page>")
