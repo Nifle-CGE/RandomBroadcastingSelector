@@ -331,7 +331,7 @@ msgid ""
 msgstr ""
 "Tu vas expériencer la grandeur. Tellement de pouvoir est entre tes mains.<br>\n"
 "    Mais comme ils disent toujours dans les films \"Avec de grands pouvoirs viennent des grandes responsabilités\".<br>\n"
-"    Et souviens toi que que ton message sera enregistré dans l'historique pour toujours, donc dis quelque chose de significatif.<br>\n"
+"    Et souviens toi que ton message sera enregistré dans l'historique pour toujours, donc dis quelque chose de significatif.<br>\n"
 "    J'imagine que tu sais déjâ ce que tu vas dire donc avant d'écrire ton magnifique message aux %(users)s gens qui se sont inscrits sur ce site web, soit certain.e que les réponses aux questions suivantes sont toutes non."
 
 #: templates/broadcast.html:25
