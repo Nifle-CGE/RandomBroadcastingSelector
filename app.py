@@ -814,7 +814,7 @@ def reselect():
         user_id = current_user.get_id()
         if request.form.get("yes"):
             stats["roles"]["futur_broadcasters"].append(user_id)
-            done_message = _("You have been reselected successfully.\nWatch your inbox %(time_interval)s.", time_interval=interval_to_watch_out)
+            done_message = _("You have been reselected successfully. Watch your inbox %(time_interval)s.", time_interval=interval_to_watch_out)
         else:
             done_message = _("You have been successfully removed from the preselected list.")
 
