@@ -11,3 +11,4 @@ azure_cosmos==4.3.0
 sendgrid==6.9.7
 deepl==1.9.0
 babel==2.10.3
+werkzeug==2.2.2
