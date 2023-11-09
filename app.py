@@ -59,27 +59,30 @@ brod_change_threshold = 24 * 60 * 60
 if testing:
     app.logger.level = logging.DEBUG
     app.logger.debug("Mode test activé.")
-    
+
     from tests.ip_getter import get_ip
     app.config["SERVER_NAME"] = get_ip() + ":5000"
 
-    with open(f"./tests/config.json", "r", encoding="utf-8") as json_file: # Config setup
+    with open(f"./tests/config.json", "r", encoding="utf-8") as json_file:  # Config setup
         config = json.load(json_file)
 else:
     app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
 
-    config = _stuffimporter.StuffImporter.get_config() # Config setup
+    config = _stuffimporter.StuffImporter.get_config()  # Config setup
 
 # User session management setup
 login_manager = LoginManager(app)
 
 # Setting anonymous user
+
+
 def anon_user_getter():
     anon_user = User()
     anon_user.is_active = False
     anon_user.is_authenticated = False
     anon_user.is_anonymous = True
     return anon_user
+
 
 login_manager.anonymous_user = anon_user_getter
 
@@ -91,7 +94,22 @@ SUPPORTED_LANGUAGES = ["en", "fr"]
 app.logger.debug("Traducteur mis en place.")
 
 # Internationalization setup
-babel = Babel(app)
+
+
+def get_lang():
+    lang = request.args.get("lang")
+    if lang and lang in LANGUAGE_CODES:
+        session["lang"] = lang
+        return lang
+    elif session.get("lang") in LANGUAGE_CODES:
+        return session["lang"]
+    elif current_user.is_authenticated:
+        return current_user.lang
+
+    return request.accept_languages.best_match(SUPPORTED_LANGUAGES)
+
+
+babel = Babel(app, locale_selector=get_lang)
 
 # Database setup
 cc = CosmosClient(config["db"]["url"], config["db"]["key"])
@@ -130,7 +148,7 @@ csp = {
     "frame-src": "'self'",
     "base-uri": "'self'",
     "connect-src": "'self'",
-    "report-to": { 
+    "report-to": {
         "group": "csp-endpoint",
         "max_age": 10886400,
         "endpoints": [
@@ -158,6 +176,8 @@ talisman = Talisman(
 app.logger.info("Application lancée.")
 
 # Flask-Login helper to retrieve a user from our db
+
+
 @login_manager.user_loader
 def load_user(user_id, active=True):
     user = User()
@@ -182,28 +202,17 @@ def load_user(user_id, active=True):
 
     return user
 
-# Babel stuff
-@babel.localeselector
-def get_lang():
-    lang = request.args.get("lang")
-    if lang and lang in LANGUAGE_CODES:
-        session["lang"] = lang
-        return lang
-    elif session.get("lang") in LANGUAGE_CODES:
-        return session["lang"]
-    elif current_user.is_authenticated:
-        return current_user.lang
-
-    return request.accept_languages.best_match(SUPPORTED_LANGUAGES)
-
 # Useful defs
+
+
 def send_mail(mail):
     if testing:
         print(f"Mail envoyé avec le sujet \"{mail.subject}\"")
     else:
         sg_client.send(mail)
 
-def role_required(role): # custom view decorator
+
+def role_required(role):  # custom view decorator
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
@@ -217,6 +226,7 @@ def role_required(role): # custom view decorator
         return wrapper
     return decorator
 
+
 def get_rem_secs():
     if stats["broadcast"]["content"]:
         rem_secs = stats["broadcast"]["_ts"] + brod_change_threshold - time.time()
@@ -226,13 +236,17 @@ def get_rem_secs():
     return rem_secs
 
 # Custom template filters
+
+
 @app.template_filter("format_date")
 def template_format_date(ts, format=None):
     return format_date(datetime.datetime.utcfromtimestamp(ts), format=format)
 
+
 @app.before_request
 def verify_broadcast():
-    if testing: return
+    if testing:
+        return
 
     skip_save = False
     if stats["broadcast"]["content"] == "[deleted]" and stats["broadcast"]["author_name"] == "[deleted]":
@@ -242,7 +256,7 @@ def verify_broadcast():
             if stats["time"]["last_broadcaster"] + brod_change_threshold > time.time():
                 app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion.")
                 return
-            else: # broadcaster didn't make his broadcast in time
+            else:  # broadcaster didn't make his broadcast in time
                 skip_save = True
 
                 f_brod = load_user(stats["roles"]["broadcaster"][0], active=False)
@@ -261,14 +275,14 @@ def verify_broadcast():
 
                 # check if some of the preselecteds have timed out
                 for key, val in copy.deepcopy(stats["roles"]["preselecteds"]).items():
-                    if val + 2592000 < time.time(): # if its been a month remove them
+                    if val + 2592000 < time.time():  # if its been a month remove them
                         stats["roles"]["preselecteds"].pop(key)
 
         elif stats["broadcast"]["_ts"] + brod_change_threshold > time.time():
             app.logger.debug("Le post a toujours le temps d'être évalué.")
             return
 
-    if not skip_save: # Save current post
+    if not skip_save:  # Save current post
         with open("samples/sample_post.json", "r", encoding="utf-8") as sample_file:
             new_post = json.load(sample_file)
 
@@ -292,9 +306,9 @@ def verify_broadcast():
         except KeyError:
             stats["broadcasts"]["msgs_sent"][new_post["lang"]] = 1
 
-        stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"])) # add number of words
-        stats["broadcasts"]["characters_sent"] += len(new_post["content"]) # add number of chars
-    
+        stats["broadcasts"]["words_sent"] += len(re.findall(r"[\w']+", new_post["content"]))  # add number of words
+        stats["broadcasts"]["characters_sent"] += len(new_post["content"])  # add number of chars
+
     # Select another broadcaster
     if stats["roles"]["futur_broadcasters"]:
         stats["roles"]["broadcaster"] = [stats["roles"]["futur_broadcasters"].pop(0)]
@@ -311,7 +325,7 @@ def verify_broadcast():
     stats["time"]["last_broadcaster"] = time.time()
 
     broadcaster = load_user(stats["roles"]["broadcaster"][0], active=False)
-    
+
     # Send mail to the new broadcaster
     with app.app_context(), babel_force_locale(broadcaster.lang):
         message = Mail(
@@ -327,7 +341,8 @@ def verify_broadcast():
     app.logger.info(f"Nouveau diffuseur {broadcaster.get_id()} a été sélectionné.")
     return
 
-def login_or_create_user(id_:str, name:str, email:str, lang:str):
+
+def login_or_create_user(id_: str, name: str, email: str, lang: str):
     if lang not in LANGUAGE_CODES:
         lang = request.accept_languages.best_match(LANGUAGE_CODES)
 
@@ -335,7 +350,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     user = load_user(id_)
 
     return_val = redirect(url_for("index"))
-    if not user: # Doesn't exist? Add it to the database.
+    if not user:  # Doesn't exist? Add it to the database.
         try:
             fraud_id = user_container.query_items(f"SELECT u.id FROM Users u WHERE u.email = '{email}'", enable_cross_partition_query=True).next()
             app.logger.info(f"Double compte de {fraud_id} empéché.")
@@ -356,7 +371,7 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
 
         return_val = render_template("message.html", message=_("You have successfully created your account, if you are selected, you will receive an email on %(mail)s so check your emails regularly.", mail=user.email))
 
-    if user.banned: # if user banned send the ban appeal form
+    if user.banned:  # if user banned send the ban appeal form
         code = secrets.token_urlsafe(32)
         stats["roles"]["ban_appealers"][user.get_id()] = code
         stuffimporter.set_stats(stats)
@@ -371,11 +386,13 @@ def login_or_create_user(id_:str, name:str, email:str, lang:str):
     return return_val
 
 # Routing
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     form = ReportForm()
-    
-    if form.validate_on_submit(): # Report callback
+
+    if form.validate_on_submit():  # Report callback
         if not stats["broadcast"]["content"]:
             app.logger.warning(f"{current_user.get_id()} a essayé de signaler un post alors qu'il n'y en a pas.")
             return render_template("message.html", message=_("No post is live right now so you can't report one."))
@@ -391,7 +408,7 @@ def index():
 
         stats["broadcast"]["reports"] += 1
 
-        if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2): # ban condition
+        if stats["users"]["seen_msg"] > (3 * math.sqrt(stats["users"]["num"])) and stats["broadcast"]["reports"] > (stats["users"]["seen_msg"] / 2):  # ban condition
             broadcaster = load_user(stats["broadcast"]["author"], active=False)
 
             broadcaster.banned = 1
@@ -408,7 +425,7 @@ def index():
                 except KeyError:
                     reason_effectives[report["reason"]] = 1
 
-            reason_effectives = sorted(reason_effectives.items(), key=lambda x:x[1])
+            reason_effectives = sorted(reason_effectives.items(), key=lambda x: x[1])
             most_reason = reason_effectives[0][0]
             broadcaster.ban_reason = most_reason
 
@@ -421,7 +438,7 @@ def index():
                         if quote in secquote:
                             results[quote] += 1
 
-                results = sorted(results.items(), key=lambda x:x[1])
+                results = sorted(results.items(), key=lambda x: x[1])
                 broadcaster.ban_most_quoted = results[0][0]
             else:
                 broadcaster.ban_most_quoted = stats["broadcast"]["author_name"]
@@ -455,26 +472,30 @@ def index():
     return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time)
 
 # All the login stuff
+
+
 @app.route("/login/")
 def login():
     return render_template("login.html")
 
+
 @app.route("/login/google/")
 def google_login():
     # Google Oauth Config
-	oauth.register(
-		name='google',
-		client_id=config["google"]["oauth_id"],
-		client_secret=config["google"]["oauth_secret"],
-		server_metadata_url=config["google"]["discovery_url"],
-		client_kwargs={
-			'scope': 'openid email profile'
-		}
-	)
-	
-	# Redirect to google_login_callback function
-	redirect_uri = url_for("google_login_callback", _external=True)
-	return oauth.google.authorize_redirect(redirect_uri)
+    oauth.register(
+        name='google',
+        client_id=config["google"]["oauth_id"],
+        client_secret=config["google"]["oauth_secret"],
+        server_metadata_url=config["google"]["discovery_url"],
+        client_kwargs={
+            'scope': 'openid email profile'
+        }
+    )
+
+    # Redirect to google_login_callback function
+    redirect_uri = url_for("google_login_callback", _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
 
 @app.route("/login/google/callback")
 def google_login_callback():
@@ -483,7 +504,7 @@ def google_login_callback():
 
     if not response_json.get("email_verified"):
         return _("User email not available or not verified by %(service)s.", service="Google"), 400
-    
+
     unique_id = "ggl_" + response_json["sub"]
     users_name = response_json["name"]
     users_email = response_json["email"]
@@ -491,20 +512,22 @@ def google_login_callback():
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
+
 @app.route('/login/twitter/')
 def twitter_login():
-	# Twitter Oauth Config
-	oauth.register(
-		name='twitter',
-		client_id=config["twitter"]["apiv1_key"],
-		client_secret=config["twitter"]["apiv1_secret"],
-		api_base_url='https://api.twitter.com/1.1/',
-		request_token_url='https://api.twitter.com/oauth/request_token',
-		access_token_url='https://api.twitter.com/oauth/access_token',
-		authorize_url='https://api.twitter.com/oauth/authorize'
-	)
-	redirect_uri = url_for('twitter_login_callback', _external=True)
-	return oauth.twitter.authorize_redirect(redirect_uri)
+    # Twitter Oauth Config
+    oauth.register(
+        name='twitter',
+        client_id=config["twitter"]["apiv1_key"],
+        client_secret=config["twitter"]["apiv1_secret"],
+        api_base_url='https://api.twitter.com/1.1/',
+        request_token_url='https://api.twitter.com/oauth/request_token',
+        access_token_url='https://api.twitter.com/oauth/access_token',
+        authorize_url='https://api.twitter.com/oauth/authorize'
+    )
+    redirect_uri = url_for('twitter_login_callback', _external=True)
+    return oauth.twitter.authorize_redirect(redirect_uri)
+
 
 @app.route('/login/twitter/callback')
 def twitter_login_callback():
@@ -528,21 +551,23 @@ def twitter_login_callback():
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
+
 @app.route('/login/github/')
 def github_login():
-	# Github Oauth Config
-	oauth.register(
-		name='github',
-		client_id=config["github"]["client_id"],
-		client_secret=config["github"]["client_secret"],
-		api_base_url='https://api.github.com/',
-		access_token_url='https://github.com/login/oauth/access_token',
-		authorize_url='https://github.com/login/oauth/authorize',
+    # Github Oauth Config
+    oauth.register(
+        name='github',
+        client_id=config["github"]["client_id"],
+        client_secret=config["github"]["client_secret"],
+        api_base_url='https://api.github.com/',
+        access_token_url='https://github.com/login/oauth/access_token',
+        authorize_url='https://github.com/login/oauth/authorize',
         userinfo_endpoint="https://api.github.com/user",
-		client_kwargs={'scope': 'user:email'}
-	)
-	redirect_uri = url_for('github_login_callback', _external=True)
-	return oauth.github.authorize_redirect(redirect_uri)
+        client_kwargs={'scope': 'user:email'}
+    )
+    redirect_uri = url_for('github_login_callback', _external=True)
+    return oauth.github.authorize_redirect(redirect_uri)
+
 
 @app.route('/login/github/callback')
 def github_login_callback():
@@ -562,24 +587,26 @@ def github_login_callback():
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
+
 @app.route("/login/discord/")
 def discord_login():
     # Discord Oauth Config
-	oauth.register(
-		name='discord',
-		client_id=config["discord"]["client_id"],
-		client_secret=config["discord"]["client_secret"],
+    oauth.register(
+        name='discord',
+        client_id=config["discord"]["client_id"],
+        client_secret=config["discord"]["client_secret"],
         api_base_url='https://discordapp.com/api/',
         access_token_url='https://discordapp.com/api/oauth2/token',
         authorize_url='https://discordapp.com/api/oauth2/authorize',
-		client_kwargs={
-			'scope': 'identify email'
-		}
-	)
-	
-	# Redirect to discord_login_callback function
-	redirect_uri = url_for("discord_login_callback", _external=True)
-	return oauth.discord.authorize_redirect(redirect_uri)
+        client_kwargs={
+            'scope': 'identify email'
+        }
+    )
+
+    # Redirect to discord_login_callback function
+    redirect_uri = url_for("discord_login_callback", _external=True)
+    return oauth.discord.authorize_redirect(redirect_uri)
+
 
 @app.route("/login/discord/callback")
 def discord_login_callback():
@@ -593,13 +620,14 @@ def discord_login_callback():
 
     if not response_json.get("verified"):
         return _("User email not available or not verified by %(service)s.", service="Discord"), 400
-    
+
     unique_id = "dscrd_" + response_json["id"]
     users_name = response_json["username"]
     users_email = response_json["email"]
     lang = response_json["locale"]
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
+
 
 """
 @app.route('/login/twitch/')
@@ -665,6 +693,7 @@ def facebook_login_callback():
 	return redirect(url_for("index", lang=session.get("lang")))
 """
 
+
 @app.route("/logout/")
 @login_required
 def logout():
@@ -672,10 +701,13 @@ def logout():
     return redirect(url_for("index"))
 
 # General stuff
+
+
 @app.route("/history/")
 def history_redirect():
     num = math.ceil((int(stats["broadcast"]["id"])) / 5)
     return redirect(url_for("history", page=num))
+
 
 @app.route("/history/<int:page>")
 def history(page):
@@ -687,13 +719,15 @@ def history(page):
         post_list = stuffimporter.itempaged_to_list(query_result)
     except StopIteration:
         post_list = []
-    
+
     return render_template("history.html", post_list=reversed(post_list), hist_page=int(page))
+
 
 @app.route("/post/")
 def specific_post_search():
     max_id = int(stats["broadcast"]["id"]) - int(bool(stats["broadcast"]["content"]))
     return render_template("post_search.html", max_post_id=max_id)
+
 
 @app.route("/post/<int:id>")
 def specific_post(id):
@@ -704,6 +738,7 @@ def specific_post(id):
 
     return render_template("post.html", post=post)
 
+
 @app.route("/statistics/")
 def statistics():
     if stats["time"]["stats_last_edited"] + 600 < time.time():
@@ -711,12 +746,12 @@ def statistics():
         stats["users"]["last_active"]["1h"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 3600}", enable_cross_partition_query=True).next()
         stats["users"]["last_active"]["24h"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 86400}", enable_cross_partition_query=True).next()
         stats["users"]["last_active"]["week"] = user_container.query_items(f"SELECT VALUE COUNT(1) FROM Users u WHERE u.last_active > {time.time() - 604800}", enable_cross_partition_query=True).next()
-        
+
         stats["top_posts"]["5_most_upped"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.upvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_downed"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.downvotes DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_pop"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.ratio DESC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
         stats["top_posts"]["5_most_unpop"] = stuffimporter.itempaged_to_list(post_container.query_items("SELECT * FROM Posts p ORDER BY p.ratio ASC OFFSET 0 LIMIT 5", enable_cross_partition_query=True))
-        
+
         stats["time"]["stats_last_edited"] = time.time()
 
         stuffimporter.set_stats(stats)
@@ -728,6 +763,7 @@ def statistics():
 
     return render_template("stats.html", stats=stats, uptime_str=uptime_str, rem_time=rem_time, lang=get_lang())
 
+
 @app.route("/broadcast/", methods=["GET", "POST"])
 @login_required
 @role_required("broadcaster")
@@ -736,29 +772,30 @@ def broadcast():
         return render_template("message.html", message=_("You have already made your broadcast."))
 
     form = BroadcastForm()
-    
+
     if form.validate_on_submit():
         stats["broadcast"]["id"] = str(int(stats["broadcast"]["id"]) + 1)
         stats["broadcast"]["content"] = form.message.data
         stats["broadcast"]["author"] = stats["roles"]["broadcaster"][0]
         stats["broadcast"]["author_name"] = form.display_name.data
         stats["broadcast"]["_ts"] = time.time()
-    
+
         test = translator.translate_text(form.message.data, target_lang="EN-US")
         stats["broadcast"]["lang"] = test.detected_source_lang.split("-")[0].lower()
-    
+
         for language in translator.get_target_languages():
             lang_code = language.code.split("-")[0]
             stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(form.message.data, target_lang=language.code).text
-        
+
         stats["broadcast"]["_ts"] = time.time()
-    
+
         stuffimporter.set_stats(stats)
-    
+
         app.logger.info("La diffusion a été enregistrée.")
         return render_template("message.html", message=_("Your broadcast has been saved, you can now share this website to everyone you know so that everyone sees your message."))
 
     return render_template("broadcast.html", form=form, stats=stats)
+
 
 @app.route("/ban-appeal/", methods=["GET", "POST"])
 def ban_appeal():
@@ -770,7 +807,7 @@ def ban_appeal():
         return render_template("message.html", message=_("Hey smartass, quit trying."))
 
     form = BanAppealForm()
-    
+
     if form.validate_on_submit():
         user = load_user(form.user_id.data, active=False)
         if user.ban_appeal:
@@ -789,9 +826,11 @@ def ban_appeal():
 
     return render_template("banned.html", form=form, user_id=banned_id)
 
+
 @app.route("/about/")
 def about():
     return render_template("about.html")
+
 
 @app.route("/reselect/", methods=["GET", "POST"])
 @login_required
@@ -825,6 +864,7 @@ def reselect():
 
     return render_template("reselect.html", time_interval=interval_to_watch_out)
 
+
 @app.route("/parameters/", methods=["GET", "POST"])
 @login_required
 def parameters():
@@ -844,6 +884,8 @@ def parameters():
     return render_template("parameters.html")
 
 # Callbacks
+
+
 @app.route("/vote/", methods=["POST"])
 @login_required
 def vote_callback():
@@ -877,6 +919,8 @@ def vote_callback():
     return request.form["action"]
 
 # Custom validators
+
+
 class MinWords(object):
     def __init__(self, minimum=-1, message=None):
         self.minimum = minimum
@@ -889,6 +933,7 @@ class MinWords(object):
         if words < self.minimum:
             raise validators.ValidationError(self.message)
 
+
 class InString(object):
     def __init__(self, string="", message=None):
         self.string = string
@@ -899,6 +944,7 @@ class InString(object):
     def __call__(self, form, field):
         if field.data not in self.string and form.reason.data != "offensive_name":
             raise validators.ValidationError(self.message)
+
 
 class StopIfBlah(object):
     def __init__(self, message=None):
@@ -911,6 +957,8 @@ class StopIfBlah(object):
             raise validators.StopValidation
 
 # WTForms
+
+
 class BroadcastForm(FlaskForm):
     message = TextAreaField(lazy_gettext("Enter the message you want to send to this website's users."), validators=[
         validators.InputRequired(),
@@ -924,6 +972,7 @@ class BroadcastForm(FlaskForm):
     ])
 
     submit = SubmitField(lazy_gettext("Submit"))
+
 
 class BanAppealForm(FlaskForm):
     user_id = HiddenField(validators=[
@@ -939,6 +988,7 @@ class BanAppealForm(FlaskForm):
 
     submit = SubmitField(lazy_gettext("Submit"))
 
+
 class ReportForm(FlaskForm):
     reason = RadioField(choices=[
         ("harassement", lazy_gettext("Is this broadcast harassing, insulting or encouraging hate against anyone ?")),
@@ -948,7 +998,7 @@ class ReportForm(FlaskForm):
     ], validators=[
         validators.InputRequired(),
     ])
-    
+
     message_quote = StringField(validators=[
         StopIfBlah(),
         validators.InputRequired(),
@@ -957,6 +1007,7 @@ class ReportForm(FlaskForm):
     ])
 
     submit = SubmitField(lazy_gettext("Submit"))
+
 
 class BanUnbanForm(FlaskForm):
     user_id = StringField("Id de la personne concernée : ", validators=[
@@ -986,6 +1037,7 @@ class BanUnbanForm(FlaskForm):
 
     submit = SubmitField()
 
+
 class AppealViewForm(FlaskForm):
     user_id = HiddenField()
 
@@ -1001,29 +1053,39 @@ class AppealViewForm(FlaskForm):
     submit = SubmitField()
 
 # Legal stuff
+
+
 @app.route("/privacy-policy/")
 def privacy_policy():
     return render_template("privacy_policy.html")
 
+
 @app.route("/terms-of-service/")
 def terms_of_service():
     return render_template("terms_of_service.html")
+
 
 @app.route("/sitemap/")
 def sitemap():
     return render_template("sitemap.html")
 
 # Crawling control
+
+
 @app.route("/robots.txt")
 def robots():
     return "User-agent: *<br>Disallow:<br>Allow: /<br>Sitemap: /sitemap"
 
 # Health check
+
+
 @app.route("/ping/")
 def ping():
     return _("App online"), 200
 
 # Admin
+
+
 @app.route("/super-secret-admin-panel/", methods=["GET", "POST"])
 @login_required
 @role_required("admin")
@@ -1089,7 +1151,7 @@ def admin_panel():
 
             user.uexport(user_container)
             stuffimporter.set_stats(stats)
-            
+
         elif appealview.submit.data and appealview.verify():
             user = load_user(appealview.user_id.data, active=False)
             if appealview.whatodo.data == "accepté":
@@ -1149,6 +1211,8 @@ def admin_panel():
     return render_template("admin_panel.html", banunban=banunban, appealview=appealview, banned_user=banned_user)
 
 # Error handling
+
+
 @app.errorhandler(401)
 def unauthorized(e):
     return render_template(
@@ -1158,6 +1222,7 @@ def unauthorized(e):
         err_img_alt="Gandalf you shall not pass GIF",
         err_msg=e
     ), 401
+
 
 @app.errorhandler(403)
 def forbidden(e):
@@ -1169,6 +1234,7 @@ def forbidden(e):
         err_msg=e
     ), 403
 
+
 @app.errorhandler(404)
 def not_found(e):
     return render_template(
@@ -1178,6 +1244,7 @@ def not_found(e):
         err_img_alt="Confused Travolta GIF",
         err_msg=e
     ), 404
+
 
 @app.errorhandler(500)
 def internal_server_error(e):
@@ -1190,6 +1257,8 @@ def internal_server_error(e):
     ), 500
 
 # CSP reports handling
+
+
 @app.route('/report-csp-violations', methods=['POST'])
 def report():
     content = request.get_json(force=True)
@@ -1204,6 +1273,7 @@ def report():
     )
     send_mail(message)
     return "", 204
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", debug=testing)
