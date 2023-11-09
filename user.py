@@ -1,6 +1,7 @@
 from azure.cosmos.exceptions import *
 import json
 
+
 class User:
     def __init__(self, id_="", name="", email="", lang="en") -> None:
         self.id_ = id_
@@ -13,7 +14,7 @@ class User:
 
         self.banned = 0
         self.ban_message = ""
-        self.ban_reason =  ""
+        self.ban_reason = ""
         self.ban_most_quoted = ""
         self.ban_appeal = ""
 
@@ -29,7 +30,7 @@ class User:
     def get_id(self) -> str:
         return self.id_
 
-    def uimport(self, user_container, user_id:str) -> None:
+    def uimport(self, user_container, user_id: str) -> None:
         """
         Use this functions when sure the user is authenticated
         """
@@ -49,7 +50,7 @@ class User:
         if user.get("ban"):
             self.banned = 1
             self.ban_message = user["ban"]["message"]
-            self.ban_reason =  user["ban"]["reason"]
+            self.ban_reason = user["ban"]["reason"]
             self.ban_most_quoted = user["ban"]["most_quoted"]
             self.ban_appeal = user["ban"]["appeal"]
 
@@ -57,7 +58,7 @@ class User:
             self.report_post_id = user["report"]["post_id"]
             self.report_reason = user["report"]["reason"]
             self.report_quote = user["report"]["quote"]
-        
+
         self.is_active = not bool(self.banned)
         self.is_authenticated = True
         self.is_anonymous = False

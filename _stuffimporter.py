@@ -1,12 +1,13 @@
 import random
 import os
 
+
 class StuffImporter(object):
     def __init__(self, s_cont, _, ngettext) -> None:
         self.s_cont = s_cont
         self._ = _
         self.ngettext = ngettext
-        
+
     @staticmethod
     def get_config() -> dict:
         return {
@@ -43,14 +44,14 @@ class StuffImporter(object):
             "sendgrid_api_key": os.getenv("SENDGRID_API_KEY"),
             "deepl_auth_key": os.getenv("DEEPL_AUTH_KEY")
         }
-            
+
     def get_stats(self) -> dict:
         return self.s_cont.read_item("stats.json", "stats.json")
 
-    def set_stats(self, stats:dict):
+    def set_stats(self, stats: dict):
         self.s_cont.replace_item("stats.json", stats)
 
-    def select_random_broadcaster(self, user_container, last_brod:str) -> str:
+    def select_random_broadcaster(self, user_container, last_brod: str) -> str:
         brods_query = user_container.query_items(f"SELECT u.id FROM Users u WHERE NOT IS_DEFINED(u.ban) AND u.id <> '{last_brod}'", enable_cross_partition_query=True)
         brods = []
         while True:
@@ -61,7 +62,7 @@ class StuffImporter(object):
 
         return random.choice(brods)
 
-    def seconds_to_str(self, seconds:float) -> str:
+    def seconds_to_str(self, seconds: float) -> str:
         days = round(seconds // 86400)
         hours = round((seconds % 86400) // 3600)
         minutes = round(((seconds % 86400) % 3600) // 60)
