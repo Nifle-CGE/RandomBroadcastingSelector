@@ -145,7 +145,10 @@ csp = {
     "style-src": "'self'",
     "form-action": "'self'",
     "media-src": "'self'",
-    "frame-src": "'self'",
+    "frame-src": [
+        "'self'",
+        "web-rbs.betteruptime.com"
+    ],
     "base-uri": "'self'",
     "connect-src": "'self'",
     "report-to": {
