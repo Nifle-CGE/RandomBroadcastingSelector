@@ -511,7 +511,9 @@ def google_login_callback():
     unique_id = "ggl_" + response_json["sub"]
     users_name = response_json["name"]
     users_email = response_json["email"]
-    lang = response_json["locale"]
+    lang = response_json.get("locale")
+    if not lang:
+        lang = ""
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -1279,4 +1281,4 @@ def report():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=testing)
+    app.run(host="0.0.0.0", debug=testing)  # ne pas changer 0.0.0.0 pour la véritable adresse pasque ça marche pas
