@@ -512,8 +512,6 @@ def google_login_callback():
     users_name = response_json["name"]
     users_email = response_json["email"]
     lang = response_json.get("locale")
-    if not lang:
-        lang = ""
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -588,7 +586,7 @@ def github_login_callback():
     unique_id = "gthb_" + str(response_json["id"])
     users_name = response_json["name"]
     users_email = response_json["email"]
-    lang = ""
+    lang = None
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
@@ -629,7 +627,7 @@ def discord_login_callback():
     unique_id = "dscrd_" + response_json["id"]
     users_name = response_json["username"]
     users_email = response_json["email"]
-    lang = response_json["locale"]
+    lang = response_json.get("locale")
 
     return login_or_create_user(unique_id, users_name, users_email, lang)
 
