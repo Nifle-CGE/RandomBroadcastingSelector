@@ -63,31 +63,31 @@ jobs:
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
-      - name: Add environment variables to .env
+      - name: Add environment variables to .env.prod
         run: |
-          echo "RBS_DEBUG=0" >> .env
-          echo "TELEGRAM_SEND_URL=${{ secrets.TELEGRAM_SEND_URL }}" >> .env
-          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
-          echo "DB_KEY=${{ secrets.DB_KEY }}" >> .env
-          echo "GOOGLE_OAUTH_ID=${{ secrets.GOOGLE_OAUTH_ID }}" >> .env
-          echo "GOOGLE_OAUTH_SECRET=${{ secrets.GOOGLE_OAUTH_SECRET }}" >> .env
-          echo "GOOGLE_DISCOVERY_URL=${{ secrets.GOOGLE_DISCOVERY_URL }}" >> .env
-          echo "TWITTER_APIV1_KEY=${{ secrets.TWITTER_APIV1_KEY }}" >> .env
-          echo "TWITTER_APIV1_SECRET=${{ secrets.TWITTER_APIV1_SECRET }}" >> .env
-          echo "FACEBOOK_CLIENT_ID=${{ secrets.FACEBOOK_CLIENT_ID }}" >> .env
-          echo "FACEBOOK_CLIENT_SECRET=${{ secrets.FACEBOOK_CLIENT_SECRET }}" >> .env
-          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" >> .env
-          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" >> .env
-          echo "DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}" >> .env
-          echo "DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}" >> .env
-          echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
-          echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
-          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> .env
-          echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env
-          echo "WEB_IMAGE=${{ env.WEB_IMAGE }}" >> .env
-          echo "NGINX_IMAGE=${{ env.NGINX_IMAGE }}" >> .env
-          echo "NAMESPACE=${{ secrets.NAMESPACE }}" >> .env
-          echo "PERSONAL_ACCESS_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .env
+          echo "RBS_DEBUG=0" >> .env.prod
+          echo "TELEGRAM_SEND_URL=${{ secrets.TELEGRAM_SEND_URL }}" >> .env.prod
+          echo "DB_URL=${{ secrets.DB_URL }}" >> .env.prod
+          echo "DB_KEY=${{ secrets.DB_KEY }}" >> .env.prod
+          echo "GOOGLE_OAUTH_ID=${{ secrets.GOOGLE_OAUTH_ID }}" >> .env.prod
+          echo "GOOGLE_OAUTH_SECRET=${{ secrets.GOOGLE_OAUTH_SECRET }}" >> .env.prod
+          echo "GOOGLE_DISCOVERY_URL=${{ secrets.GOOGLE_DISCOVERY_URL }}" >> .env.prod
+          echo "TWITTER_APIV1_KEY=${{ secrets.TWITTER_APIV1_KEY }}" >> .env.prod
+          echo "TWITTER_APIV1_SECRET=${{ secrets.TWITTER_APIV1_SECRET }}" >> .env.prod
+          echo "FACEBOOK_CLIENT_ID=${{ secrets.FACEBOOK_CLIENT_ID }}" >> .env.prod
+          echo "FACEBOOK_CLIENT_SECRET=${{ secrets.FACEBOOK_CLIENT_SECRET }}" >> .env.prod
+          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" >> .env.prod
+          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" >> .env.prod
+          echo "DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}" >> .env.prod
+          echo "DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}" >> .env.prod
+          echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env.prod
+          echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env.prod
+          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> .env.prod
+          echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env.prod
+          echo "WEB_IMAGE=${{ env.WEB_IMAGE }}" >> .env.prod
+          echo "NGINX_IMAGE=${{ env.NGINX_IMAGE }}" >> .env.prod
+          echo "NAMESPACE=${{ secrets.NAMESPACE }}" >> .env.prod
+          echo "PERSONAL_ACCESS_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .env.prod
       - name: Add the private SSH key to the ssh-agent
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -100,10 +100,10 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          scp -o StrictHostKeyChecking=no -r ./.env ./docker-compose.prod.yml root@${{ secrets.LINODE_IP_ADDRESS }}:/usr/src/app
+          scp -o StrictHostKeyChecking=no -r ./.env.prod ./docker-compose.prod.yml root@${{ secrets.LINODE_IP_ADDRESS }}:/usr/src/app
           ssh -o StrictHostKeyChecking=no root@${{ secrets.LINODE_IP_ADDRESS }} << 'ENDSSH'
             cd /usr/src/app
-            source .env
+            source .env.prod
             docker login ghcr.io -u $NAMESPACE -p $PERSONAL_ACCESS_TOKEN
             docker pull $WEB_IMAGE
             docker pull $NGINX_IMAGE
