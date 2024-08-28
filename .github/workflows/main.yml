@@ -108,5 +108,5 @@ jobs:
             docker pull $WEB_IMAGE
             docker pull $NGINX_IMAGE
             echo "Finished pulling images"
-            sudo docker compose -f docker-compose.prod.yml up -d
+            docker compose -f docker-compose.prod.yml up -d
           ENDSSH
