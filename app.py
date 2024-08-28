@@ -39,36 +39,18 @@ import requests
 import _stuffimporter
 from user import User
 
-# Logging
-# Mise en place du système de logs avec impression dans la console et enregistrement dans un fichier logs.log
-fh = logging.FileHandler("logs.log", encoding='utf-8')
-formatter = logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s : %(message)s")
-fh.setFormatter(formatter)
+# Testing
+testing = bool(os.environ.get("RBS_DEBUG"))
 
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
-app.logger.addHandler(fh)
-app.logger.level = logging.INFO
-
+app.logger.level = logging.DEBUG
 app.logger.info("Lancement de l'application.")
 
-# testing
-testing = os.path.isdir("tests")
+# Config
+config = _stuffimporter.StuffImporter.get_config()  # Config setup
 brod_change_threshold = 24 * 60 * 60
-if testing:
-    app.logger.level = logging.DEBUG
-    app.logger.debug("Mode test activé.")
-
-    from tests.ip_getter import get_ip
-    app.config["SERVER_NAME"] = get_ip() + ":5000"
-
-    with open(f"./tests/config.json", "r", encoding="utf-8") as json_file:  # Config setup
-        config = json.load(json_file)
-else:
-    app.config["SERVER_NAME"] = "rbs.azurewebsites.net"
-
-    config = _stuffimporter.StuffImporter.get_config()  # Config setup
 
 # User session management setup
 login_manager = LoginManager(app)
@@ -155,7 +137,7 @@ csp = {
         "group": "csp-endpoint",
         "max_age": 10886400,
         "endpoints": [
-            {"url": "https://rbs.azurewebsites.net/report-csp-violations"}
+            {"url": "https://web-rbs.com/report-csp-violations"}
         ]
     },
     "font-src": [
@@ -173,16 +155,15 @@ talisman = Talisman(
     content_security_policy_nonce_in=[
         "script-src",
         "style-src"
-    ]
+    ],
+    force_https=False  # Le https est géré par cloudflare donc pas besoin de s'embeter avec ça
 )
 
 app.logger.info("Application lancée.")
 
-# Flask-Login helper to retrieve a user from our db
-
 
 @login_manager.user_loader
-def load_user(user_id, active=True):
+def load_user(user_id, active=True):  # Flask-Login helper to retrieve a user from our db
     user = User()
     if not user.uimport(user_container, user_id):
         return None
@@ -257,7 +238,7 @@ def verify_broadcast():
     else:
         if not stats["broadcast"]["content"]:
             if stats["time"]["last_broadcaster"] + brod_change_threshold > time.time():
-                app.logger.debug(f"Le diffuseur a toujours le temps pour faire sa diffusion.")
+                app.logger.debug("Le diffuseur a toujours le temps pour faire sa diffusion.")
                 return
             else:  # broadcaster didn't make his broadcast in time
                 skip_save = True
@@ -538,7 +519,7 @@ def twitter_login_callback():
         lang = get_lang()
         return render_template("message.html", message=_("You cancelled the Continue with %(service)s action.", service="Twitter"))
 
-    token = oauth.twitter.authorize_access_token()
+    oauth.twitter.authorize_access_token()
     response = oauth.twitter.get("account/verify_credentials.json", params={"include_email": "true", "skip_status": "true"})
     response_json = response.json()
 
@@ -574,7 +555,7 @@ def github_login():
 
 @app.route('/login/github/callback')
 def github_login_callback():
-    token = oauth.github.authorize_access_token()
+    oauth.github.authorize_access_token()
     response = oauth.github.get("user")
     response_json = response.json()
 
@@ -617,7 +598,7 @@ def discord_login_callback():
         lang = get_lang()
         return render_template("message.html", message=_("You cancelled the Continue with %(service)s action.", service="Discord"))
 
-    token = oauth.discord.authorize_access_token()
+    oauth.discord.authorize_access_token()
     response = oauth.discord.get("users/@me")
     response_json = response.json()
 
@@ -635,20 +616,20 @@ def discord_login_callback():
 """
 @app.route('/login/twitch/')
 def twitch_login():
-	# Twitch Oauth Config
-	oauth.register(
-		name='twitch',
-		client_id=config["twitch"]["client_id"],
-		client_secret=config["twitch"]["client_secret"],
-		api_base_url='https://api.twitch.tv/helix/',
-		access_token_url='https://id.twitch.tv/oauth2/token',
-		authorize_url='https://id.twitch.tv/oauth2/authorize',
+    # Twitch Oauth Config
+    oauth.register(
+        name='twitch',
+        client_id=config["twitch"]["client_id"],
+        client_secret=config["twitch"]["client_secret"],
+        api_base_url='https://api.twitch.tv/helix/',
+        access_token_url='https://id.twitch.tv/oauth2/token',
+        authorize_url='https://id.twitch.tv/oauth2/authorize',
         client_kwargs={
             'scope': 'user:read:email'
         }
-	)
-	redirect_uri = url_for('twitch_login_callback', _external=True)
-	return oauth.twitch.authorize_redirect(redirect_uri)
+    )
+    redirect_uri = url_for('twitch_login_callback', _external=True)
+    return oauth.twitch.authorize_redirect(redirect_uri)
 
 @app.route('/login/twitch/callback')
 def twitch_login_callback():
@@ -673,27 +654,27 @@ def twitch_login_callback():
 
 @app.route('/login/facebook/')
 def facebook_login():
-	# Facebook Oauth Config
-	oauth.register(
-		name='facebook',
-		client_id=config["facebook"]["client_id"],
-		client_secret=config["facebook"]["client_secret"],
-		api_base_url='https://graph.facebook.com/',
-		access_token_url='https://graph.facebook.com/oauth/access_token',
-		authorize_url='https://www.facebook.com/dialog/oauth',
-		client_kwargs={'scope': 'email public_profile'},
+    # Facebook Oauth Config
+    oauth.register(
+        name='facebook',
+        client_id=config["facebook"]["client_id"],
+        client_secret=config["facebook"]["client_secret"],
+        api_base_url='https://graph.facebook.com/',
+        access_token_url='https://graph.facebook.com/oauth/access_token',
+        authorize_url='https://www.facebook.com/dialog/oauth',
+        client_kwargs={'scope': 'email public_profile'},
         userinfo_endpoint="https://graph.facebook.com/me?fields=id,name,email,languages"
-	)
-	redirect_uri = url_for('facebook_login_callback', _external=True)
-	return oauth.facebook.authorize_redirect(redirect_uri)
+    )
+    redirect_uri = url_for('facebook_login_callback', _external=True)
+    return oauth.facebook.authorize_redirect(redirect_uri)
 
 @app.route('/login/facebook/callback')
 def facebook_login_callback():
-	token = oauth.facebook.authorize_access_token()
-	profile = token["userinfo"]
+    token = oauth.facebook.authorize_access_token()
+    profile = token["userinfo"]
 
-	return profile
-	return redirect(url_for("index", lang=session.get("lang")))
+    return profile
+    return redirect(url_for("index", lang=session.get("lang")))
 """
 
 
@@ -1279,4 +1260,4 @@ def report():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=testing)  # ne pas changer 0.0.0.0 pour la véritable adresse pasque ça marche pas
+    app.run(host="0.0.0.0", port=8000, debug=testing)  # ne pas changer 0.0.0.0 pour la véritable adresse pasque ça marche pas

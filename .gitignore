@@ -1,5 +1,9 @@
-__pycache__
-tests
-corbeille
 messages.pot
 **/*.log
+
+*.pyc
+__pycache__
+.DS_Store
+.env.dev
+.env.prod
+.env.prod.db
