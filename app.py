@@ -64,7 +64,6 @@ def get_ip():
 
 
 testing = bool(os.environ.get("RBS_DEBUG"))
-app.config["SERVER_NAME"] = get_ip() + ":8000"
 
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
