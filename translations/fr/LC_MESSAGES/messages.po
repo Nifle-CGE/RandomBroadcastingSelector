@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  1.0.0\n"
 "Report-Msgid-Bugs-To: random.broadcasting.selector@gmail.com\n"
-"POT-Creation-Date: 2023-12-21 09:26+0100\n"
+"POT-Creation-Date: 2024-08-29 14:17+0200\n"
 "PO-Revision-Date: 2022-08-23 14:20+0200\n"
 "Last-Translator: Pouget - - Péjoan Elfin <random.broadcasting.selector@gmail.com>\n"
 "Language: fr\n"
@@ -16,7 +16,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.10.3\n"
+"Generated-By: Babel 2.16.0\n"
 
 #: _stuffimporter.py:73
 #, python-format
@@ -309,11 +309,15 @@ msgstr "Se connecter"
 msgid "en"
 msgstr "fr"
 
-#: templates/base.html:69
+#: templates/base.html:70
+msgid "<b>Warning</b>: you are currently on an old RBS version, logging in is disabled. Remove this bookmark, go to the new version at <a href=\"https://web-rbs.com\" class=\"w3-text-blue\">https://web-rbs.com</a> and bookmark the new one."
+msgstr "<b>Attention</b> : tu est actuellement sur une vieille version de RBS, la connexion au compte est désactivée. Supprime ce favoris, va sur la nouvelle version <a href=\"https://web-rbs.com\" class=\"w3-text-blue\">https://web-rbs.com</a> et met la nouvelle version en favoris."
+
+#: templates/base.html:72
 msgid "<i>Created by <a href=\"mailto:random.broadcasting.selector@gmail.com\">Nifle CGE</a></i> | <a href=\"/about/\">About</a> | <a href=\"/post/\">Lookup an individual post</a> | <a href=\"/sitemap/\">Sitemap</a> | <a href=\"/privacy-policy/\">Privacy Policy</a> | <a href=\"/terms-of-service/\">Terms of Service</a>"
 msgstr "<i>Créé par <a href=\"mailto:random.broadcasting.selector@gmail.com\">Nifle CGE</a></i> | <a href=\"/about/\">À propos</a> | <a href=\"/post/\">Rechercher un post</a> | <a href=\"/sitemap/\">Sitemap</a> | <a href=\"/privacy-policy/\">Politique de confidentialité</a> | <a href=\"/terms-of-service/\">Conditions d'utilisation</a>"
 
-#: templates/base.html:71
+#: templates/base.html:74
 msgid "If you spot any spelling mistakes or encounter any bugs just contact me by clicking my name above."
 msgstr "Si tu remarques une erreur d'orthographe ou si tu rencontres des bogues tu peux me contacter en cliquant sur mon nom au dessus."
 
