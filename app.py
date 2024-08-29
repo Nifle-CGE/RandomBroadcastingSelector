@@ -64,11 +64,7 @@ def get_ip():
 
 
 testing = bool(os.environ.get("RBS_DEBUG"))
-if testing:
-    app.logger.debug("Mode test activé.")
-    app.config["SERVER_NAME"] = get_ip() + ":8000"
-else:
-    app.config["SERVER_NAME"] = "web-rbs.com"
+app.config["SERVER_NAME"] = get_ip() + ":8000"
 
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
