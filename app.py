@@ -10,6 +10,7 @@ import logging
 import functools
 import pprint
 import copy
+import socket
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
@@ -39,14 +40,35 @@ import requests
 import _stuffimporter
 from user import User
 
-# Testing
-testing = bool(os.environ.get("RBS_DEBUG"))
-
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 app.logger.level = logging.DEBUG
 app.logger.info("Lancement de l'application.")
+
+# Testing
+
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        IP = s.getsockname()[0]
+    except Exception:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+
+testing = bool(os.environ.get("RBS_DEBUG"))
+if testing:
+    app.logger.debug("Mode test activé.")
+    app.config["SERVER_NAME"] = get_ip() + ":8000"
+else:
+    app.config["SERVER_NAME"] = "web-rbs.com"
 
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
