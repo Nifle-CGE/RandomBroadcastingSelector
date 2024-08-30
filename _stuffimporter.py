@@ -30,8 +30,8 @@ class StuffImporter(object):
                 "client_secret": os.getenv("FACEBOOK_CLIENT_SECRET")
             },
             "github": {
-                "client_id": os.getenv("GITHUB_CLIENT_ID"),
-                "client_secret": os.getenv("GITHUB_CLIENT_SECRET")
+                "client_id": os.getenv("GH_CLIENT_ID"),
+                "client_secret": os.getenv("GH_CLIENT_SECRET")
             },
             "discord": {
                 "client_id": os.getenv("DISCORD_CLIENT_ID"),

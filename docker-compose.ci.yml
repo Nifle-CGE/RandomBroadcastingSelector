@@ -1,0 +1,23 @@
+services:
+  web:
+    build:
+      context: ./
+      dockerfile: Dockerfile.prod
+      cache_from:
+        - "${WEB_IMAGE}"
+    image: "${WEB_IMAGE}"
+    command: gunicorn --bind 0.0.0.0:8000 app:app
+    expose:
+      - 8000
+    env_file: .env
+    restart: on-failure:3
+  nginx:
+    build:
+      context: ./nginx
+      cache_from:
+        - "${NGINX_IMAGE}"
+    image: "${NGINX_IMAGE}"
+    ports:
+      - 80:80
+    depends_on:
+      - web

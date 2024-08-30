@@ -1,4 +1,4 @@
-from azure.cosmos.exceptions import *
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 import json
 
 
