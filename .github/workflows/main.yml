@@ -1,19 +1,24 @@
 name: Continuous Integration and Delivery
 
-on: [push]
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
 
 env:
   WEB_IMAGE: ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')/web
   NGINX_IMAGE: ghcr.io/$(echo $GITHUB_REPOSITORY | tr '[:upper:]' '[:lower:]')/nginx
 
 jobs:
-
   build:
     name: Build Docker Images
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
+
       - name: Add environment variables to .env
         run: |
           echo "RBS_DEBUG=0" >> .env
@@ -35,21 +40,26 @@ jobs:
           echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
           echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> .env
           echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env
+
       - name: Set environment variables
         run: |
           echo "WEB_IMAGE=$(echo ${{env.WEB_IMAGE}} )" >> $GITHUB_ENV
           echo "NGINX_IMAGE=$(echo ${{env.NGINX_IMAGE}} )" >> $GITHUB_ENV
+
       - name: Log in to GitHub Packages
         run: echo ${PERSONAL_ACCESS_TOKEN} | docker login ghcr.io -u ${{ secrets.NAMESPACE }} --password-stdin
         env:
           PERSONAL_ACCESS_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
       - name: Pull images
         run: |
           docker pull ${{ env.WEB_IMAGE }} || true
           docker pull ${{ env.NGINX_IMAGE }} || true
+
       - name: Build images
         run: |
           docker compose -f docker-compose.ci.yml build
+
       - name: Push images
         run: |
           docker push ${{ env.WEB_IMAGE }}
@@ -59,10 +69,14 @@ jobs:
     name: Deploy to Linode
     runs-on: ubuntu-latest
     needs: build
-    #if: github.ref == 'refs/heads/main'
+    environment:
+      name: 'Production'
+      url: "https://web-rbs.com"
+
     steps:
       - name: Checkout master
         uses: actions/checkout@v1
+
       - name: Add environment variables to .env.prod
         run: |
           echo "RBS_DEBUG=0" >> .env.prod
@@ -88,6 +102,7 @@ jobs:
           echo "NGINX_IMAGE=${{ env.NGINX_IMAGE }}" >> .env.prod
           echo "NAMESPACE=${{ secrets.NAMESPACE }}" >> .env.prod
           echo "PERSONAL_ACCESS_TOKEN=${{ secrets.PERSONAL_ACCESS_TOKEN }}" >> .env.prod
+
       - name: Add the private SSH key to the ssh-agent
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
@@ -96,6 +111,7 @@ jobs:
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-keyscan github.com >> ~/.ssh/known_hosts
           ssh-add - <<< "${{ secrets.PRIVATE_KEY }}"
+
       - name: Build and deploy images on Linode
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
