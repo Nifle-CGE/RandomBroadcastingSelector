@@ -63,7 +63,7 @@ def get_ip():
     return IP
 
 
-testing = bool(os.environ.get("RBS_DEBUG"))
+testing = bool(int(os.environ.get("RBS_DEBUG")))
 
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
