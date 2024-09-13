@@ -68,6 +68,7 @@ testing = bool(int(os.environ.get("RBS_DEBUG")))
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
 brod_change_threshold = 24 * 60 * 60
+prod_server_name = "web-rbs.com"
 
 # User session management setup
 login_manager = LoginManager(app)
@@ -270,7 +271,7 @@ def verify_broadcast():
                         from_email="random.broadcasting.selector@gmail.com",
                         to_emails=f_brod.email,
                         subject=_("RandomBroadcastingSelector: You missed your opportunity but don't worry."),
-                        html_content=render_template("mails/missed.html", server_name=app.config["SERVER_NAME"])
+                        html_content=render_template("mails/missed.html", server_name=prod_server_name)
                     )
                 send_mail(message)
 
@@ -333,7 +334,7 @@ def verify_broadcast():
             from_email="random.broadcasting.selector@gmail.com",
             to_emails=broadcaster.email,
             subject=_("RandomBroadcastingSelector: You are the one."),
-            html_content=render_template("mails/broadcaster.html", server_name=app.config["SERVER_NAME"])
+            html_content=render_template("mails/broadcaster.html", server_name=prod_server_name)
         )
     send_mail(message)
 
@@ -451,7 +452,7 @@ def index():
                     from_email="random.broadcasting.selector@gmail.com",
                     to_emails=broadcaster.email,
                     subject=_("RandomBroadcastingSelector: You were banned."),
-                    html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], broadcaster=broadcaster)
+                    html_content=render_template("mails/banned.html", server_name=prod_server_name, broadcaster=broadcaster)
                 )
             send_mail(message)
 
@@ -1123,7 +1124,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector: You were banned."),
-                            html_content=render_template("mails/banned.html", server_name=app.config["SERVER_NAME"], user=user)
+                            html_content=render_template("mails/banned.html", server_name=prod_server_name, user=user)
                         )
                     send_mail(message)
 
@@ -1141,7 +1142,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
-                            html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/unbanned.html", server_name=prod_server_name)
                         )
                     send_mail(message)
 
@@ -1164,7 +1165,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
-                            html_content=render_template("mails/unbanned.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/unbanned.html", server_name=prod_server_name)
                         )
                     send_mail(message)
 
@@ -1183,7 +1184,7 @@ def admin_panel():
                             from_email="random.broadcasting.selector@gmail.com",
                             to_emails=user.email,
                             subject=_("RandomBroadcastingSelector: Your ban appeal was refused."),
-                            html_content=render_template("mails/refused.html", server_name=app.config["SERVER_NAME"])
+                            html_content=render_template("mails/refused.html", server_name=prod_server_name)
                         )
                     send_mail(message)
 
