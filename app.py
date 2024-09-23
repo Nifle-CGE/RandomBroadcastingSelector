@@ -40,30 +40,17 @@ import requests
 import _stuffimporter
 from user import User
 
+# Testing
+testing = bool(int(os.environ.get("RBS_DEBUG")))
+
 # Flask app setup
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
-app.logger.level = logging.DEBUG
+if testing:
+    app.logger.level = logging.DEBUG
+else:
+    app.logger.level = logging.INFO
 app.logger.info("Lancement de l'application.")
-
-# Testing
-
-
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
-    try:
-        # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
-        IP = s.getsockname()[0]
-    except Exception:
-        IP = '127.0.0.1'
-    finally:
-        s.close()
-    return IP
-
-
-testing = bool(int(os.environ.get("RBS_DEBUG")))
 
 # Config
 config = _stuffimporter.StuffImporter.get_config()  # Config setup
