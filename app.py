@@ -10,7 +10,6 @@ import logging
 import functools
 import pprint
 import copy
-import socket
 
 # Third-party libraries
 from flask import Flask, redirect, render_template, url_for, session, request, abort
