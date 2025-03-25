@@ -698,7 +698,8 @@ def history_redirect():
 
 @app.route("/history/<int:page>")
 def history(page):
-    query_list = [f"p.id = '{post_id}'" for post_id in range(stats["broadcast"]["id"] - 6, stats["broadcast"]["id"])]
+    current_id = int(stats["broadcast"]["id"])
+    query_list = [f"p.id = '{post_id}'" for post_id in range(current_id - 5, current_id + 1)]
     query_str = " OR ".join(query_list)
 
     try:
