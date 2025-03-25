@@ -702,10 +702,10 @@ def history(page: int):
     query_list = [f"p.id = '{post_id}'" for post_id in range(current_id - (5 * page) + 1, current_id - (5 * (page - 1)) + 1)]
     query_str = " OR ".join(query_list)
 
-    try:
-        query_result = post_container.query_items(f"SELECT * FROM Posts p WHERE {query_str}", enable_cross_partition_query=True)
-        post_list = stuffimporter.itempaged_to_list(query_result)
-    except StopIteration:
+    query_result = post_container.query_items(f"SELECT * FROM Posts p WHERE {query_str}", enable_cross_partition_query=True)
+    post_list = stuffimporter.itempaged_to_list(query_result)
+    
+    if not post_list:
         abort(404)
 
     return render_template("history.html", post_list=reversed(post_list), hist_page=page)
