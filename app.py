@@ -704,7 +704,7 @@ def history(page: int):
 
     query_result = post_container.query_items(f"SELECT * FROM Posts p WHERE {query_str}", enable_cross_partition_query=True)
     post_list = stuffimporter.itempaged_to_list(query_result)
-    
+
     if not post_list:
         abort(404)
 
