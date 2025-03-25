@@ -697,9 +697,9 @@ def history_redirect():
 
 
 @app.route("/history/<int:page>")
-def history(page):
+def history(page: int):
     current_id = int(stats["broadcast"]["id"])
-    query_list = [f"p.id = '{post_id}'" for post_id in range(current_id - 5, current_id + 1)]
+    query_list = [f"p.id = '{post_id}'" for post_id in range(current_id - (5 * page) + 1, current_id - (5 * (page - 1)) + 1)]
     query_str = " OR ".join(query_list)
 
     try:
@@ -708,7 +708,7 @@ def history(page):
     except StopIteration:
         abort(404)
 
-    return render_template("history.html", post_list=reversed(post_list), hist_page=int(page))
+    return render_template("history.html", post_list=reversed(post_list), hist_page=page)
 
 
 @app.route("/post/")
