@@ -693,20 +693,19 @@ def logout():
 
 @app.route("/history/")
 def history_redirect():
-    num = math.ceil((int(stats["broadcast"]["id"])) / 5)
-    return redirect(url_for("history", page=num))
+    return redirect(url_for("history", page=1))
 
 
 @app.route("/history/<int:page>")
 def history(page):
-    query_list = [f"p.id = '{post_id}'" for post_id in range((5 * page) - 4, (5 * page) + 1)]
+    query_list = [f"p.id = '{post_id}'" for post_id in range(stats["broadcast"]["id"] - 6, stats["broadcast"]["id"])]
     query_str = " OR ".join(query_list)
 
     try:
         query_result = post_container.query_items(f"SELECT * FROM Posts p WHERE {query_str}", enable_cross_partition_query=True)
         post_list = stuffimporter.itempaged_to_list(query_result)
     except StopIteration:
-        post_list = []
+        abort(404)
 
     return render_template("history.html", post_list=reversed(post_list), hist_page=int(page))
 
