@@ -120,7 +120,7 @@ jobs:
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} << 'ENDSSH'
             cd ~/app
             source .env.prod
-            docker login ghcr.io -u $NAMESPACE -p $PERSONAL_ACCESS_TOKEN
+            echo $PERSONAL_ACCESS_TOKEN | sudo docker login ghcr.io -u $NAMESPACE --password-stdin
             sudo docker pull $WEB_IMAGE
             sudo docker pull $NGINX_IMAGE
             sudo docker compose -f docker-compose.prod.yml up -d
