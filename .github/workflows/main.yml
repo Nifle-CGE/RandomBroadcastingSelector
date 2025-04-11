@@ -119,7 +119,7 @@ jobs:
           scp -o StrictHostKeyChecking=no -r ./.env.prod ./docker-compose.prod.yml ubuntu@${{ secrets.SERVER_IP }}:~/app
           ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.SERVER_IP }} << 'ENDSSH'
             cd ~/app
-            source .env.prod
+            sudo source .env.prod
             echo $PERSONAL_ACCESS_TOKEN | sudo docker login ghcr.io -u $NAMESPACE --password-stdin
             sudo docker pull $WEB_IMAGE
             sudo docker pull $NGINX_IMAGE
