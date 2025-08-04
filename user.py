@@ -1,5 +1,6 @@
-from azure.cosmos.exceptions import CosmosResourceNotFoundError
 import json
+
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 
 
 class User:

@@ -1,39 +1,36 @@
 # Python standard libraries
-import datetime
-import secrets
-import json
-import os
-import time
-import math
-import re
-import logging
-import functools
-import pprint
 import copy
+import datetime
+import functools
+import json
+import logging
+import math
+import os
+import pprint
+import re
+import secrets
+import smtplib
+import time
+from email.mime.text import MIMEText
 
 # Third-party libraries
-from flask import Flask, redirect, render_template, url_for, session, request, abort
-
-from flask_login import LoginManager, current_user, login_required, login_user, logout_user
-
-from flask_wtf import FlaskForm
-from wtforms.fields import StringField, TextAreaField, HiddenField, RadioField, SubmitField, BooleanField
-from wtforms import validators
-
-from flask_babel import Babel, _, ngettext, lazy_gettext, lazy_ngettext, format_date, format_datetime, force_locale as babel_force_locale
-
-from flask_talisman import Talisman
-
-from authlib.integrations.flask_client import OAuth
-
-from azure.cosmos import CosmosClient
-
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
-
 import deepl
-
 import requests
+from authlib.integrations.flask_client import OAuth
+from azure.cosmos import CosmosClient
+from flask import (Flask, abort, redirect, render_template, request, session,
+                   url_for)
+from flask_babel import Babel, _
+from flask_babel import force_locale as babel_force_locale
+from flask_babel import (format_date, format_datetime, lazy_gettext,
+                         lazy_ngettext, ngettext)
+from flask_login import (LoginManager, current_user, login_required,
+                         login_user, logout_user)
+from flask_talisman import Talisman
+from flask_wtf import FlaskForm
+from wtforms import validators
+from wtforms.fields import (BooleanField, HiddenField, RadioField, StringField,
+                            SubmitField, TextAreaField)
 
 # Internal imports
 import _stuffimporter
@@ -115,10 +112,6 @@ stats["time"]["start_time"] = time.time()
 stuffimporter.set_stats(stats)
 app.logger.debug("Stats récupérés.")
 
-# Mail client setup
-sg_client = SendGridAPIClient(config["sendgrid_api_key"])
-app.logger.debug("Client mail mis en place.")
-
 # OAuth setup
 oauth = OAuth(app)
 
@@ -190,14 +183,22 @@ def load_user(user_id, active=True):  # Flask-Login helper to retrieve a user fr
 
     return user
 
+
 # Useful defs
 
 
-def send_mail(mail):
+def send_mail(sender_email, recipient_email, subject, body):
     if testing:
-        print(f"Mail envoyé avec le sujet \"{mail.subject}\"")
-    else:
-        sg_client.send(mail)
+        print(f"Mail envoyé avec le sujet \"{subject}\"")
+        return
+
+    html_message = MIMEText(body, 'html')
+    html_message['Subject'] = subject
+    html_message['From'] = sender_email
+    html_message['To'] = recipient_email
+    with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+        server.login(sender_email, config["email_password"])
+        server.sendmail(sender_email, recipient_email, html_message.as_string())
 
 
 def role_required(role):  # custom view decorator
@@ -253,13 +254,12 @@ def verify_broadcast():
 
                 # Send former broadcaster the missed mail and setup the reselection proposal
                 with app.app_context(), babel_force_locale(f_brod.lang):
-                    message = Mail(
-                        from_email="random.broadcasting.selector@gmail.com",
-                        to_emails=f_brod.email,
+                    send_mail(
+                        sender_email="random.broadcasting.selector@gmail.com",
+                        recipient_email=f_brod.email,
                         subject=_("RandomBroadcastingSelector: You missed your opportunity but don't worry."),
-                        html_content=render_template("mails/missed.html", server_name=prod_server_name)
+                        body=render_template("mails/missed.html", server_name=prod_server_name)
                     )
-                send_mail(message)
 
                 # check if some of the preselecteds have timed out
                 for key, val in copy.deepcopy(stats["roles"]["preselecteds"]).items():
@@ -316,13 +316,12 @@ def verify_broadcast():
 
     # Send mail to the new broadcaster
     with app.app_context(), babel_force_locale(broadcaster.lang):
-        message = Mail(
-            from_email="random.broadcasting.selector@gmail.com",
-            to_emails=broadcaster.email,
+        send_mail(
+            sender_email="random.broadcasting.selector@gmail.com",
+            recipient_email=broadcaster.email,
             subject=_("RandomBroadcastingSelector: You are the one."),
-            html_content=render_template("mails/broadcaster.html", server_name=prod_server_name)
+            body=render_template("mails/broadcaster.html", server_name=prod_server_name)
         )
-    send_mail(message)
 
     stuffimporter.set_stats(stats)
 
@@ -434,13 +433,12 @@ def index():
             broadcaster.uexport(user_container)
 
             with app.app_context(), babel_force_locale(broadcaster.lang):
-                message = Mail(
-                    from_email="random.broadcasting.selector@gmail.com",
-                    to_emails=broadcaster.email,
+                send_mail(
+                    sender_email="random.broadcasting.selector@gmail.com",
+                    recipient_email=broadcaster.email,
                     subject=_("RandomBroadcastingSelector: You were banned."),
-                    html_content=render_template("mails/banned.html", server_name=prod_server_name, broadcaster=broadcaster)
+                    body=render_template("mails/banned.html", server_name=prod_server_name, broadcaster=broadcaster)
                 )
-            send_mail(message)
 
             stats["users"]["num"] -= 1
             stats["users"]["banned"] += 1
@@ -1106,13 +1104,12 @@ def admin_panel():
 
                 if not banunban.slienced.data:
                     with app.app_context(), babel_force_locale(user.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=user.email,
+                        send_mail(
+                            sender_email="random.broadcasting.selector@gmail.com",
+                            recipient_email=user.email,
                             subject=_("RandomBroadcastingSelector: You were banned."),
-                            html_content=render_template("mails/banned.html", server_name=prod_server_name, user=user)
+                            body=render_template("mails/banned.html", server_name=prod_server_name, user=user)
                         )
-                    send_mail(message)
 
                 stats["users"]["num"] -= 1
                 stats["users"]["banned"] += 1
@@ -1124,13 +1121,12 @@ def admin_panel():
 
                 if not banunban.slienced.data:
                     with app.app_context(), babel_force_locale(user.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=user.email,
+                        send_mail(
+                            sender_email="random.broadcasting.selector@gmail.com",
+                            recipient_email=user.email,
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
-                            html_content=render_template("mails/unbanned.html", server_name=prod_server_name)
+                            body=render_template("mails/unbanned.html", server_name=prod_server_name)
                         )
-                    send_mail(message)
 
                 stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
@@ -1147,13 +1143,12 @@ def admin_panel():
 
                 if not appealview.slienced.data:
                     with app.app_context(), babel_force_locale(user.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=user.email,
+                        send_mail(
+                            sender_email="random.broadcasting.selector@gmail.com",
+                            recipient_email=user.email,
                             subject=_("RandomBroadcastingSelector: You are no longer banned."),
-                            html_content=render_template("mails/unbanned.html", server_name=prod_server_name)
+                            body=render_template("mails/unbanned.html", server_name=prod_server_name)
                         )
-                    send_mail(message)
 
                 stats["users"]["num"] += 1
                 stats["users"]["banned"] -= 1
@@ -1166,13 +1161,12 @@ def admin_panel():
 
                 if not appealview.slienced.data:
                     with app.app_context(), babel_force_locale(user.lang):
-                        message = Mail(
-                            from_email="random.broadcasting.selector@gmail.com",
-                            to_emails=user.email,
+                        send_mail(
+                            sender_email="random.broadcasting.selector@gmail.com",
+                            recipient_email=user.email,
                             subject=_("RandomBroadcastingSelector: Your ban appeal was refused."),
-                            html_content=render_template("mails/refused.html", server_name=prod_server_name)
+                            body=render_template("mails/refused.html", server_name=prod_server_name)
                         )
-                    send_mail(message)
 
             user.uexport()
 
@@ -1253,13 +1247,12 @@ def report():
     app.logger.warning("CSP violation occurred")
     requests.get(config["telegram_send_url"] + "csp+violation+occured")
 
-    message = Mail(
-        from_email="random.broadcasting.selector@gmail.com",
-        to_emails="pub@elfin.fr",
+    send_mail(
+        sender_email="random.broadcasting.selector@gmail.com",
+        recipient_email="random.broadcasting.selector@gmail.com",
         subject="RandomBroadcastingSelector : CSP violation.",
-        html_content=json.dumps(content, indent=4, sort_keys=True)
+        body=json.dumps(content, indent=4, sort_keys=True)
     )
-    send_mail(message)
     return "", 204
 
 

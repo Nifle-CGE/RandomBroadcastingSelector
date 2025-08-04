@@ -1,5 +1,5 @@
-import random
 import os
+import random
 
 
 class StuffImporter(object):
@@ -41,7 +41,7 @@ class StuffImporter(object):
                 "client_id": os.getenv("TWITCH_CLIENT_ID"),
                 "client_secret": os.getenv("TWITCH_CLIENT_SECRET")
             },
-            "sendgrid_api_key": os.getenv("SENDGRID_API_KEY"),
+            "email_password": os.getenv("EMAIL_PASSWORD"),
             "deepl_auth_key": os.getenv("DEEPL_AUTH_KEY")
         }
 

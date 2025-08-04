@@ -38,7 +38,7 @@ jobs:
           echo "DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}" >> .env
           echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env
           echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env
-          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> .env
+          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env
           echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env
 
       - name: Set environment variables
@@ -96,7 +96,7 @@ jobs:
           echo "DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}" >> .env.prod
           echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env.prod
           echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env.prod
-          echo "SENDGRID_API_KEY=${{ secrets.SENDGRID_API_KEY }}" >> .env.prod
+          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env.prod
           echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env.prod
           echo "WEB_IMAGE=${{ env.WEB_IMAGE }}" >> .env.prod
           echo "NGINX_IMAGE=${{ env.NGINX_IMAGE }}" >> .env.prod
