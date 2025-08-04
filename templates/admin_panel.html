@@ -11,6 +11,10 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
 
 {% block content %}
 <h1>Admin Panel</h1>
+<h2>Infos</h2>
+<p>
+    <strong>Diffuseur sélectionné :</strong> {{ broadcaster.get_id() }} ({{ broadcaster.email }})<br>
+</p>
 <h2>Tout ce qui est ban</h2>
 <h3>Pour ban qqun</h3>
 <form method="post">

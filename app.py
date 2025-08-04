@@ -1189,8 +1189,10 @@ def admin_panel():
 
     stuffimporter.set_stats(stats)
 
+    broadcaster = load_user(stats["roles"]["broadcaster"][0], active=False)
+
     app.logger.info(f"{identifier} a accédé au panneau d'administration avec succès.")
-    return render_template("admin_panel.html", banunban=banunban, appealview=appealview, banned_user=banned_user)
+    return render_template("admin_panel.html", banunban=banunban, appealview=appealview, banned_user=banned_user, broadcaster=broadcaster)
 
 # Error handling
 
