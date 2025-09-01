@@ -79,25 +79,6 @@ jobs:
 
       - name: Add environment variables to .env.prod
         run: |
-          echo "RBS_DEBUG=0" >> .env.prod
-          echo "TELEGRAM_SEND_URL=${{ secrets.TELEGRAM_SEND_URL }}" >> .env.prod
-          echo "DB_URL=${{ secrets.DB_URL }}" >> .env.prod
-          echo "DB_KEY=${{ secrets.DB_KEY }}" >> .env.prod
-          echo "GOOGLE_OAUTH_ID=${{ secrets.GOOGLE_OAUTH_ID }}" >> .env.prod
-          echo "GOOGLE_OAUTH_SECRET=${{ secrets.GOOGLE_OAUTH_SECRET }}" >> .env.prod
-          echo "GOOGLE_DISCOVERY_URL=${{ secrets.GOOGLE_DISCOVERY_URL }}" >> .env.prod
-          echo "TWITTER_APIV1_KEY=${{ secrets.TWITTER_APIV1_KEY }}" >> .env.prod
-          echo "TWITTER_APIV1_SECRET=${{ secrets.TWITTER_APIV1_SECRET }}" >> .env.prod
-          echo "FACEBOOK_CLIENT_ID=${{ secrets.FACEBOOK_CLIENT_ID }}" >> .env.prod
-          echo "FACEBOOK_CLIENT_SECRET=${{ secrets.FACEBOOK_CLIENT_SECRET }}" >> .env.prod
-          echo "GH_CLIENT_ID=${{ secrets.GH_CLIENT_ID }}" >> .env.prod
-          echo "GH_CLIENT_SECRET=${{ secrets.GH_CLIENT_SECRET }}" >> .env.prod
-          echo "DISCORD_CLIENT_ID=${{ secrets.DISCORD_CLIENT_ID }}" >> .env.prod
-          echo "DISCORD_CLIENT_SECRET=${{ secrets.DISCORD_CLIENT_SECRET }}" >> .env.prod
-          echo "TWITCH_CLIENT_ID=${{ secrets.TWITCH_CLIENT_ID }}" >> .env.prod
-          echo "TWITCH_CLIENT_SECRET=${{ secrets.TWITCH_CLIENT_SECRET }}" >> .env.prod
-          echo "EMAIL_PASSWORD=${{ secrets.EMAIL_PASSWORD }}" >> .env.prod
-          echo "DEEPL_AUTH_KEY=${{ secrets.DEEPL_AUTH_KEY }}" >> .env.prod
           echo "WEB_IMAGE=${{ env.WEB_IMAGE }}" >> .env.prod
           echo "NGINX_IMAGE=${{ env.NGINX_IMAGE }}" >> .env.prod
           echo "NAMESPACE=${{ secrets.NAMESPACE }}" >> .env.prod
