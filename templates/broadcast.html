@@ -1,10 +1,12 @@
 {% extends "base.html" %}
 
 {% block extra_events %}
+
 document.getElementById("activatorButton").onclick = function () { enableSubmitButton('submitButton', 'activatorButton') };
 
 document.getElementById("message_input").oninput = function () { updateCharCounter('message_input', 'message_counter') };
 document.getElementById("name_input").oninput = function () { updateCharCounter('name_input', 'name_counter') };
+
 {% endblock %}
 
 {% block title %}{{ _("Broadcast") }}{% endblock %}
@@ -12,6 +14,7 @@ document.getElementById("name_input").oninput = function () { updateCharCounter(
 {% block broadcast_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
+
 <h1>{{ _("Broadcast") }}</h1>
 <h2>{{ _("Before doing anything, read the text below.") }}</h2>
 <h3>
@@ -49,4 +52,5 @@ document.getElementById("name_input").oninput = function () { updateCharCounter(
 
     {{ form.submit(id="submitButton", class="w3-button w3-light-grey w3-padding-small w3-margin-top w3-round w3-border w3-border-black", disabled=True) }}
 </form>
+
 {% endblock %}

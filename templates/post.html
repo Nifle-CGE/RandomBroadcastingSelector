@@ -5,5 +5,7 @@
 {% block title %}{{ _("Post number %(number)s", number=post["id"]) }}{% endblock %}
 
 {% block content %}
+
 {{ to_import.post(post) }}
+
 {% endblock %}

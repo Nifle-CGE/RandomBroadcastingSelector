@@ -5,6 +5,7 @@
 {% block reselect_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
+
 <h1>{{ _("Get Reselected") }}</h1>
 <h3>
     {% trans time_interval=time_interval %}If you are here, it means you received a mail and saw it too late.<br>
@@ -17,4 +18,5 @@
     <input type="submit" name="yes" value="{{ _('Yes') }}" class="w3-button w3-light-green w3-padding-small w3-round w3-border w3-border-black">
     <input type="submit" name="no" value="{{ _('No') }}" class="w3-button w3-orange w3-padding-small w3-round w3-border w3-border-black">
 </form>
+
 {% endblock %}

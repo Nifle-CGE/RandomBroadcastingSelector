@@ -7,6 +7,7 @@
 {% block stats_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
+
 <h2>{{ _("This Broadcasts info") }}</h2>
 {% if stats["broadcast"]["lang"] == lang: %}
 {{ _("Current message:") }} ❝{{ stats["broadcast"]["content"] }}❞<br>
@@ -64,4 +65,5 @@
 {{ to_import.post(post) }}
 {% endfor %}
 <small>{{ _("These stats are updated every 10 minutes.") }}</small>
+
 {% endblock %}

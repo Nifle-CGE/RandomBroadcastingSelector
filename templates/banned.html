@@ -1,12 +1,15 @@
 {% extends "base.html" %}
 
 {% block extra_events %}
+
 document.getElementById("reason_input").oninput = function () { updateCharCounter('reason_input', 'reason_counter') };
+
 {% endblock %}
 
 {% block title %}Ban appeal{% endblock %}
 
 {% block content %}
+
 <form method="post">
     {{ form.csrf_token }}
     {% if form.csrf_token.errors: %}
@@ -30,4 +33,5 @@ document.getElementById("reason_input").oninput = function () { updateCharCounte
 <p>
     {% trans %}<span class="w3-text-red">Important</span>: If after submitting, you get any other message than "Your ban appeal has been saved.", you will have to go back to the login page and try to login again to be able to correct you ban appeal.{% endtrans %}
 </p>
+
 {% endblock %}

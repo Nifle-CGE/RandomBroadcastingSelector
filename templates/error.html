@@ -3,10 +3,12 @@
 {% block title %}{{ err_title }}{% endblock %}
 
 {% block content %}
+
 <div class="w3-center">
     <h1>{{ err_title }}</h1>
     <img src="{{ err_img_src }}" alt="{{ err_img_alt }}">
     <br>
     <h3 class="w3-container w3-flat-clouds w3-round-large">{{ err_msg }}</h3>
 </div>
+
 {% endblock %}

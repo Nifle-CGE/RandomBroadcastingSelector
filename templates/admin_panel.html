@@ -1,8 +1,10 @@
 {% extends "base.html" %}
 
 {% block extra_events %}
+
 document.getElementById("ban_unban_checkbutton1").onclick = function () { document.getElementById('ban_inputs').hidden = false };
 document.getElementById("ban_unban_checkbutton2").onclick = function () { document.getElementById('ban_inputs').hidden = true };
+
 {% endblock %}
 
 {% block title %}Admin Panel{% endblock %}
@@ -10,11 +12,13 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
 {% block admin_panel_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
+
 <h1>Admin Panel</h1>
 <h2>Infos</h2>
 <p>
     <strong>Diffuseur sélectionné :</strong> {{ broadcaster.get_id() }} ({{ broadcaster.email }})<br>
 </p>
+
 <h2>Tout ce qui est ban</h2>
 <h3>Pour ban qqun</h3>
 <form method="post">
@@ -119,4 +123,5 @@ document.getElementById("ban_unban_checkbutton2").onclick = function () { docume
     <input type="hidden" name="action" value="export_logs">
     <input type="submit" value="Export" class="w3-button w3-light-grey w3-padding-small w3-round w3-border w3-border-black">
 </form>
+
 {% endblock %}

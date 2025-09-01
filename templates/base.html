@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6MK24KZF6L" nonce="{{ csp_nonce() }}"></script>
+    <script nonce="{{ csp_nonce() }}">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-6MK24KZF6L');
+    </script>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
 
@@ -23,48 +33,50 @@
     <title>{% block title required %}{% endblock %} - RandomBroadcastingSelector</title>
 </head>
 
-<nav class="w3-bar w3-border-bottom w3-flat-clouds bottom-round-10">
-    <a href="/"><img class="w3-bar-item hover-zoom rbs-logo" src="/static/img/logo RBSm.png" alt="RBS logo"></a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block home_main %}{% endblock %}" href="/"><span class="full-rbs"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</span><span class="short-rbs"><b>RBS</b></span></a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
-    {% if current_user.is_broadcaster: %}
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
-    {% elif current_user.is_preselected: %}
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block reselect_main %}{% endblock %}" href="/reselect/">{{ _("Get Reselected") }}</a>
-    {% endif %}
-    {% if current_user.is_admin: %}
-    <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block admin_panel_main %}{% endblock %}" href="/super-secret-admin-panel/">{{ _("Admin Panel") }}</a>
-    {% endif %}
-
-    {% if current_user.is_authenticated: %}
-    <div class="w3-dropdown-hover w3-right user-dropdown">
-        <button class="w3-button w3-padding-16 w3-border-left {% block params_main %}{% endblock %}">{{ current_user.name }}</button>
-        <div class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity user-dropdown-content">
-            <a class="w3-bar-item w3-button {{ self.params_main() }}" href="/parameters/">{{ _("Parameters") }}</a>
-            <a class="w3-bar-item w3-button" href="/logout/">{{ _("Logout") }}</a>
-        </div>
-    </div>
-    {% else: %}
-    <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left {% block login_main %}{% endblock %} bottom-left-round-10" href="/login/">{{ _("Login") }}</a>
-    {% endif %}
-    <div class="w3-dropdown-click w3-right">
-        <button id="lang_dropdown_button" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
-        <div id="lang_dropdown" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity lang-dropdown-content">
-            {% for element in ["en", "fr"]: %}
-            {% if _("en") != element: %}
-            <a href="/?lang={{ element }}" class="w3-bar-item w3-button">{{ element|upper }}</a>
-            {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-</nav>
-
 <body class="rbs-body">
+    <nav class="w3-bar w3-border-bottom w3-flat-clouds bottom-round-10">
+        <a href="/"><img class="w3-bar-item hover-zoom rbs-logo" src="/static/img/logo RBSm.png" alt="RBS logo"></a>
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block home_main %}{% endblock %}" href="/"><span class="full-rbs"><b>R</b>andom<b>B</b>roadcasting<b>S</b>elector</span><span class="short-rbs"><b>RBS</b></span></a>
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block stats_main %}{% endblock %}" href="/statistics/">{{ _("Stats") }}</a>
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block history_main %}{% endblock %}" href="/history/">{{ _("History") }}</a>
+        {% if current_user.is_broadcaster: %}
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block broadcast_main %}{% endblock %}" href="/broadcast/">{{ _("Broadcast") }}</a>
+        {% elif current_user.is_preselected: %}
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block reselect_main %}{% endblock %}" href="/reselect/">{{ _("Get Reselected") }}</a>
+        {% endif %}
+        {% if current_user.is_admin: %}
+        <a class="w3-bar-item w3-button w3-padding-16 w3-border-right {% block admin_panel_main %}{% endblock %}" href="/super-secret-admin-panel/">{{ _("Admin Panel") }}</a>
+        {% endif %}
+
+        {% if current_user.is_authenticated: %}
+        <div class="w3-dropdown-hover w3-right user-dropdown">
+            <button class="w3-button w3-padding-16 w3-border-left {% block params_main %}{% endblock %}">{{ current_user.name }}</button>
+            <div class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity user-dropdown-content">
+                <a class="w3-bar-item w3-button {{ self.params_main() }}" href="/parameters/">{{ _("Parameters") }}</a>
+                <a class="w3-bar-item w3-button" href="/logout/">{{ _("Logout") }}</a>
+            </div>
+        </div>
+        {% else: %}
+        <a class="w3-bar-item w3-button w3-right w3-padding-16 w3-border-left {% block login_main %}{% endblock %} bottom-left-round-10" href="/login/">{{ _("Login") }}</a>
+        {% endif %}
+        <div class="w3-dropdown-click w3-right">
+            <button id="lang_dropdown_button" class="w3-button w3-padding-16 w3-border-left">{{ _("en")|upper }}▼</button>
+            <div id="lang_dropdown" class="w3-dropdown-content w3-bar-block w3-card-4 w3-animate-opacity lang-dropdown-content">
+                {% for element in ["en", "fr"]: %}
+                {% if _("en") != element: %}
+                <a href="/?lang={{ element }}" class="w3-bar-item w3-button">{{ element|upper }}</a>
+                {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </nav>
+
     <div class="w3-container">
         {% block content required %}{% endblock %}
     </div>
+
     <br>
+
     <footer class="w3-container w3-flat-clouds w3-padding-16 top-round-10">
         {% trans %}<i>Created by <a href="mailto:random.broadcasting.selector@gmail.com">Nifle CGE</a></i> | <a href="/about/">About</a> | <a href="/post/">Lookup an individual post</a> | <a href="/sitemap/">Sitemap</a> | <a href="/privacy-policy/">Privacy Policy</a> | <a href="/terms-of-service/">Terms of Service</a>{% endtrans %}
         <br>

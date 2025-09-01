@@ -1,4 +1,5 @@
 {% macro post(post, live=False) -%}
+
 <div class="w3-padding-16 flex-center">
     <div class="w3-container w3-cell w3-center">
         <input type="button" id="upvoteButton" class="w3-button w3-round-xlarge hover-zoom w3-hover-light-green{% if current_user.upvote == post['id']: %} w3-text-green w3-hover-text-green{% endif %} vote-arrow" value="▲"><br>
@@ -102,4 +103,5 @@
         document.getElementById("post_text").innerHTML = document.getElementById("post_text").innerHTML.trim("\n").replaceAll("\n", "<br>")
     </script>
 </div>
+
 {%- endmacro %}

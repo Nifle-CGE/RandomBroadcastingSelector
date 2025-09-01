@@ -7,6 +7,7 @@
 {% block home_main %}w3-teal w3-hover-blue-gray{% endblock %}
 
 {% block content %}
+
 <div class="w3-center">
     {% if stats["broadcast"]["content"]: %}
     {{ to_import.post(stats["broadcast"], live=True) }}
@@ -29,4 +30,5 @@
         </h5>
     </div>
 </div>
+
 {% endblock %}
