@@ -1,11 +1,44 @@
-messages.pot
-**/*.log
+# Devenv
+.devenv*
+devenv.local.nix
+devenv.local.yaml
 
-*.pyc
-__pycache__
+# direnv
+.direnv
+
+# pre-commit
+.pre-commit-config.yaml
+
+node_modules
+
+# Output
+.output
+.vercel
+.netlify
+.wrangler
+/.svelte-kit
+/build
+
+# OS
 .DS_Store
-.env.dev
-.env.prod
-.env.prod.db
+Thumbs.db
 
-.venv
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# Cloudflare Types
+/worker-configuration.d.ts
+
+# Paraglide
+src/lib/paraglide
+project.inlang/cache/
+
+# SQLite
+*.db
