@@ -11,5 +11,7 @@
     bun.enable = true;
   };
 
+  dotenv.disableHint = true;
+
   # See full reference at https://devenv.sh/reference/options/
 }
