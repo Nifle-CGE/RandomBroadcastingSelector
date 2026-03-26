@@ -1,40 +1,58 @@
-# sv
+# RandomBroadcastingSelector
+
+## How-To
+
+### Drizzle
+
+To push the database schema to the dev database, run:
+
+```sh
+bunx drizzle-kit push --config drizzle-dev.config.ts
+```
+
+To push the database schema to the production database, run:
+
+```sh
+bunx drizzle-kit push
+```
+
+## sv
 
 Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
 
-## Creating a project
+### Creating a project
 
 If you're seeing this, you've probably already done this step. Congrats!
 
 ```sh
 # create a new project
-npx sv create my-app
+bunx sv create my-app
 ```
 
 To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-bun x sv create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" drizzle="database:sqlite+sqlite:libsql" paraglide="languageTags:fr, en+demo:no" mcp="ide:vscode+setup:remote" --install bun ./
+bunx sv create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" drizzle="database:sqlite+sqlite:libsql" paraglide="languageTags:fr, en+demo:no" mcp="ide:vscode+setup:remote" --install bun ./
 ```
 
-## Developing
+### Developing
 
 Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
 
 ```sh
-npm run dev
+bun run dev
 
 # or start the server and open the app in a new browser tab
-npm run dev -- --open
+bun run dev -- --open
 ```
 
-## Building
+### Building
 
 To create a production version of your app:
 
 ```sh
-npm run build
+bun run build
 ```
 
 You can preview the production build with `npm run preview`.
