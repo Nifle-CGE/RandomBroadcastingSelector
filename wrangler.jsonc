@@ -4,9 +4,7 @@
 	"keep_vars": false,
 	"send_metrics": false,
 	"compatibility_date": "2026-04-04",
-	"compatibility_flags": [
-		"nodejs_als"
-	],
+	"compatibility_flags": ["nodejs_als"],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"build": {
 		"command": "bun run build"
@@ -23,5 +21,8 @@
 			"database_name": "rbs",
 			"database_id": "5d21c8ee-9838-4d78-905f-bafa2ae2ff2f"
 		}
-	]
+	],
+	"observability": {
+		"enabled": true
+	}
 }
