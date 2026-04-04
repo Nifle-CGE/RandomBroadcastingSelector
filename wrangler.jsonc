@@ -3,26 +3,25 @@
 	"name": "rbs",
 	"keep_vars": false,
 	"send_metrics": false,
-	"compatibility_date": "2026-01-31",
+	"compatibility_date": "2026-03-28",
 	"compatibility_flags": [
-		"nodejs_compat"
+		"nodejs_als"
 	],
 	"main": ".svelte-kit/cloudflare/_worker.js",
+	"build": {
+		"command": "bun run build"
+	},
+	"workers_dev": true,
+	"preview_urls": true,
 	"assets": {
 		"binding": "ASSETS",
 		"directory": ".svelte-kit/cloudflare"
 	},
-	"workers_dev": true,
-	"preview_urls": true,
 	"d1_databases": [
 		{
-			"binding": "DB",
+			"binding": "rbs",
 			"database_name": "rbs",
-			"database_id": "777cc8e3-e5cc-457e-9d26-3e12bd52bc52",
-			"migrations_dir": "drizzle"
+			"database_id": "f39bb960-edb8-45c7-a0b3-70ff7467624d"
 		}
-	],
-	"build": {
-		"command": "bun run build",
-	}
+	]
 }
