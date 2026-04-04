@@ -17,7 +17,7 @@ To recreate this project with the same configuration:
 
 ```sh
 # recreate this project
-bunx sv@0.13.0 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" drizzle="database:d1" better-auth="demo:password,github" paraglide="languageTags:fr, en+demo:yes" mcp="ide:vscode+setup:local" --install bun ./
+bunx sv@0.14.0 create --template minimal --types ts --add prettier eslint tailwindcss="plugins:none" sveltekit-adapter="adapter:cloudflare+cfTarget:workers" drizzle="database:d1" better-auth="demo:password,github" mcp="ide:vscode+setup:local" --install bun .
 ```
 
 ### Developing

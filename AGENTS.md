@@ -2,7 +2,7 @@
 
 - **Language**: TypeScript
 - **Package Manager**: bun
-- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, drizzle, better-auth, paraglide, mcp
+- **Add-ons**: prettier, eslint, tailwindcss, sveltekit-adapter, drizzle, better-auth, mcp
 
 ---
 

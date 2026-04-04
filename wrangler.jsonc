@@ -3,9 +3,9 @@
 	"name": "rbs",
 	"keep_vars": false,
 	"send_metrics": false,
-	"compatibility_date": "2026-03-28",
+	"compatibility_date": "2026-04-04",
 	"compatibility_flags": [
-		"nodejs_compat"
+		"nodejs_als"
 	],
 	"main": ".svelte-kit/cloudflare/_worker.js",
 	"build": {
@@ -21,7 +21,7 @@
 		{
 			"binding": "rbs",
 			"database_name": "rbs",
-			"database_id": "f39bb960-edb8-45c7-a0b3-70ff7467624d"
+			"database_id": "5d21c8ee-9838-4d78-905f-bafa2ae2ff2f"
 		}
 	]
 }
