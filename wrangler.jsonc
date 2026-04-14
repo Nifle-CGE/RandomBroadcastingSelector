@@ -17,9 +17,10 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "rbs",
+			"binding": "DB",
 			"database_name": "rbs",
-			"database_id": "5d21c8ee-9838-4d78-905f-bafa2ae2ff2f"
+			"database_id": "5d21c8ee-9838-4d78-905f-bafa2ae2ff2f",
+			"migrations_dir": "./drizzle"
 		}
 	],
 	"observability": {
