@@ -17,7 +17,28 @@ const authConfig = {
 	},
 	plugins: [
 		sveltekitCookies(getRequestEvent) // make sure this is the last plugin in the array
-	]
+  ],
+  advanced: {
+    database: {
+      generateId: 'serial',
+      joins: true,
+    },
+  },
+	user: {
+		additionalFields: {
+			role: {
+				type: ['user', 'admin'],
+				required: false,
+				defaultValue: 'user',
+				input: false // don't allow user to set role
+			},
+			lang: {
+				type: 'string',
+				required: false,
+				defaultValue: 'en'
+			}
+		}
+	}
 } satisfies Omit<Parameters<typeof betterAuth>[0], 'database'>;
 
 export const createAuth = (d1: D1Database) =>
