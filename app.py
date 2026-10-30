@@ -70,9 +70,13 @@ def anon_user_getter():
 login_manager.anonymous_user = anon_user_getter
 
 # Deepl translation setup
+deepl.http_client.max_network_retries = 1  # default backoff can outlast gunicorn's 30s timeout
 translator = deepl.Translator(config["deepl_auth_key"])
 
 LANGUAGE_CODES = [lang.code.lower() for lang in translator.get_source_languages()]
+TARGET_CODES = {}
+for target_lang in translator.get_target_languages():  # first variant wins: en -> EN-GB, pt -> PT-BR
+    TARGET_CODES.setdefault(target_lang.code.split("-")[0].lower(), target_lang.code)
 SUPPORTED_LANGUAGES = ["en", "fr"]
 app.logger.debug("Traducteur mis en place.")
 
@@ -223,6 +227,19 @@ def get_rem_secs():
         rem_secs = stats["time"]["last_broadcaster"] + brod_change_threshold - time.time()
 
     return rem_secs
+
+
+def ensure_trad(lang):
+    # Translate lazily, one DeepL call per viewer language, so /broadcast/ never hits the worker timeout
+    content = stats["broadcast"]["content"]
+    if not content or lang not in TARGET_CODES or lang in stats["broadcast"]["trads"]:
+        return
+    try:
+        stats["broadcast"]["trads"][lang] = translator.translate_text(content, target_lang=TARGET_CODES[lang]).text
+    except deepl.DeepLException as e:
+        app.logger.warning(f"Traduction vers {lang} impossible : {e}")
+        return
+    stuffimporter.set_stats(stats)
 
 # Custom template filters
 
@@ -454,6 +471,7 @@ def index():
         return render_template("message.html", message=_("Your report has been saved."))
 
     rem_time = stuffimporter.seconds_to_str(get_rem_secs())
+    ensure_trad(get_lang())
 
     return render_template("index.html", stats=stats, form=form, lang=get_lang(), rem_time=rem_time)
 
@@ -746,6 +764,7 @@ def statistics():
 
     uptime_str = stuffimporter.seconds_to_str(time.time() - stats["time"]["start_time"])
     rem_time = stuffimporter.seconds_to_str(get_rem_secs())
+    ensure_trad(get_lang())
 
     return render_template("stats.html", stats=stats, uptime_str=uptime_str, rem_time=rem_time, lang=get_lang())
 
@@ -768,12 +787,7 @@ def broadcast():
 
         test = translator.translate_text(form.message.data, target_lang="EN-US")
         stats["broadcast"]["lang"] = test.detected_source_lang.split("-")[0].lower()
-
-        for language in translator.get_target_languages():
-            lang_code = language.code.split("-")[0]
-            stats["broadcast"]["trads"][lang_code.lower()] = translator.translate_text(form.message.data, target_lang=language.code).text
-
-        stats["broadcast"]["_ts"] = time.time()
+        stats["broadcast"]["trads"] = {"en": test.text}
 
         stuffimporter.set_stats(stats)
 
