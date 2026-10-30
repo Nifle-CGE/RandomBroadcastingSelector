@@ -237,7 +237,7 @@ def ensure_trad(lang):
     try:
         stats["broadcast"]["trads"][lang] = translator.translate_text(content, target_lang=TARGET_CODES[lang]).text
     except deepl.DeepLException as e:
-        app.logger.warning(f"Traduction vers {lang} impossible : {e}")
+        app.logger.warning(f"Traduction vers {lang} impossible: {e}")
         return
     stuffimporter.set_stats(stats)
 
